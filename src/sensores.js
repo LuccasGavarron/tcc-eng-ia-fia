@@ -39,7 +39,8 @@ const at = (arr, t) => arr[clamp(t, 0, arr.length - 1)];
 function qc(st, v, t, out, neighborsRain) {
   if (v == null) return "sem comunicação";
   const prev = t > 0 ? out.v[t - 1] : null;
-  if (st.c === "cemaden" && v === 0 && neighborsRain > 8) return "zero com chuva nos vizinhos";
+  // valor travado: 6 h zerado enquanto os vizinhos somam chuva
+  if (st.c === "cemaden" && v === 0 && t >= 5 && out.v.slice(t - 5, t).every(x => x === 0) && neighborsRain > 5) return "zero com chuva nos vizinhos";
   if (st.c === "lora" && (v < 5 || v > 60)) return "fora da faixa física";
   if (st.c === "ana" && prev != null && Math.abs(v - prev) > 1.2) return "salto improvável";
   return "";
@@ -74,7 +75,8 @@ export function simulateSensors(p) {
       }
       if (v != null) v = Math.round(v * 10) / 10;
       out.v.push(v);
-      const neigh = st.c === "cemaden" ? rainAt(t) * 0.9 : 0;
+      let neigh = 0;
+      if (st.c === "cemaden") for (let k = Math.max(0, t - 5); k <= t; k++) neigh += rainAt(k) * 0.9;
       out.flag.push(qc(st, v, t, out, neigh));
     }
     res[st.id] = out;

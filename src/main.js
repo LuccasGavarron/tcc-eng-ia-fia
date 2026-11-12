@@ -8,7 +8,7 @@ import { CONNECTORS, STATIONS, simulateSensors, lastValid, gaugeCross } from "./
 const $ = id => document.getElementById(id);
 const G = M.G, H = M.H;
 const fmt = (v, d = 0) => v.toFixed(d).replace(".", ",");
-const pct = p => Math.round(p * 100) + "%";
+const pct = p => (p > 0.99 ? "> 99%" : p < 0.01 ? "< 1%" : Math.round(p * 100) + "%");
 const hourLabel = t => "dia " + (Math.floor(t / 24) + 1) + ", " + String(t % 24).padStart(2, "0") + "h";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -245,7 +245,7 @@ function areaFacts(st) {
   if (!grid) { $("riseTxt").textContent = "Aproxime o mapa de uma cidade para o Véspera ler o relevo."; return; }
   $("riseTxt").textContent = S.mode === "chuva"
     ? "Em " + hourLabel(S.t) + ", nível d'água " + fmt(st.rise, 1) + " m acima do normal" + (grid.hand ? ", comparado à altura de cada ponto acima do rio mais próximo." : ". Sem rios mapeados aqui: comparado às cotas mais baixas da tela.")
-    : (cover && !isNaN(grid.veg[(G * G) >> 1]) ? "Em " + hourLabel(S.t) + ", perigo de incêndio " + M.FMA_CLASSES[st.fireClass].toLowerCase() + " e índice de calor " + fmt(F.hiAt(S.t), 0) + " °C."
+    : (!isNaN(coverAt(map.getCenter().lng, map.getCenter().lat, "veg")) ? "Em " + hourLabel(S.t) + ", perigo de incêndio " + M.FMA_CLASSES[st.fireClass].toLowerCase() + " e índice de calor " + fmt(F.hiAt(S.t), 0) + " °C."
       : "Cobertura do solo disponível só para Sorocaba.");
 }
 
@@ -344,7 +344,7 @@ function drawSensorsTab() {
 function drawHazards() {
   $("hazards").innerHTML = HAZ.map(h => {
     const p = F.prob[h.k], e = F.eta[h.k];
-    const when = e == null ? (p >= 0.15 ? "limiar não cruzado em 72 h" : "") : e === 0 ? "já em curso" : "em " + e + " h, " + hourLabel(e);
+    const when = e == null ? (p >= 0.15 ? "limiar não cruzado em 72 h" : "") : e === 0 ? "limiar já ultrapassado" : "em " + e + " h, " + hourLabel(e);
     return '<li><div class="hz-top"><b>' + h.n + "</b><span>" + pct(p) + '</span></div><div class="bar"><i style="width:' + Math.max(1, p * 100) + "%;background:" + h.color + '"></i></div>' +
       (when ? '<p class="hz-eta">' + when + "</p>" : "") + "</li>";
   }).join("");
