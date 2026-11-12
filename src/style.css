@@ -112,7 +112,7 @@ th{font:700 13px var(--display)}
   #map{position:relative;height:58vh}
   .panel{position:relative;inset:auto;width:auto;border-radius:0;box-shadow:none}
   .scroll{overflow:visible}
-  .legend{bottom:12px}
+  .legend{top:12px;bottom:auto;left:12px;right:auto;font-size:11.5px}
   .maplibregl-ctrl-bottom-right{bottom:0}
 }
 @media (prefers-reduced-motion:reduce){.tube .fill{transition:none}}
