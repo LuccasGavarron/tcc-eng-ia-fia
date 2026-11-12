@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test src/model.test.js"
   },
   "dependencies": {
     "mapbox-gl": "^3.34.2"

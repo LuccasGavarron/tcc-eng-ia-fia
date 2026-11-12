@@ -37,6 +37,10 @@ function computeMet(){
   met={peak,peakT,days,dayMax,sat,C,runoff,rise,slideIdx,inmet:Math.max(lvI,lvD),byI:lvI>=lvD};
 }
 
+/* ---------- rios reais (OpenStreetMap) ---------- */
+let rivers=null;
+fetch("/rios-sorocaba.geojson").then(r=>r.json()).then(j=>{rivers=j;try{map.getSource("rios").setData(j);}catch(e){}if(grid)scheduleSample();});
+
 /* ---------- mapa ---------- */
 mapboxgl.accessToken=TOKEN;
 const map=new mapboxgl.Map({container:"map",style:"mapbox://styles/mapbox/satellite-streets-v12",
@@ -50,6 +54,9 @@ map.on("style.load",()=>{
   map.setFog({color:"rgb(220,230,236)","high-color":"rgb(40,80,130)","horizon-blend":0.08,"space-color":"rgb(12,20,30)","star-intensity":0});
   map.addSource("hs",{type:"raster-dem",url:"mapbox://mapbox.mapbox-terrain-dem-v1",tileSize:512,maxzoom:14});
   map.addLayer({id:"hillshade",type:"hillshade",source:"hs",layout:{visibility:"none"},paint:{"hillshade-exaggeration":0.55,"hillshade-shadow-color":"#1B2A31"}});
+  map.addSource("rios",{type:"geojson",data:rivers||{type:"FeatureCollection",features:[]}});
+  map.addLayer({id:"rios",type:"line",source:"rios",paint:{"line-color":"#7FC4F0",
+    "line-width":["match",["get","w"],"r",3,"c",1.6,1.1],"line-opacity":0.9}});
   map.addSource("risk",{type:"geojson",data:{type:"FeatureCollection",features:[]}});
   map.addLayer({id:"risk-fill",type:"fill",source:"risk",paint:{
     "fill-color":["match",["get","k"],"f","#2C6CB0","a","#C4841C","s","#AE3A2C","#000"],
@@ -94,19 +101,43 @@ function sample(){
   for(let r=1;r<G-1;r++)for(let c=1;c<G-1;c++){const i=r*G+c;slope[i]=Math.hypot((el[i+1]-el[i-1])/(2*mx),(el[i+G]-el[i-G])/(2*my))*100;}
   const vals=Array.from(el).filter(v=>!isNaN(v)).sort((a,b)=>a-b);
   $("busy").hidden=true;
-  grid=vals.length<100?null:{west,south,dx,dy,el,slope,base:vals[Math.floor(vals.length*0.03)]};
+  grid=vals.length<100?null:{west,south,dx,dy,el,slope,base:vals[Math.floor(vals.length*0.03)],hand:computeHAND(el,west,south,dx,dy)};
   render(); findShelters();
+}
+
+/* HAND (Height Above Nearest Drainage, Rennó et al. 2008, INPE):
+   altura de cada célula acima da célula de drenagem mais próxima.
+   Drenagem = células cortadas pelos rios do OSM. Sem rios na tela, devolve null. */
+function computeHAND(el,west,south,dx,dy){
+  if(!rivers)return null;
+  const drain=new Int32Array(G*G).fill(-1), q=[];
+  const mark=(x,y)=>{const c=Math.floor((x-west)/dx),r=Math.floor((y-south)/dy),i=r*G+c;
+    if(c>=0&&r>=0&&c<G&&r<G&&drain[i]<0&&!isNaN(el[i])){drain[i]=i;q.push(i);}};
+  for(const f of rivers.features){const p=f.geometry.coordinates;
+    for(let k=1;k<p.length;k++){const[a,b]=p[k-1],[c,d]=p[k],n=Math.ceil(Math.max(Math.abs(c-a)/dx,Math.abs(d-b)/dy)*2)+1;
+      for(let s=0;s<=n;s++)mark(a+(c-a)*s/n,b+(d-b)*s/n);}}
+  if(q.length<3)return null;
+  // busca em largura a partir da drenagem: cada célula herda a drenagem vizinha mais próxima
+  for(let h=0;h<q.length;h++){const i=q[h],r=(i/G)|0,c=i%G;
+    for(const[dr,dc]of[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
+      const rr=r+dr,cc=c+dc,j=rr*G+cc; if(rr<0||cc<0||rr>=G||cc>=G||drain[j]>=0||isNaN(el[j]))continue;
+      drain[j]=drain[i];q.push(j);}}
+  const hand=new Float32Array(G*G).fill(NaN);
+  for(let i=0;i<G*G;i++)if(drain[i]>=0)hand[i]=Math.max(0,el[i]-el[drain[i]]);
+  return hand;
 }
 
 /* ---------- risco ---------- */
 let cl=null;
 function classify(){
   const out={f:new Uint8Array(G*G),n:{f:0,a:0,s:0,t:0}}; if(!grid)return out;
-  const lvl=grid.base+met.rise, thr=met.slideIdx<0.7?Infinity:Math.max(16,46-20*(met.slideIdx-0.7));
+  const thr=met.slideIdx<0.7?Infinity:Math.max(16,46-20*(met.slideIdx-0.7));
   for(let i=0;i<G*G;i++){
     const e=grid.el[i]; if(isNaN(e))continue; out.n.t++;
     let k=0;
-    if(rain>0&&e<lvl)k=1; else if(met.rise>1&&e<lvl+Math.max(2,met.rise*0.35))k=2; else if(grid.slope[i]>thr)k=3;
+    // com rios: compara a cheia com o HAND; sem rios: cota mais baixa da tela
+    const hv=grid.hand?grid.hand[i]:e-grid.base;
+    if(rain>0&&hv<met.rise)k=1; else if(met.rise>1&&hv<met.rise+Math.max(2,met.rise*0.35))k=2; else if(grid.slope[i]>thr)k=3;
     out.f[i]=k; if(k)out.n["_fas"[k]]++;
   }
   return out;
