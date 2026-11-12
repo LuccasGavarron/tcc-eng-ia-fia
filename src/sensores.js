@@ -14,19 +14,22 @@ export const CONNECTORS = [
 
 // fault: defeito simulado. rain: fator espacial da chuva. Réguas: cota de alerta e de transbordamento.
 export const STATIONS = [
-  { id: "P1", c: "cemaden", n: "Centro", ll: [-47.4580, -23.5015], rain: 1.0 },
-  { id: "P2", c: "cemaden", n: "Zona Norte", ll: [-47.4630, -23.4500], rain: 1.12 },
-  { id: "P3", c: "cemaden", n: "Zona Leste", ll: [-47.4100, -23.4950], rain: 0.9 },
-  { id: "P4", c: "cemaden", n: "Zona Oeste", ll: [-47.5000, -23.4900], rain: 1.05, fault: "entupido" },
+  // pluviômetros reais do Cemaden em Sorocaba (código e coordenada); as leituras são simuladas
+  { id: "P1", c: "cemaden", n: "Cerrado (355220503A)", ll: [-47.486, -23.508], rain: 1.05 },
+  { id: "P2", c: "cemaden", n: "Retiro São João (355220508A)", ll: [-47.4428, -23.4553], rain: 1.0 },
+  { id: "P3", c: "cemaden", n: "Jardim Saira (355220510A)", ll: [-47.422, -23.478], rain: 0.95 },
+  { id: "P4", c: "cemaden", n: "Éden (355220506A)", ll: [-47.408, -23.424], rain: 1.12, fault: "entupido" },
+  { id: "P5", c: "cemaden", n: "Brigadeiro Tobias (355220504A)", ll: [-47.36154, -23.51027], rain: 0.9 },
   { id: "U1", c: "lora", n: "Encosta Zona Norte", ll: [-47.4700, -23.4420], soil: 1.04 },
   { id: "U2", c: "lora", n: "Encosta Zona Leste", ll: [-47.4020, -23.4880], soil: 0.97 },
   { id: "U3", c: "lora", n: "Encosta Zona Oeste", ll: [-47.5120, -23.4780], soil: 1.0, fault: "sem sinal" },
   { id: "U4", c: "lora", n: "Encosta Zona Sul", ll: [-47.4450, -23.5350], soil: 1.06, fault: "bateria" },
-  { id: "R1", c: "ana", n: "Rio Sorocaba, Centro", ll: [-47.45162, -23.49877], base: 1.4, gain: 1, lag: 0, alert: 3.8, over: 5.5 },
-  { id: "R2", c: "ana", n: "Rio Sorocaba, montante", ll: [-47.44851, -23.53133], base: 1.2, gain: 0.85, lag: -2, alert: 3.4, over: 5 },
-  { id: "R3", c: "ana", n: "Rio Pirajibu", ll: [-47.43791, -23.41755], base: 0.8, gain: 0.7, lag: -3, alert: 2.6, over: 3.6 },
-  { id: "R4", c: "ana", n: "Córrego Itanguá", ll: [-47.49521, -23.48976], base: 0.4, gain: 0.55, lag: -6, alert: 1.8, over: 2.5 },
-  { id: "M1", c: "inmet", n: "Sorocaba (A713)", ll: [-47.4339, -23.4261] },
+  // réguas em metros acima do nível normal. Praça Lions: 1,2 m ainda na calha, 2 m fecha a Dom Aguirre (reportagens 2022 a 2026)
+  { id: "R1", c: "ana", n: "Rio Sorocaba, Praça Lions", ll: [-47.45154, -23.49766], base: 0, gain: 1, lag: 0, alert: 1.2, over: 2.0 },
+  { id: "R2", c: "ana", n: "Rio Sorocaba, montante", ll: [-47.44851, -23.53133], base: 0, gain: 0.85, lag: -2, alert: 1.1, over: 1.9 },
+  { id: "R3", c: "ana", n: "Rio Pirajibu", ll: [-47.43791, -23.41755], base: 0, gain: 0.7, lag: -3, alert: 0.9, over: 1.5 },
+  { id: "R4", c: "ana", n: "Córrego Itanguá, Rua Karim Jamal", ll: [-47.49521, -23.48976], base: 0, gain: 0.5, lag: -6, alert: 0.6, over: 1.0 },
+  { id: "M1", c: "inmet", n: "Iperó (A713), vizinha de Sorocaba", ll: [-47.5856, -23.4261] },
   { id: "D1", c: "radar", n: "Célula sobre o Centro", ll: [-47.4560, -23.4990], rain: 1.0 },
   { id: "T1", c: "transito", n: "Av. Dom Aguirre, marginal", ll: [-47.4535, -23.4960], free: 60, river: "R1" },
   { id: "T2", c: "transito", n: "Marginal do Pirajibu", ll: [-47.4395, -23.4190], free: 50, river: "R3" },
@@ -62,8 +65,8 @@ export function simulateSensors(p) {
         v = (st.fault === "sem sinal" && t >= 30 && t < 38) ? null : clamp(th * st.soil * 100 + noise(0.6), 0, 100);
       } else if (st.c === "ana") {
         const s = p.mode === "chuva" ? at(p.sim.stage, t + st.lag) : 0;
-        v = st.base * (p.mode === "chuva" ? 1 : 0.7) + st.gain * s + noise(0.03);
-        if (st.id === "R1" && t === 47) v += 2.1; // pico espúrio de 1 leitura: interferência no sensor de radar
+        v = Math.max(0, st.base + st.gain * s + noise(0.03));
+        if (st.id === "R1" && t === 47) v += 1.6; // pico espúrio de 1 leitura: interferência no sensor de radar
       } else if (st.c === "inmet") {
         v = p.mode === "chuva" ? 21 - Math.min(5, rainAt(t) * 0.2) + 3 * Math.sin(((t % 24) - 9) / 24 * 2 * Math.PI) + noise(0.3) : p.dry.T[t] + noise(0.3);
         out.rh = out.rh || []; out.rh.push(p.mode === "chuva" ? clamp(88 + rainAt(t), 0, 100) : p.dry.RH[t]);

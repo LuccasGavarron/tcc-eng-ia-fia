@@ -1,0 +1,856 @@
+{
+ "pontos": [
+  {
+   "nome": "Av. Dom Aguirre - Parque das Águas",
+   "bairro": "Jardim Abaeté",
+   "tipo": "transbordamento de rio",
+   "lat": -23.47017,
+   "lon": -47.44725,
+   "aprox": false,
+   "datas": [
+    "2023-02-12",
+    "2024-10-23",
+    "2024-11-06",
+    "2026-03-07",
+    "2026-09-12",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://noticias.sorocaba.sp.gov.br/defesa-civil-estadual-vistoria-areas-atingidas-pelas-chuvas-em-sorocaba-e-da-suporte-em-acoes-emergenciais-e-humanitarias/",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2024/10/739698-chuva-provoca-estragos-em-sorocaba-e-regiao.html",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2024/11/740272-chuvas-causam-alagamentos-em-sorocaba.html",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/03/757933-chuva-forte-provoca-alagamentos-e-transtornos.html",
+    "https://noticias.sorocaba.sp.gov.br/nota-chuvas-em-sorocaba/",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-mantem-atendimentos-a-ocorrencias-causadas-pelas-fortes-chuvas-deste-sabado-7/"
+   ]
+  },
+  {
+   "nome": "Praça Lions (régua do Rio Sorocaba)",
+   "bairro": "Vila Senger / Centro",
+   "tipo": "transbordamento de rio",
+   "lat": -23.49766,
+   "lon": -47.45154,
+   "aprox": false,
+   "datas": [
+    "2022",
+    "2023",
+    "2023-01-31",
+    "2026-09-12",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-decreta-situacao-de-emergencia-publica-em-razao/",
+    "https://noticias.sorocaba.sp.gov.br/nota-chuvas-em-sorocaba/",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-mantem-atendimentos-a-ocorrencias-causadas-pelas-fortes-chuvas-deste-sabado-7/"
+   ]
+  },
+  {
+   "nome": "Av. Dom Aguirre - Ponte Francisco Dell'Osso",
+   "bairro": "Centro",
+   "tipo": "transbordamento de rio",
+   "lat": -23.49752,
+   "lon": -47.45162,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-mantem-atendimentos-a-ocorrencias-causadas-pelas-fortes-chuvas-deste-sabado-7/"
+   ]
+  },
+  {
+   "nome": "Praça Dom Tadeu Strunck (Av. Dom Aguirre)",
+   "bairro": "Jardim Marginal",
+   "tipo": "transbordamento de rio",
+   "lat": -23.5075,
+   "lon": -47.45232,
+   "aprox": false,
+   "datas": [
+    "2026-09-12",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://noticias.sorocaba.sp.gov.br/nota-chuvas-em-sorocaba/",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-mantem-atendimentos-a-ocorrencias-causadas-pelas-fortes-chuvas-deste-sabado-7/"
+   ]
+  },
+  {
+   "nome": "Av. Dom Aguirre x Rua João Gabriel Mendes",
+   "bairro": "Jardim Maria do Carmo",
+   "tipo": "alagamento",
+   "lat": -23.47363,
+   "lon": -47.44307,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2023",
+    "2023-02-12"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://noticias.sorocaba.sp.gov.br/defesa-civil-estadual-vistoria-areas-atingidas-pelas-chuvas-em-sorocaba-e-da-suporte-em-acoes-emergenciais-e-humanitarias/"
+   ]
+  },
+  {
+   "nome": "Av. Dom Aguirre x Rua Hélio Monzoni",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -23.49394,
+   "lon": -47.44772,
+   "aprox": false,
+   "datas": [
+    "2026-09-12"
+   ],
+   "fontes": [
+    "https://noticias.sorocaba.sp.gov.br/nota-chuvas-em-sorocaba/"
+   ]
+  },
+  {
+   "nome": "Av. XV de Agosto x Rua Fernandópolis / Radial Norte",
+   "bairro": "Jardim Leocádia",
+   "tipo": "transbordamento de rio",
+   "lat": -23.46889,
+   "lon": -47.44026,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2023",
+    "2023-02-12",
+    "2024-10-23",
+    "2024-11-06",
+    "2025-02-18",
+    "2026-03-07",
+    "2026-09-12",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://noticias.sorocaba.sp.gov.br/defesa-civil-estadual-vistoria-areas-atingidas-pelas-chuvas-em-sorocaba-e-da-suporte-em-acoes-emergenciais-e-humanitarias/",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2024/10/739698-chuva-provoca-estragos-em-sorocaba-e-regiao.html",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2024/11/740272-chuvas-causam-alagamentos-em-sorocaba.html",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2025/02/744013-chuva-forte-alaga-ruas-de-sorocaba-e-causa-transtornos-no-transito.html",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/03/757933-chuva-forte-provoca-alagamentos-e-transtornos.html",
+    "https://noticias.sorocaba.sp.gov.br/nota-chuvas-em-sorocaba/",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-mantem-atendimentos-a-ocorrencias-causadas-pelas-fortes-chuvas-deste-sabado-7/"
+   ]
+  },
+  {
+   "nome": "Praça da Bandeira",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -23.49574,
+   "lon": -47.46246,
+   "aprox": false,
+   "datas": [
+    "2022",
+    "2023",
+    "2024-10-23",
+    "2025-02-18"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2024/10/739698-chuva-provoca-estragos-em-sorocaba-e-regiao.html",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2025/02/744013-chuva-forte-alaga-ruas-de-sorocaba-e-causa-transtornos-no-transito.html"
+   ]
+  },
+  {
+   "nome": "Av. Afonso Vergueiro x Rua Dr. Álvaro Soares",
+   "bairro": "Centro / Vila Santo Antônio",
+   "tipo": "alagamento",
+   "lat": -23.49751,
+   "lon": -47.45195,
+   "aprox": false,
+   "datas": [
+    "2025-02-18",
+    "2026-03-07",
+    "2026-09-12"
+   ],
+   "fontes": [
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2025/02/744013-chuva-forte-alaga-ruas-de-sorocaba-e-causa-transtornos-no-transito.html",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/03/757933-chuva-forte-provoca-alagamentos-e-transtornos.html",
+    "https://noticias.sorocaba.sp.gov.br/nota-chuvas-em-sorocaba/"
+   ]
+  },
+  {
+   "nome": "Av. Juvenal de Campos (perto da Av. Washington Luiz)",
+   "bairro": "Jardim Faculdade / Jardim Santa Lucinda",
+   "tipo": "alagamento",
+   "lat": -23.51137,
+   "lon": -47.45261,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2024-01-20",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://www.cnnbrasil.com.br/nacional/com-maior-volume-de-alagamentos-desde-1981-sorocaba-decreta-estado-de-calamidade/",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-mantem-atendimentos-a-ocorrencias-causadas-pelas-fortes-chuvas-deste-sabado-7/"
+   ]
+  },
+  {
+   "nome": "Rua Antônio Furtado Lopes (córrego)",
+   "bairro": "Vila Mineirão",
+   "tipo": "transbordamento de rio",
+   "lat": -23.46941,
+   "lon": -47.46526,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2022-03-12",
+    "2023-01-31",
+    "2024-11-06",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://sbtnews.sbt.com.br/noticia/brasil/200584-chuva-provoca-alagamento-e-estragos-em-sorocaba-sao-paulo",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-decreta-situacao-de-emergencia-publica-em-razao/",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2024/11/740272-chuvas-causam-alagamentos-em-sorocaba.html",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-mantem-atendimentos-a-ocorrencias-causadas-pelas-fortes-chuvas-deste-sabado-7/"
+   ]
+  },
+  {
+   "nome": "Rua Abner Pedroso de Alcântara",
+   "bairro": "Jardim Guadalupe / Mineirão",
+   "tipo": "transbordamento de rio",
+   "lat": -23.46389,
+   "lon": -47.46435,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2023-01-31",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-decreta-situacao-de-emergencia-publica-em-razao/",
+    "https://www.bnewssaopaulo.com.br/noticias/policia/sorocaba-decreta-emergencia-apos-inundacoes-em-bairros-da-cidade.html"
+   ]
+  },
+  {
+   "nome": "Rua Antônio de Andrade",
+   "bairro": "Jardim Santa Lucinda / Jardim Marginal",
+   "tipo": "alagamento",
+   "lat": -23.5086,
+   "lon": -47.45334,
+   "aprox": true,
+   "datas": [
+    "2023-01-31",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-decreta-situacao-de-emergencia-publica-em-razao/",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-mantem-atendimentos-a-ocorrencias-causadas-pelas-fortes-chuvas-deste-sabado-7/"
+   ]
+  },
+  {
+   "nome": "Rua Ingrácia Angrisani Gomes",
+   "bairro": "Jardim Maria do Carmo",
+   "tipo": "alagamento",
+   "lat": -23.46833,
+   "lon": -47.44214,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2023-02-12"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://noticias.sorocaba.sp.gov.br/defesa-civil-estadual-vistoria-areas-atingidas-pelas-chuvas-em-sorocaba-e-da-suporte-em-acoes-emergenciais-e-humanitarias/"
+   ]
+  },
+  {
+   "nome": "Rua Oscar Harder",
+   "bairro": "Jardim Marli / Itapemirim",
+   "tipo": "transbordamento de rio",
+   "lat": -23.46838,
+   "lon": -47.51239,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2023",
+    "2023-02-12"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://noticias.sorocaba.sp.gov.br/defesa-civil-estadual-vistoria-areas-atingidas-pelas-chuvas-em-sorocaba-e-da-suporte-em-acoes-emergenciais-e-humanitarias/"
+   ]
+  },
+  {
+   "nome": "Rua Eugênia de Oliveira Cirne",
+   "bairro": "Jardim Lopes de Oliveira / Itapemirim",
+   "tipo": "transbordamento de rio",
+   "lat": -23.47003,
+   "lon": -47.51244,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2023",
+    "2023-02-12"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://noticias.sorocaba.sp.gov.br/defesa-civil-estadual-vistoria-areas-atingidas-pelas-chuvas-em-sorocaba-e-da-suporte-em-acoes-emergenciais-e-humanitarias/"
+   ]
+  },
+  {
+   "nome": "Rua Marechal Castelo Branco",
+   "bairro": "Jardim Sandra",
+   "tipo": "transbordamento de rio",
+   "lat": -23.51253,
+   "lon": -47.45352,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2023-02-12"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://noticias.sorocaba.sp.gov.br/defesa-civil-estadual-vistoria-areas-atingidas-pelas-chuvas-em-sorocaba-e-da-suporte-em-acoes-emergenciais-e-humanitarias/"
+   ]
+  },
+  {
+   "nome": "Av. Itavuvu x Rua Vicente Paes Filho",
+   "bairro": "Vila Carol / Jardim Paraná",
+   "tipo": "alagamento",
+   "lat": -23.47238,
+   "lon": -47.47683,
+   "aprox": true,
+   "datas": [
+    "2023",
+    "2026-03-07"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://www.band.com.br/band-multi/sorocaba-e-regiao/noticias/video-raio-atinge-casa-em-sorocaba-e-temporal-alaga-principais-avenidas-202603071902"
+   ]
+  },
+  {
+   "nome": "Rua Karim Jamal - travessia do Córrego Itanguá",
+   "bairro": "Jardim Vera Cruz",
+   "tipo": "transbordamento de rio",
+   "lat": -23.51588,
+   "lon": -47.49801,
+   "aprox": false,
+   "datas": [
+    "2026-01-15"
+   ],
+   "fontes": [
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/01/756215-chuvas-causam-alagamentos-pontuais-e-transbordamento-de-corrego-em-sorocaba.html",
+    "https://repositorio.unesp.br/items/24e5189f-3f0e-449d-8f41-08d0e026acc4"
+   ]
+  },
+  {
+   "nome": "Av. Dr. Armando Pannunzio",
+   "bairro": "Parque Esmeralda (região)",
+   "tipo": "alagamento",
+   "lat": -23.51163,
+   "lon": -47.48889,
+   "aprox": true,
+   "datas": [
+    "2026-01-15"
+   ],
+   "fontes": [
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/01/756215-chuvas-causam-alagamentos-pontuais-e-transbordamento-de-corrego-em-sorocaba.html"
+   ]
+  },
+  {
+   "nome": "Rua Professor João Doretto",
+   "bairro": "Parque Esmeralda",
+   "tipo": "transbordamento de rio",
+   "lat": -23.49585,
+   "lon": -47.49463,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2023",
+    "2026-01-15"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/01/756215-chuvas-causam-alagamentos-pontuais-e-transbordamento-de-corrego-em-sorocaba.html"
+   ]
+  },
+  {
+   "nome": "Rua Adolpho Goldman x Rua Sylvio Fernandes de Oliveira",
+   "bairro": "Parque Vitória Régia",
+   "tipo": "alagamento",
+   "lat": -23.4252,
+   "lon": -47.44882,
+   "aprox": true,
+   "datas": [
+    "2023-01-31",
+    "2023-02-12",
+    "2026-09-12"
+   ],
+   "fontes": [
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-decreta-situacao-de-emergencia-publica-em-razao/",
+    "https://noticias.sorocaba.sp.gov.br/defesa-civil-estadual-vistoria-areas-atingidas-pelas-chuvas-em-sorocaba-e-da-suporte-em-acoes-emergenciais-e-humanitarias/",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-contabiliza-acoes-de-rescaldo-e-mantem-monitoramento-de-chuvas-e-do-nivel-do-rio-sorocaba/"
+   ]
+  },
+  {
+   "nome": "Rua Maciel Baião x Av. Ipanema",
+   "bairro": "Jardim Celisa Maria",
+   "tipo": "alagamento",
+   "lat": -23.48426,
+   "lon": -47.47133,
+   "aprox": false,
+   "datas": [
+    "2026-09-12"
+   ],
+   "fontes": [
+    "https://noticias.sorocaba.sp.gov.br/nota-chuvas-em-sorocaba/"
+   ]
+  },
+  {
+   "nome": "Rua Padre Madureira",
+   "bairro": "Árvore Grande / Jardim Pelegrino",
+   "tipo": "alagamento",
+   "lat": -23.49298,
+   "lon": -47.44255,
+   "aprox": true,
+   "datas": [
+    "2025-02-18"
+   ],
+   "fontes": [
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2025/02/744013-chuva-forte-alaga-ruas-de-sorocaba-e-causa-transtornos-no-transito.html"
+   ]
+  },
+  {
+   "nome": "Rua Jorge Bacelli",
+   "bairro": "Jardim Mathilde / Vila Rica",
+   "tipo": "alagamento",
+   "lat": -23.48574,
+   "lon": -47.43378,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2023-01-31",
+    "2023-02-12",
+    "2025-02-18",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-decreta-situacao-de-emergencia-publica-em-razao/",
+    "https://noticias.sorocaba.sp.gov.br/defesa-civil-estadual-vistoria-areas-atingidas-pelas-chuvas-em-sorocaba-e-da-suporte-em-acoes-emergenciais-e-humanitarias/",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2025/02/744013-chuva-forte-alaga-ruas-de-sorocaba-e-causa-transtornos-no-transito.html",
+    "https://www.bnewssaopaulo.com.br/noticias/policia/sorocaba-decreta-emergencia-apos-inundacoes-em-bairros-da-cidade.html"
+   ]
+  },
+  {
+   "nome": "Estrada do Império",
+   "bairro": "Genebra",
+   "tipo": "alagamento",
+   "lat": -23.50502,
+   "lon": -47.33136,
+   "aprox": true,
+   "datas": [
+    "2024-11-06"
+   ],
+   "fontes": [
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2024/11/740272-chuvas-causam-alagamentos-em-sorocaba.html"
+   ]
+  },
+  {
+   "nome": "Córrego do Jardim Hungarês",
+   "bairro": "Jardim Hungarês",
+   "tipo": "transbordamento de rio",
+   "lat": -23.46963,
+   "lon": -47.46844,
+   "aprox": true,
+   "datas": [
+    "2026-03-07"
+   ],
+   "fontes": [
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/03/757933-chuva-forte-provoca-alagamentos-e-transtornos.html"
+   ]
+  },
+  {
+   "nome": "Córrego do Jardim Novo Horizonte",
+   "bairro": "Jardim Novo Horizonte",
+   "tipo": "transbordamento de rio",
+   "lat": -23.46222,
+   "lon": -47.49159,
+   "aprox": true,
+   "datas": [
+    "2017-02-04"
+   ],
+   "fontes": [
+    "https://istoedinheiro.com.br/sorocaba-chuva-deixa-dois-desaparecidos-e-populacao-fica-sem-agua"
+   ]
+  },
+  {
+   "nome": "Av. Antônio Carlos Comitre",
+   "bairro": "Campolim / Jardim Pitangui",
+   "tipo": "alagamento",
+   "lat": -23.51585,
+   "lon": -47.46567,
+   "aprox": true,
+   "datas": [
+    "2022",
+    "2026-03-07"
+   ],
+   "fontes": [
+    "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download",
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/03/757933-chuva-forte-provoca-alagamentos-e-transtornos.html"
+   ]
+  }
+ ],
+ "episodios": [
+  {
+   "data": "2017-02-01",
+   "titulo": "Chuva rompe adutora e deixa Sorocaba sem água",
+   "chuva_mm": 128,
+   "resumo": "Caíram 128 mm em uma noite. A principal adutora rompeu. A cidade ficou sem água por cerca de cinco dias.",
+   "pontos": [],
+   "fontes": [
+    "https://istoedinheiro.com.br/sorocaba-chuva-deixa-dois-desaparecidos-e-populacao-fica-sem-agua"
+   ]
+  },
+  {
+   "data": "2017-02-04",
+   "titulo": "Córrego arrasta homem e menino no Jardim Novo Horizonte",
+   "chuva_mm": null,
+   "resumo": "Córrego subiu após chuva forte. Um homem e um menino ficaram desaparecidos.",
+   "pontos": [
+    "Córrego do Jardim Novo Horizonte"
+   ],
+   "fontes": [
+    "https://istoedinheiro.com.br/sorocaba-chuva-deixa-dois-desaparecidos-e-populacao-fica-sem-agua"
+   ]
+  },
+  {
+   "data": "2020-10-07",
+   "titulo": "Recorde de calor em Iperó, região de Sorocaba",
+   "chuva_mm": null,
+   "resumo": "Estação A713 do INMET marcou 39,1 °C. É a maior máxima desde 2006. Recorde anterior: 37,1 °C em 2014.",
+   "pontos": [],
+   "fontes": [
+    "https://portal.inmet.gov.br/noticias/recorde-hist%C3%B3rico-de-temperatura-nos-estados-do-mato-grosso-do-sul-e-s%C3%A3o-paulo"
+   ]
+  },
+  {
+   "data": "2022-03-12",
+   "titulo": "Rio Sorocaba e córregos transbordam; 45 resgatados",
+   "chuva_mm": null,
+   "resumo": "Chuva de madrugada. Rio Sorocaba e córregos transbordaram. 45 pessoas resgatadas, sem feridos. Mineirão atingido.",
+   "pontos": [
+    "Rua Antônio Furtado Lopes (córrego)"
+   ],
+   "fontes": [
+    "https://sbtnews.sbt.com.br/noticia/brasil/200584-chuva-provoca-alagamento-e-estragos-em-sorocaba-sao-paulo"
+   ]
+  },
+  {
+   "data": "2023-01-31",
+   "titulo": "Sorocaba decreta emergência após alagamentos",
+   "chuva_mm": null,
+   "resumo": "Vazão de Itupararanga subiu para 23,89 m³/s. Alagamentos no Mineirão, Santa Lucinda e Guadalupe. Houve desalojados. Decreto 27.614/2023.",
+   "pontos": [
+    "Rua Antônio Furtado Lopes (córrego)",
+    "Rua Antônio de Andrade",
+    "Rua Abner Pedroso de Alcântara",
+    "Praça Lions (régua do Rio Sorocaba)"
+   ],
+   "fontes": [
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-decreta-situacao-de-emergencia-publica-em-razao/"
+   ]
+  },
+  {
+   "data": "2023-02-12",
+   "titulo": "100 mm em seis horas e rio 2,10 m acima do normal",
+   "chuva_mm": 100,
+   "resumo": "Fevereiro somou 375 mm até dia 13. Rio Sorocaba subiu 2,10 m. 19 bairros com alagamento. 10 famílias desalojadas e 1 desabrigada.",
+   "pontos": [
+    "Av. Dom Aguirre - Parque das Águas",
+    "Av. XV de Agosto x Rua Fernandópolis / Radial Norte",
+    "Av. Dom Aguirre x Rua João Gabriel Mendes",
+    "Rua Ingrácia Angrisani Gomes"
+   ],
+   "fontes": [
+    "https://noticias.sorocaba.sp.gov.br/defesa-civil-estadual-vistoria-areas-atingidas-pelas-chuvas-em-sorocaba-e-da-suporte-em-acoes-emergenciais-e-humanitarias/"
+   ]
+  },
+  {
+   "data": "2024-01-20",
+   "titulo": "192 mm em 24 h; estado de calamidade",
+   "chuva_mm": 192,
+   "resumo": "Maior volume de alagamentos desde 1981. Carro arrastado na Av. Juvenal de Campos. Uma mulher de 74 anos morreu.",
+   "pontos": [
+    "Av. Juvenal de Campos (perto da Av. Washington Luiz)"
+   ],
+   "fontes": [
+    "https://www.cnnbrasil.com.br/nacional/com-maior-volume-de-alagamentos-desde-1981-sorocaba-decreta-estado-de-calamidade/"
+   ]
+  },
+  {
+   "data": "2024-09-10",
+   "titulo": "Queimada e decreto de emergência climática",
+   "chuva_mm": null,
+   "resumo": "Incêndio atingiu terreno entre as zonas Norte e Oeste. Prefeitura decretou emergência climática em 11/09. Previsão: umidade abaixo de 25%.",
+   "pontos": [],
+   "fontes": [
+    "https://abcdoabc.com.br/prefeitura-de-sorocaba-decreta-emergencia-climatica-e-multa-para-quem-provocar-queimadas/"
+   ]
+  },
+  {
+   "data": "2024-11-06",
+   "titulo": "116 mm em 24 h; rio 1,3 m acima do normal",
+   "chuva_mm": 116,
+   "resumo": "Foram 152 mm em três dias. Rio inundou o Parque das Águas. Córrego transbordou no Mineirão. Casal ilhado.",
+   "pontos": [
+    "Av. Dom Aguirre - Parque das Águas",
+    "Av. XV de Agosto x Rua Fernandópolis / Radial Norte",
+    "Rua Antônio Furtado Lopes (córrego)",
+    "Estrada do Império"
+   ],
+   "fontes": [
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2024/11/740272-chuvas-causam-alagamentos-em-sorocaba.html"
+   ]
+  },
+  {
+   "data": "2024-11-08",
+   "titulo": "99 mm em 24 h; Dom Aguirre fechada nos dois sentidos",
+   "chuva_mm": 99,
+   "resumo": "Foram 235 mm em três dias e 342 mm no mês. Rio passou de 2,30 m segundo a Defesa Civil. Motorista resgatado de carro ilhado.",
+   "pontos": [
+    "Av. Dom Aguirre - Parque das Águas"
+   ],
+   "fontes": [
+    "https://sbtnews.sbt.com.br/noticia/brasil/motorista-fica-ilhado-e-e-resgatado-por-populacao-em-sorocaba-sp"
+   ]
+  },
+  {
+   "data": "2025-02-18",
+   "titulo": "Temporal de fim de tarde alaga centro e Jardim Matilde",
+   "chuva_mm": 41.33,
+   "resumo": "Cemaden mediu cerca de 41 mm em poucas horas. Rio subiu 1,20 m. Água entrou em casas. Escola alagada no Jardim São Marcos.",
+   "pontos": [
+    "Praça da Bandeira",
+    "Rua Padre Madureira",
+    "Av. Afonso Vergueiro x Rua Dr. Álvaro Soares",
+    "Av. XV de Agosto x Rua Fernandópolis / Radial Norte",
+    "Rua Jorge Bacelli"
+   ],
+   "fontes": [
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2025/02/744013-chuva-forte-alaga-ruas-de-sorocaba-e-causa-transtornos-no-transito.html"
+   ]
+  },
+  {
+   "data": "2026-01-15",
+   "titulo": "Córrego Itanguá transborda no Jardim Vera Cruz",
+   "chuva_mm": null,
+   "resumo": "Alagamentos pontuais. Itanguá transbordou na Rua Karim Jamal. Situação normalizada no mesmo dia.",
+   "pontos": [
+    "Rua Karim Jamal - travessia do Córrego Itanguá",
+    "Av. Dr. Armando Pannunzio",
+    "Rua Professor João Doretto"
+   ],
+   "fontes": [
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/01/756215-chuvas-causam-alagamentos-pontuais-e-transbordamento-de-corrego-em-sorocaba.html"
+   ]
+  },
+  {
+   "data": "2026-03-07",
+   "titulo": "Temporal alaga Afonso Vergueiro; pessoas ilhadas",
+   "chuva_mm": null,
+   "resumo": "Afonso Vergueiro alagou por inteiro. Córrego transbordou no Jardim Hungarês. Muro de colégio caiu. Parque das Águas fechado.",
+   "pontos": [
+    "Av. Afonso Vergueiro x Rua Dr. Álvaro Soares",
+    "Av. Dom Aguirre - Parque das Águas",
+    "Av. XV de Agosto x Rua Fernandópolis / Radial Norte",
+    "Córrego do Jardim Hungarês",
+    "Av. Antônio Carlos Comitre",
+    "Av. Itavuvu x Rua Vicente Paes Filho"
+   ],
+   "fontes": [
+    "https://www.jornalcruzeiro.com.br/sorocaba/noticias/2026/03/757933-chuva-forte-provoca-alagamentos-e-transtornos.html",
+    "https://www.band.com.br/band-multi/sorocaba-e-regiao/noticias/video-raio-atinge-casa-em-sorocaba-e-temporal-alaga-principais-avenidas-202603071902"
+   ]
+  },
+  {
+   "data": "2026-09-12",
+   "titulo": "71 mm na madrugada; rio quase 2 m acima do normal",
+   "chuva_mm": 71,
+   "resumo": "Foram 127 mm em três dias e 214 mm em setembro. Dom Aguirre e XV de Agosto interditadas. Sem desalojados.",
+   "pontos": [
+    "Av. Dom Aguirre - Parque das Águas",
+    "Praça Dom Tadeu Strunck (Av. Dom Aguirre)",
+    "Av. XV de Agosto x Rua Fernandópolis / Radial Norte",
+    "Av. Dom Aguirre x Rua Hélio Monzoni",
+    "Rua Maciel Baião x Av. Ipanema",
+    "Rua Adolpho Goldman x Rua Sylvio Fernandes de Oliveira"
+   ],
+   "fontes": [
+    "https://noticias.sorocaba.sp.gov.br/nota-chuvas-em-sorocaba/",
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-contabiliza-acoes-de-rescaldo-e-mantem-monitoramento-de-chuvas-e-do-nivel-do-rio-sorocaba/"
+   ]
+  },
+  {
+   "data": "2026-11-07",
+   "titulo": "Rio passa de 2 m; prefeitura decreta emergência",
+   "chuva_mm": 41,
+   "resumo": "Foram 41 mm no sábado e 96 mm em três dias. 19 quedas de árvores. Emergência por alagamentos no Mineirão, Guadalupe, Matilde e Vitória Régia III.",
+   "pontos": [
+    "Praça Lions (régua do Rio Sorocaba)",
+    "Av. Dom Aguirre - Ponte Francisco Dell'Osso",
+    "Praça Dom Tadeu Strunck (Av. Dom Aguirre)",
+    "Av. XV de Agosto x Rua Fernandópolis / Radial Norte",
+    "Av. Juvenal de Campos (perto da Av. Washington Luiz)",
+    "Rua Antônio Furtado Lopes (córrego)",
+    "Rua Antônio de Andrade"
+   ],
+   "fontes": [
+    "https://noticias.sorocaba.sp.gov.br/prefeitura-de-sorocaba-mantem-atendimentos-a-ocorrencias-causadas-pelas-fortes-chuvas-deste-sabado-7/",
+    "https://www.bnewssaopaulo.com.br/noticias/policia/sorocaba-decreta-emergencia-apos-inundacoes-em-bairros-da-cidade.html"
+   ]
+  }
+ ],
+ "areas_risco": [
+  {
+   "nome": "88 pontos críticos da Defesa Civil: 41 de alagamento, 21 de inundação e 26 de deslizamento (número repetido de 2015 a 2020)",
+   "tipo": "alagamento; inundação; deslizamento",
+   "fonte": "https://noticias.sorocaba.sp.gov.br/plano-verao-2020-2021-ja-esta-vigorando-em-sorocaba/"
+  },
+  {
+   "nome": "Plano Verão: alerta com 60 mm ou mais em 3 dias e previsão de chuva contínua; remoção preventiva em área de risco",
+   "tipo": "critério de alerta",
+   "fonte": "https://noticias.sorocaba.sp.gov.br/plano-verao-2020-2021-ja-esta-vigorando-em-sorocaba/"
+  },
+  {
+   "nome": "Relatório COMPDEC 039/2023: endereços de inundação e alagamento de 2022 e 2023 (anexo A do TCC)",
+   "tipo": "alagamento; inundação",
+   "fonte": "https://repositorio.unesp.br/bitstreams/74476d14-9cc9-470d-9371-db6dcee4baa3/download"
+  },
+  {
+   "nome": "Ocorrências concentradas nas margens do Rio Sorocaba e do Córrego Itanguá (zona oeste)",
+   "tipo": "inundação",
+   "fonte": "https://repositorio.unesp.br/items/24e5189f-3f0e-449d-8f41-08d0e026acc4"
+  },
+  {
+   "nome": "Jardim Abaeté, Parque Vitória Régia e Parque São Bento: risco médio (R2) e alto (R3) de inundação, mapeamento do Instituto Geológico 2015",
+   "tipo": "inundação",
+   "fonte": "https://www.ppgsga.ufscar.br/marcia-arruda.pdf"
+  },
+  {
+   "nome": "Carta de suscetibilidade a movimentos de massa e inundações de Sorocaba, IPT/CPRM 2014, escala 1:25.000 (citada no TCC)",
+   "tipo": "inundação; deslizamento",
+   "fonte": "https://repositorio.unesp.br/items/24e5189f-3f0e-449d-8f41-08d0e026acc4"
+  },
+  {
+   "nome": "Refúgio e Ouro Branco: bairros mais críticos para inundação na análise de risco climático (CRVA/ICLEI)",
+   "tipo": "inundação",
+   "fonte": "https://americadosul.iclei.org/wp-content/uploads/sites/19/2021/06/cartilha-crva-sorocaba-v4-1.pdf"
+  },
+  {
+   "nome": "93% da cidade com risco alto a extremo de incêndio (focos de 2017 e 2018)",
+   "tipo": "incêndio em vegetação",
+   "fonte": "https://revistas.usp.br/rdg/article/view/148048"
+  }
+ ],
+ "estacoes": [
+  {
+   "rede": "INMET",
+   "codigo": "A713",
+   "nome": "Iperó (antes chamada SOROCABA nos arquivos até 2018) - automática, desde 22/08/2006",
+   "lat": -23.4261111,
+   "lon": -47.5855556,
+   "fonte": "https://portal.inmet.gov.br/uploads/dadoshistoricos/2024.zip"
+  },
+  {
+   "rede": "Cemaden",
+   "codigo": "355220503A",
+   "nome": "Cerrado - pluviômetro",
+   "lat": -23.508,
+   "lon": -47.486,
+   "fonte": "https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/4407/24"
+  },
+  {
+   "rede": "Cemaden",
+   "codigo": "355220504A",
+   "nome": "Brigadeiro Tobias - pluviômetro",
+   "lat": -23.51027,
+   "lon": -47.36154,
+   "fonte": "https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/7085/24"
+  },
+  {
+   "rede": "Cemaden",
+   "codigo": "355220505A",
+   "nome": "Morros - pluviômetro",
+   "lat": -23.51807,
+   "lon": -47.41729,
+   "fonte": "https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/7086/24"
+  },
+  {
+   "rede": "Cemaden",
+   "codigo": "355220506A",
+   "nome": "Éden - pluviômetro",
+   "lat": -23.424,
+   "lon": -47.408,
+   "fonte": "https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/7087/24"
+  },
+  {
+   "rede": "Cemaden",
+   "codigo": "355220508A",
+   "nome": "Retiro São João - pluviômetro",
+   "lat": -23.4553,
+   "lon": -47.4428,
+   "fonte": "https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/7089/24"
+  },
+  {
+   "rede": "Cemaden",
+   "codigo": "355220509A",
+   "nome": "Aparecidinha - pluviômetro",
+   "lat": -23.42682,
+   "lon": -47.36295,
+   "fonte": "https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/7090/24"
+  },
+  {
+   "rede": "Cemaden",
+   "codigo": "355220510A",
+   "nome": "Jardim Saira - pluviômetro",
+   "lat": -23.478,
+   "lon": -47.422,
+   "fonte": "https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/7091/24"
+  },
+  {
+   "rede": "Cemaden",
+   "codigo": "355220514H",
+   "nome": "Rio Una - estação hidrológica",
+   "lat": -23.5015,
+   "lon": -47.4519,
+   "fonte": "https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/6597/24"
+  },
+  {
+   "rede": "ANA/DAEE",
+   "codigo": "02347028 / E4-128",
+   "nome": "Éden - pluviométrica DAEE, desde 1971 (23°25'S, 47°24'W)",
+   "lat": -23.4167,
+   "lon": -47.4,
+   "fonte": "https://rigeo.sgb.gov.br/bitstream/doc/23559/1/sp_sorocaba_relatorio_idf_2013.pdf"
+  },
+  {
+   "rede": "ANA/DAEE",
+   "codigo": "2347200 / 62510100",
+   "nome": "Rio Sorocaba, Médio Sorocaba - fluviométrica (local exato não confirmado)",
+   "lat": null,
+   "lon": null,
+   "fonte": "https://www.sigrh.sp.gov.br/public/uploads/events//CBH-SMT/10734/monitoramento-ugrhi-10---smt-cob-10-v4.pdf"
+  },
+  {
+   "rede": "Defesa Civil Sorocaba",
+   "codigo": "régua Praça Lions",
+   "nome": "Régua do Rio Sorocaba na Praça Lions - leitura em metros acima do normal; cota oficial de alerta não publicada",
+   "lat": -23.49766,
+   "lon": -47.45154,
+   "fonte": "https://noticias.sorocaba.sp.gov.br/nota-chuvas-em-sorocaba/"
+  }
+ ]
+}

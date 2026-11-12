@@ -67,8 +67,9 @@ export function simulate(hours, ante) {
     s1 += dq; const o1 = s1 / K; s1 -= o1;
     s2 += o1; const o2 = s2 / K; s2 -= o2;
     theta.push(th); q.push(dq);
-    // curva-chave simplificada: subida do nível (m) cresce com a vazão (mm/h na bacia) elevada a 0,6
-    stage.push(1.7 * Math.max(0, o2) ** 0.6);
+    // curva-chave: subida do nível (m) cresce com a vazão (mm/h na bacia) elevada a 0,6.
+    // Coeficiente calibrado com as reportagens: 100 a 120 mm em 72 h sobem o Rio Sorocaba cerca de 2 m na Praça Lions.
+    stage.push(1.0 * Math.max(0, o2) ** 0.6);
     // galerias dimensionadas para cerca de 35 mm/h; o excesso acumula nas baixadas
     pluvial.push(Math.max(0, hours[t] - 35) * 0.035);
   }
@@ -166,7 +167,7 @@ export function computeHAND(el, lines, west, south, dx, dy, elevAt) {
 }
 
 // Altura da calha cheia (m acima do nível normal) por peso do canal: rio, canal, córrego.
-export const bankfull = w => (w >= 1 ? 2.5 : w >= 0.5 ? 1.5 : 1.3);
+export const bankfull = w => (w >= 1 ? 2.0 : w >= 0.5 ? 1.1 : 0.9);
 
 // Classes por célula: 0 nada, 1 inundação, 2 atenção, 3 encosta, 4 incêndio, 5 calor.
 export const KIND = ["", "f", "a", "s", "x", "h"];
@@ -257,7 +258,7 @@ export function buildHistory(n = 360, seed = 7) {
       // acumulado em 72 h com cauda longa: a maioria dos episódios é moderada
       const p = { mode: "chuva", sys: SYSTEMS[(r() * 4) | 0], rain: Math.min(260, 10 - 55 * Math.log(1 - r())), ante: r() * 220 };
       const s = scenarioState(p), noise = () => (r() - 0.5) * 4;
-      rows.f.push([features("f", s), +(s.rise + noise() > 3)]);
+      rows.f.push([features("f", s), +(s.rise + noise() * 0.6 > 1.9)]);
       rows.s.push([features("s", s), +(s.slideIdx + s.sat * 0.4 + noise() * 0.35 > 1.45)]);
     } else {
       const p = { mode: "seco", dryDays: 1 - 9 * Math.log(1 - r()), rhMin: 15 + r() * 55, wind: r() * 35, anom: r() * 8, heatDays: (r() * 8) | 0 };

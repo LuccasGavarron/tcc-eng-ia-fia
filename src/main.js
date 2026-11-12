@@ -56,7 +56,7 @@ function forecast() {
   const hiAt = t => M.heatIndex(dry.T[t], dry.RH[t]);
   const seq = f => Array.from({ length: H }, (_, t) => f(t));
   const eta = {
-    f: S.mode === "chuva" ? M.firstCross(sim.rise, 3) : null,
+    f: S.mode === "chuva" ? M.firstCross(sim.rise, 2) : null, // Dom Aguirre fecha com 2 m acima do normal
     s: S.mode === "chuva" ? M.firstCross(seq(t => slideAt(t) + sat0 * 0.4), 1.45) : null,
     x: S.mode === "seco" ? M.firstCross(seq(t => M.fmaClass(fmaAt(t))), 3) : null,
     h: S.mode === "seco" ? M.firstCross(seq(hiAt), 32) : null,
@@ -243,8 +243,10 @@ function areaFacts(st) {
     : [[pc(n.x), sw("#E0612B") + "Incêndio"], [pc(n.h), sw("#B0368A") + "Calor extremo"], [cover ? "" : "", "&nbsp;"]];
   $("areaFacts").innerHTML = cells.map(([v, l]) => "<div><b>" + v + "</b><span>" + l + "</span></div>").join("");
   if (!grid) { $("riseTxt").textContent = "Aproxime o mapa de uma cidade para o Véspera ler o relevo."; return; }
+  const pts = (hist?.pontos || []).map(p => cellOf([p.lon, p.lat])).filter(i => i >= 0), hit = pts.filter(i => cl.f[i] === 1 || cl.f[i] === 2).length;
   $("riseTxt").textContent = S.mode === "chuva"
-    ? "Em " + hourLabel(S.t) + ", nível d'água " + fmt(st.rise, 1) + " m acima do normal" + (grid.hand ? ", comparado à altura de cada ponto acima do rio mais próximo." : ". Sem rios mapeados aqui: comparado às cotas mais baixas da tela.")
+    ? "Em " + hourLabel(S.t) + ", rio " + fmt(st.rise, 1) + " m acima do normal" + (grid.hand ? "." : ". Sem rios mapeados aqui: comparado às cotas mais baixas da tela.") +
+      (pts.length ? " " + hit + " de " + pts.length + " pontos com alagamento registrado ficam dentro da mancha." : "")
     : (!isNaN(coverAt(map.getCenter().lng, map.getCenter().lat, "veg")) ? "Em " + hourLabel(S.t) + ", perigo de incêndio " + M.FMA_CLASSES[st.fireClass].toLowerCase() + " e índice de calor " + fmt(F.hiAt(S.t), 0) + " °C."
       : "Cobertura do solo disponível só para Sorocaba.");
 }
@@ -331,7 +333,7 @@ function drawSensorsTab() {
     const rows = STATIONS.filter(st => st.c === c.id).map(st => {
       const s = F.sensors[st.id], fl = s.flag[t], lv = fl ? lastValid(s, t) : null;
       const extra = st.c === "lora" ? "Bateria " + s.battery + "%, sinal " + s.rssi + " dBm"
-        : st.c === "ana" ? "Alerta " + fmt(st.alert, 1) + " m, transborda " + fmt(st.over, 1) + " m" : "";
+        : st.c === "ana" ? "Atenção em " + fmt(st.alert, 1) + " m, transborda em " + fmt(st.over, 1) + " m acima do normal" : "";
       return '<li class="sensor' + (fl ? " is-bad" : "") + '"><div class="s-main"><b>' + esc(st.n) + "</b><span>" + sensorValue(st, t) + "</span></div>" +
         spark(st) + (fl ? '<p class="bad">Reprovada: ' + esc(fl) + (lv ? ". Modelo usa a leitura de " + lv.age + " h atrás." : ".") + "</p>" : "") +
         (extra ? '<p class="s-meta">' + extra + "</p>" : "") + "</li>";
@@ -361,10 +363,11 @@ function planItems() {
   if (S.mode === "chuva") {
     if (P.f >= 0.15 || P.s >= 0.15) add("now", "f", "Acompanhar radar e réguas em nowcasting a partir de " + hourLabel(Math.max(0, F.peakT - 6)) + ".", false);
     const R1 = STATIONS.find(s => s.id === "R1"), ga = gaugeCross(F.sensors.R1, R1, "alert"), go = gaugeCross(F.sensors.R1, R1, "over");
-    if (ga != null) add("r1", "f", "Prontidão: a régua do Rio Sorocaba no Centro passa a cota de alerta (" + fmt(R1.alert, 1) + " m) em " + hourLabel(ga) +
-      (go != null ? " e transborda em " + hourLabel(go) : "") + ".", false);
+    if (S.rain >= 60) add("pv", "f", "Plano Verão: " + S.rain + " mm previstos em 72 h passam do critério de alerta da Defesa Civil de Sorocaba (60 mm em 3 dias).", false);
+    if (ga != null) add("r1", "f", "Prontidão: a régua da Praça Lions passa de " + fmt(R1.alert, 1) + " m acima do normal em " + hourLabel(ga) +
+      (go != null ? " e chega a " + fmt(R1.over, 1) + " m, nível em que a Dom Aguirre alaga, em " + hourLabel(go) : "") + ".", false);
     if (P.f >= 0.15 && E.f != null) {
-      const named = histNames("alag").concat(histNames("transb")).slice(0, 3);
+      const named = [...new Set(histNames("").filter(n => !n.includes("Dom Aguirre") && !n.includes("Praça Lions")))].slice(0, 3);
       add("int", "f", "Interditar a Av. Dom Aguirre" + (named.length ? ", " + named.join(", ") : "") + " e travessias nas áreas em azul até " + hourLabel(Math.max(0, E.f - 2)) + ".", true);
       add("sms", "f", "Avisar moradores das áreas em azul e amarelo, com rota para terreno alto.", true);
     }
