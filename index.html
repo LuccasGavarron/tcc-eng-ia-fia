@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Véspera</title>
+<meta name="description" content="Previsão de enchentes, deslizamentos, incêndios e ondas de calor para a Defesa Civil.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231B2A31'/><path d='M5 22c5-6 9 2 14-4s6-5 8-4' fill='none' stroke='%237FC4F0' stroke-width='3' stroke-linecap='round'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Public+Sans:wght@400;500;600;700&display=swap">
-
 </head>
 <body>
 <div id="map" aria-label="Mapa por satélite com relevo"></div>
@@ -14,12 +15,18 @@
   <button type="button" id="v3" aria-pressed="true">3D</button>
   <button type="button" id="v2" aria-pressed="false">2D</button>
 </div>
-<div class="busy" id="busy" hidden>Lendo o relevo…</div>
-<div class="legend" aria-label="Legenda">
-  <span><i class="sw" style="background:var(--water)"></i>Inundação prevista</span>
-  <span><i class="sw" style="background:var(--ochre)"></i>Faixa de atenção</span>
-  <span><i class="sw" style="background:var(--brick)"></i>Encosta instável</span>
-  <span><i class="sw" style="background:#E6ECE8;border:2px solid var(--ink)"></i>Abrigo sugerido</span>
+<div class="spin" id="busy" role="status" aria-label="Lendo o relevo" hidden></div>
+<div class="legend" id="legend" aria-label="Legenda"></div>
+
+<div class="timeline" aria-label="Linha do tempo da previsão">
+  <button type="button" id="play" aria-label="Reproduzir as 72 horas">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path id="playIcon" d="M4 2l10 6-10 6z"/></svg>
+  </button>
+  <div class="tl-track">
+    <input type="range" id="hour" min="0" max="71" value="0" aria-label="Hora da previsão">
+    <div class="tl-days"><span>Dia 1</span><span>Dia 2</span><span>Dia 3</span></div>
+  </div>
+  <output id="hourOut">Dia 1, 00h</output>
 </div>
 
 <section class="panel" aria-label="Painel do Véspera">
@@ -32,15 +39,22 @@
       </g>
     </svg>
     <h1 class="brand">Véspera</h1>
-    <p class="tagline">Previsão de inundações e deslizamentos para agir antes da chuva chegar.</p>
+    <p class="tagline">Previsão de catástrofes para agir antes do desastre.</p>
     <div class="tabs" role="tablist">
-      <button type="button" role="tab" id="tCen" aria-selected="true" aria-controls="pCen">Cenário</button>
-      <button type="button" role="tab" id="tMet" aria-selected="false" aria-controls="pMet">Como funciona</button>
+      <button type="button" role="tab" id="t-cen" aria-selected="true" aria-controls="p-cen">Cenário</button>
+      <button type="button" role="tab" id="t-sen" aria-selected="false" aria-controls="p-sen">Sensores</button>
+      <button type="button" role="tab" id="t-pla" aria-selected="false" aria-controls="p-pla">Plano</button>
+      <button type="button" role="tab" id="t-met" aria-selected="false" aria-controls="p-met">Como funciona</button>
     </div>
   </header>
 
-  <!-- ===== ABA CENÁRIO ===== -->
-  <div class="scroll" id="pCen" role="tabpanel" aria-labelledby="tCen">
+  <!-- ===== CENÁRIO ===== -->
+  <div class="scroll" id="p-cen" role="tabpanel" aria-labelledby="t-cen">
+    <div class="field">
+      <div class="row"><h2 class="h">Riscos previstos</h2><span class="badge" id="level">Observação</span></div>
+      <ul class="hazards" id="hazards"></ul>
+    </div>
+
     <div class="field">
       <h2 class="h">Cidade</h2>
       <div class="chips" id="cities"></div>
@@ -52,124 +66,211 @@
     </div>
 
     <div class="field">
-      <h2 class="h">Sistema meteorológico previsto</h2>
-      <div class="systems" id="systems"></div>
+      <h2 class="h">Tipo de evento</h2>
+      <div class="seg" role="group" aria-label="Tipo de evento">
+        <button type="button" id="m-chuva" aria-pressed="true">Chuva forte</button>
+        <button type="button" id="m-seco" aria-pressed="false">Calor e seca</button>
+      </div>
     </div>
 
-    <div class="field">
-      <h2 class="h">Precipitação acumulada em 72 h</h2>
-      <div class="gauge">
-        <div class="tube" id="tube" role="slider" tabindex="0" aria-label="Precipitação acumulada em milímetros" aria-valuemin="0" aria-valuemax="250" aria-valuenow="120">
-          <div class="ticks" id="ticks"></div>
-          <div class="glass"><div class="fill" id="fill"></div></div>
-        </div>
-        <div class="readout">
-          <div><span class="mm" id="mm">120</span><span class="unit">mm</span></div>
-          <p id="liters">120 litros por metro quadrado</p>
-          <span class="badge" id="level">Alerta</span>
-          <div class="presets">
-            <button type="button" data-v="30">Chuva comum</button>
-            <button type="button" data-v="120">Temporal</button>
-            <button type="button" data-v="220">Evento extremo</button>
+    <!-- chuva -->
+    <div class="group" id="g-chuva">
+      <div class="field">
+        <h2 class="h">Sistema meteorológico previsto</h2>
+        <div class="systems" id="systems"></div>
+      </div>
+
+      <div class="field">
+        <h2 class="h">Precipitação acumulada em 72 h</h2>
+        <div class="gauge">
+          <div class="tube" id="tube" role="slider" tabindex="0" aria-label="Precipitação acumulada em milímetros" aria-valuemin="0" aria-valuemax="250" aria-valuenow="120">
+            <div class="ticks" id="ticks"></div>
+            <div class="glass"><div class="fill" id="fill"></div></div>
+          </div>
+          <div class="readout">
+            <div><span class="mm" id="mm">120</span><span class="unit">mm</span></div>
+            <p id="liters">120 litros por metro quadrado</p>
+            <div class="presets">
+              <button type="button" data-v="30">Chuva comum</button>
+              <button type="button" data-v="120">Temporal</button>
+              <button type="button" data-v="220">Evento extremo</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="field range">
-      <div class="row"><label class="h" for="ante">Chuva antecedente (7 dias)</label><output id="anteOut">80 mm</output></div>
-      <input type="range" id="ante" min="0" max="300" step="10" value="80">
-      <p class="sub" id="soil">Solo moderadamente úmido</p>
-    </div>
-
-    <div class="field">
-      <h2 class="h">Hietograma previsto</h2>
-      <svg class="hyeto" id="hyeto" viewBox="0 0 356 128" role="img" aria-label="Chuva prevista hora a hora nas próximas 72 horas"></svg>
-      <div class="facts">
-        <div><b id="fPeak">–</b><span>Pico (mm/h)</span></div>
-        <div><b id="fWhen">–</b><span>Hora do pico</span></div>
-        <div><b id="fDay">–</b><span>Maior dia (mm)</span></div>
+      <div class="field range">
+        <div class="row"><label class="h" for="ante">Chuva antecedente (5 dias)</label><output id="anteOut">80 mm</output></div>
+        <input type="range" id="ante" min="0" max="250" step="10" value="80">
+        <p class="sub" id="soil"></p>
       </div>
-      <div class="warn" id="inmet"></div>
+
+      <div class="field">
+        <h2 class="h">Hietograma previsto</h2>
+        <svg class="hyeto" id="hyeto" viewBox="0 0 356 128" role="img" aria-label="Chuva prevista hora a hora nas próximas 72 horas"></svg>
+        <div class="facts">
+          <div><b id="fPeak"></b><span>Pico (mm/h)</span></div>
+          <div><b id="fWhen"></b><span>Hora do pico</span></div>
+          <div><b id="fDay"></b><span>Maior dia (mm)</span></div>
+        </div>
+        <div class="warn" id="inmet"></div>
+      </div>
+    </div>
+
+    <!-- calor e seca -->
+    <div class="group" id="g-seco" hidden>
+      <div class="field range">
+        <div class="row"><label class="h" for="anom">Máxima acima da média</label><output id="anomOut"></output></div>
+        <input type="range" id="anom" min="0" max="10" step="0.5" value="6">
+      </div>
+      <div class="field range">
+        <div class="row"><label class="h" for="heatDays">Dias seguidos de calor</label><output id="heatDaysOut"></output></div>
+        <input type="range" id="heatDays" min="0" max="10" step="1" value="4">
+      </div>
+      <div class="field range">
+        <div class="row"><label class="h" for="rhMin">Umidade relativa mínima</label><output id="rhMinOut"></output></div>
+        <input type="range" id="rhMin" min="10" max="70" step="1" value="22">
+      </div>
+      <div class="field range">
+        <div class="row"><label class="h" for="dryDays">Dias sem chuva</label><output id="dryDaysOut"></output></div>
+        <input type="range" id="dryDays" min="0" max="60" step="1" value="18">
+      </div>
+      <div class="field range">
+        <div class="row"><label class="h" for="wind">Vento</label><output id="windOut"></output></div>
+        <input type="range" id="wind" min="0" max="50" step="1" value="18">
+      </div>
+      <div class="facts">
+        <div><b id="fFma"></b><span>FMA+</span></div>
+        <div><b id="fHi"></b><span>Índice de calor (°C)</span></div>
+        <div><b id="fTmax"></b><span>Máxima (°C)</span></div>
+      </div>
+      <div class="warn" id="inmetHeat"></div>
     </div>
 
     <div class="field">
       <h2 class="h">Área visível afetada</h2>
-      <div class="facts">
-        <div><b id="rF">–</b><span><i class="sw" style="background:var(--water)"></i>Inundação</span></div>
-        <div><b id="rA">–</b><span><i class="sw" style="background:var(--ochre)"></i>Atenção</span></div>
-        <div><b id="rS">–</b><span><i class="sw" style="background:var(--brick)"></i>Encostas</span></div>
-      </div>
+      <div class="facts" id="areaFacts"></div>
       <p class="sub" id="riseTxt"></p>
       <div class="layers">
-        <label><input type="checkbox" id="lF" checked> Mostrar inundação</label>
-        <label><input type="checkbox" id="lS" checked> Mostrar encostas instáveis</label>
-        <label><input type="checkbox" id="lH" checked> Mostrar abrigos sugeridos</label>
+        <label><input type="checkbox" id="lR" checked> Áreas de risco</label>
+        <label><input type="checkbox" id="lH" checked> Abrigos sugeridos</label>
+        <label><input type="checkbox" id="lS" checked> Sensores</label>
+        <label><input type="checkbox" id="lO" checked> Ocorrências registradas</label>
       </div>
     </div>
 
-    <div class="field">
-      <h2 class="h">Plano de resposta sugerido</h2>
-      <ol class="plan" id="plan"></ol>
-    </div>
-
-    <p class="note">Protótipo acadêmico. Relevo e imagens de satélite são reais (Mapbox); a chuva é um cenário que você define, e o risco é calculado por regras simplificadas, explicadas na aba Como funciona. Abrigos são escolas fora das manchas de risco, mostradas apenas como exemplo.</p>
+    <p class="note">Protótipo acadêmico. Relevo, satélite, rios e cobertura do solo são dados reais (Sentinel-2, Terrarium e OpenStreetMap). O evento é um cenário que você define; sensores e histórico de treino são simulados.</p>
   </div>
 
-  <!-- ===== ABA MÉTODO ===== -->
-  <div class="scroll method" id="pMet" role="tabpanel" aria-labelledby="tMet" hidden>
+  <!-- ===== SENSORES ===== -->
+  <div class="scroll" id="p-sen" role="tabpanel" aria-labelledby="t-sen" hidden>
     <div class="field">
-      <h2 class="h">Da nuvem ao alerta</h2>
-      <p>O Véspera encadeia três perguntas: quanta chuva vai cair e com que intensidade, quanto dessa água o solo ainda consegue absorver, e para onde o excedente vai no relevo da cidade.</p>
+      <div class="facts" id="senFacts"></div>
+    </div>
+    <div id="connectors" class="connectors"></div>
+    <p class="note">Rede piloto simulada para Sorocaba. Cada conector imita o formato e a cadência da fonte real. As falhas são de propósito, para mostrar o controle de qualidade: leitura reprovada não entra no modelo.</p>
+  </div>
+
+  <!-- ===== PLANO ===== -->
+  <div class="scroll" id="p-pla" role="tabpanel" aria-labelledby="t-pla" hidden>
+    <div class="field">
+      <h2 class="h">Plano de resposta priorizado</h2>
+      <ol class="plan" id="plan"></ol>
+    </div>
+    <div class="field">
+      <h2 class="h">Alerta à população</h2>
+      <div class="alertbox" id="alertPreview"></div>
+      <button type="button" class="primary" id="send" disabled>Enviar alerta</button>
+      <ul class="log" id="log"></ul>
+    </div>
+    <div class="field">
+      <h2 class="h">Análise da IA</h2>
+      <button type="button" class="secondary" id="ask">Pedir análise</button>
+      <div class="ai" id="ai" hidden></div>
+    </div>
+  </div>
+
+  <!-- ===== COMO FUNCIONA ===== -->
+  <div class="scroll method" id="p-met" role="tabpanel" aria-labelledby="t-met" hidden>
+    <div class="field">
+      <h2 class="h">Coletar, aprender, prever, recomendar</h2>
+      <p>O Véspera junta satélite, sensores da cidade e histórico de desastres. Um modelo físico calcula o que a água, o calor e a seca fazem no terreno. Um modelo estatístico, treinado com o histórico, transforma isso em probabilidade. O plano sai priorizado e só vira alerta depois da aprovação da Defesa Civil.</p>
     </div>
 
     <div class="field">
-      <h2 class="h">1. Previsão da chuva</h2>
-      <p>Num sistema real, a chuva viria de três fontes combinadas. Modelos numéricos de previsão do tempo (como GFS, ECMWF e WRF) cobrem os próximos dias. Imagens do satélite GOES mostram a temperatura do topo das nuvens: topos muito frios indicam nuvens convectivas profundas. O radar meteorológico mede a refletividade (em dBZ) e permite o nowcasting, a previsão de curtíssimo prazo, de 0 a 6 horas.</p>
-      <p>Neste protótipo, você escolhe o sistema meteorológico e o total de 72 horas, e o Véspera distribui a chuva hora a hora no hietograma, com a forma típica de cada sistema.</p>
+      <h2 class="h">1. Chuva</h2>
+      <p>Num sistema real, a chuva vem de modelos numéricos (GFS, ECMWF, WRF), do satélite GOES, que mede a temperatura do topo das nuvens, e do radar, que mede a refletividade em dBZ e permite o nowcasting de 0 a 6 horas. Aqui, você escolhe o sistema e o total de 72 horas, e o Véspera distribui a chuva hora a hora.</p>
+      <div class="formula">Refletividade: Z = 200 R<sup>1,6</sup> (Marshall-Palmer)</div>
     </div>
 
     <div class="field">
       <h2 class="h">2. Solo e escoamento</h2>
-      <p>A mesma chuva causa estragos diferentes conforme o solo já esteja encharcado. Por isso o Cemaden acompanha a chuva acumulada em 72 horas, na última semana e em 30 dias, além da umidade do solo. O Véspera estima a saturação a partir da chuva antecedente e calcula quanto da chuva vira escoamento superficial.</p>
-      <div class="formula">Escoamento = C × precipitação, com C entre 0,35 (solo seco) e 0,85 (saturado)</div>
+      <p>O escoamento usa o método Curve Number do NRCS (SCS-CN). O CN da malha urbana de Sorocaba é 82 e sobe ou desce conforme a umidade antecedente, de CN I (solo seco) a CN III (encharcado). Um balanço hídrico da camada de 0 a 30 cm acompanha a umidade do solo hora a hora.</p>
+      <div class="formula">Q = (P − 0,2 S)² ÷ (P + 0,8 S), com S = 25 400 ÷ CN − 254</div>
     </div>
 
     <div class="field">
-      <h2 class="h">3. Resposta do relevo</h2>
-      <p>O mapa amostra uma grade de 64 × 64 pontos de elevação real. Inundação: o nível de água sobe acima das cotas mais baixas da área visível (os fundos de vale, onde correm os rios), em função do escoamento e do pico de intensidade. Deslizamento: encostas com declividade acima de um limiar ficam instáveis, e esse limiar cai conforme cresce a chuva acumulada, já que solo saturado perde coesão.</p>
+      <h2 class="h">3. Rio e drenagem urbana</h2>
+      <p>O escoamento passa por dois reservatórios lineares em série (hidrograma de Nash), que atrasam e achatam a onda de cheia. Uma curva-chave converte a vazão em nível do rio. Quando a chuva passa de 35 mm/h, a capacidade típica das galerias, a água acumula nas baixadas.</p>
     </div>
 
     <div class="field">
-      <h2 class="h">Níveis de aviso do INMET para chuva</h2>
+      <h2 class="h">4. Onde a água chega</h2>
+      <p>O mapa lê uma grade de 96 × 96 pontos de elevação real e marca os rios do OpenStreetMap. Para cada ponto, o Véspera calcula o HAND, a altura acima da drenagem mais próxima, método do INPE (Rennó et al., 2008). Inunda o que fica abaixo do nível previsto do rio.</p>
+    </div>
+
+    <div class="field">
+      <h2 class="h">5. Encostas</h2>
+      <p>A chuva acumulada em 72 horas, somada à antecedente, forma um índice de deflagração inspirado nos limiares usados pelo Cemaden. Quanto maior o índice, menor a declividade que basta para a encosta ceder. Como a grade de 370 m suaviza o terreno, o limiar foi ajustado para essa escala: de 24% de declividade, caindo até 10% com solo saturado.</p>
+    </div>
+
+    <div class="field">
+      <h2 class="h">6. Incêndio e calor</h2>
+      <p>O perigo de incêndio usa a Fórmula de Monte Alegre Alterada (FMA+), índice brasileiro que soma o inverso da umidade das 13 h nos dias sem chuva e pondera pelo vento. O calor usa o índice de calor da NOAA e o critério de onda de calor do INMET. A vegetação e a área construída vêm do OpenStreetMap, em células de 200 m.</p>
+      <div class="formula">FMA+ = Σ (100 ÷ UR) × e<sup>0,04 v</sup></div>
+    </div>
+
+    <div class="field">
+      <h2 class="h">7. Aprendizado</h2>
+      <p id="mlTxt"></p>
+    </div>
+
+    <div class="field">
+      <h2 class="h">Avisos do INMET</h2>
       <table>
-        <thead><tr><th>Aviso</th><th>Intensidade</th><th>Acumulado diário</th></tr></thead>
+        <thead><tr><th>Aviso</th><th>Chuva</th><th>Onda de calor</th></tr></thead>
         <tbody>
-          <tr><td>Amarelo, perigo potencial</td><td>20 a 30 mm/h</td><td>até 50 mm</td></tr>
-          <tr><td>Laranja, perigo</td><td>30 a 60 mm/h</td><td>50 a 100 mm</td></tr>
-          <tr><td>Vermelho, grande perigo</td><td>acima de 60 mm/h</td><td>acima de 100 mm</td></tr>
+          <tr><td>Amarelo</td><td>20 a 30 mm/h ou até 50 mm/dia</td><td>5 °C acima da média por 2 a 3 dias</td></tr>
+          <tr><td>Laranja</td><td>30 a 60 mm/h ou 50 a 100 mm/dia</td><td>por 3 a 5 dias</td></tr>
+          <tr><td>Vermelho</td><td>acima de 60 mm/h ou de 100 mm/dia</td><td>por mais de 5 dias</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="field" id="histField" hidden>
+      <h2 class="h">Histórico de Sorocaba</h2>
+      <ul class="hist" id="hist"></ul>
     </div>
 
     <div class="field">
       <h2 class="h">Glossário</h2>
       <dl>
-        <dt>Precipitação acumulada</dt><dd>Total de chuva num período. 1 mm equivale a 1 litro de água por metro quadrado.</dd>
-        <dt>Intensidade</dt><dd>Chuva por hora (mm/h). Chuvas curtas e intensas causam alagamentos repentinos; chuvas longas encharcam o solo.</dd>
-        <dt>Hietograma</dt><dd>Gráfico da chuva ao longo do tempo, hora a hora.</dd>
-        <dt>Chuva antecedente</dt><dd>Chuva dos dias anteriores, que indica o quanto o solo já está saturado.</dd>
-        <dt>Coeficiente de escoamento (C)</dt><dd>Fração da chuva que escorre pela superfície em vez de infiltrar. Cresce com o solo saturado e com o asfalto.</dd>
-        <dt>Tempo de concentração</dt><dd>Tempo que a água leva do ponto mais distante da bacia até um ponto do rio. Bacias pequenas e urbanas reagem em minutos.</dd>
-        <dt>Frente fria</dt><dd>Massa de ar frio avançando sobre ar quente. Traz chuva organizada em faixa, com pico na passagem da frente.</dd>
-        <dt>ZCAS</dt><dd>Zona de Convergência do Atlântico Sul: faixa de nebulosidade que estaciona sobre o Sudeste no verão e causa chuva persistente por vários dias.</dd>
-        <dt>Convecção</dt><dd>Ar quente e úmido sobe rápido e forma nuvens de tempestade (cumulonimbus). Gera pancadas fortes e curtas, em geral à tarde.</dd>
-        <dt>Ciclone extratropical</dt><dd>Centro de baixa pressão que se forma ou se aprofunda perto da costa, com chuva volumosa e ventos fortes concentrados em poucas horas.</dd>
-        <dt>Nowcasting</dt><dd>Previsão de 0 a 6 horas feita principalmente com radar e satélite.</dd>
+        <dt>Precipitação acumulada</dt><dd>Total de chuva num período. 1 mm equivale a 1 litro por metro quadrado.</dd>
+        <dt>Hietograma</dt><dd>Gráfico da chuva hora a hora.</dd>
+        <dt>Abstração inicial (Ia)</dt><dd>Chuva retida antes de começar a escorrer: interceptação, depressões e infiltração inicial.</dd>
+        <dt>Tempo de concentração</dt><dd>Tempo que a água leva do ponto mais distante da bacia até o rio.</dd>
+        <dt>Cota de alerta</dt><dd>Nível da régua a partir do qual a Defesa Civil entra em prontidão. Acima da cota de transbordamento, o rio sai da calha.</dd>
+        <dt>HAND</dt><dd>Altura de um ponto acima do rio mais próximo pelo caminho da água.</dd>
+        <dt>Frente fria</dt><dd>Massa de ar frio avançando sobre ar quente. Chuva em faixa, com pico na passagem.</dd>
+        <dt>ZCAS</dt><dd>Zona de Convergência do Atlântico Sul: faixa de nuvens que estaciona sobre o Sudeste no verão e causa chuva por dias.</dd>
+        <dt>Convecção</dt><dd>Ar quente e úmido sobe rápido e forma cumulonimbus. Pancadas fortes e curtas, em geral à tarde.</dd>
+        <dt>Ciclone extratropical</dt><dd>Baixa pressão perto da costa, com chuva volumosa e ventos fortes em poucas horas.</dd>
+        <dt>AUC</dt><dd>Chance de o modelo dar nota maior a um caso com desastre do que a um sem. 0,5 é sorteio; 1 é perfeito.</dd>
+        <dt>Cell Broadcast</dt><dd>Mensagem enviada a todos os celulares de uma área pelas antenas, sem cadastro. É o canal do Defesa Civil Alerta.</dd>
       </dl>
     </div>
 
-    <p class="note">Simplificações deste protótipo: a chuva é igual em toda a área, não há modelo hidrológico de bacia (vazão, tempo de concentração real, drenagem urbana) e a declividade vem de uma grade de baixa resolução. São justamente esses os pontos que um produto real precisaria resolver.</p>
+    <p class="note">Limites do protótipo: a chuva é igual em toda a área, a curva-chave e os parâmetros não foram calibrados com medições, e o histórico de treino é simulado. Um produto real calibraria tudo com dados do Cemaden, da ANA e do S2iD.</p>
   </div>
 </section>
 

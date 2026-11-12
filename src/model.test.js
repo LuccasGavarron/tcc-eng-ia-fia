@@ -19,9 +19,10 @@ test("simulação: chuva maior e solo úmido sobem mais o rio", () => {
 test("HAND: drenagem é zero e cresce com a distância do rio", () => {
   const G = M.G, el = new Float32Array(G * G);
   for (let r = 0; r < G; r++) for (let c = 0; c < G; c++) el[r * G + c] = 500 + Math.abs(c - 32) * 2;
-  const hand = M.computeHAND(el, [[[32.5, 0], [32.5, 63.9]]], 0, 0, 1, 1);
+  const { hand, w } = M.computeHAND(el, [{ p: [[32.5, 0], [32.5, 63.9]], w: 0.3 }], 0, 0, 1, 1);
   assert.equal(hand[10 * G + 32], 0);
   assert.equal(hand[10 * G + 42], 20);
+  assert.equal(w[10 * G + 42], Math.fround(0.3));
   assert.equal(M.computeHAND(el, [], 0, 0, 1, 1), null);
 });
 

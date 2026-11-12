@@ -1,7 +1,7 @@
 // Modelo físico e estatístico do Véspera. Funções puras, sem DOM.
 // Testes: node --test
 
-export const G = 64;
+export const G = 96;
 export const H = 72; // horizonte da previsão, em horas
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const gauss = (t, m, s) => Math.exp(-0.5 * ((t - m) / s) ** 2);
@@ -86,7 +86,8 @@ export function slideIndex(hours, t, ante) {
   return (acc + 0.6 * ante) / 150;
 }
 // Declividade crítica (%) cai conforme o índice cresce: solo saturado perde coesão.
-export const slopeThreshold = idx => (idx < 0.7 ? Infinity : Math.max(16, 46 - 20 * (idx - 0.7)));
+// Calibrada para a grade de ~370 m, que suaviza a declividade real pela metade.
+export const slopeThreshold = idx => (idx < 0.7 ? Infinity : Math.max(10, 24 - 10 * (idx - 0.7)));
 
 /* ===================== INCÊNDIO E CALOR ===================== */
 
@@ -129,32 +130,43 @@ export function drySeries(anom, rhMin) {
 
 /* HAND (Height Above Nearest Drainage, Rennó et al. 2008, INPE): altura de cada célula
    acima da célula de drenagem mais próxima. Drenagem = células cortadas pelos rios.
-   Busca em largura a partir da drenagem. Sem rios na grade, devolve null. */
-export function computeHAND(el, lines, west, south, dx, dy) {
-  const drain = new Int32Array(G * G).fill(-1), q = [];
+   Busca em largura a partir da drenagem. Cada linha tem um peso: a cheia de um córrego
+   sobe menos que a do rio principal. Sem rios na grade, devolve null.
+   lines: [{ p: [[lon, lat], ...], w: peso }], rios primeiro.
+   elevAt(lon, lat): cota no próprio leito; sem ela, usa a cota do centro da célula. */
+export function computeHAND(el, lines, west, south, dx, dy, elevAt) {
+  const drain = new Int32Array(G * G).fill(-1), wt = new Float32Array(G * G), bed = new Float32Array(G * G).fill(Infinity), q = [];
+  let cur = 1;
   const mark = (x, y) => {
     const c = Math.floor((x - west) / dx), r = Math.floor((y - south) / dy), i = r * G + c;
-    if (c >= 0 && r >= 0 && c < G && r < G && drain[i] < 0 && !isNaN(el[i])) { drain[i] = i; q.push(i); }
+    if (c < 0 || r < 0 || c >= G || r >= G || isNaN(el[i])) return;
+    if (drain[i] < 0) { drain[i] = i; wt[i] = cur; q.push(i); }
+    if (wt[i] === cur) { const z = elevAt ? elevAt(x, y) : el[i]; if (z != null && z < bed[i]) bed[i] = z; }
   };
-  for (const p of lines)
+  for (const { p, w } of [...lines].sort((a, b) => b.w - a.w)) {
+    cur = w;
     for (let k = 1; k < p.length; k++) {
       const [a, b] = p[k - 1], [c, d] = p[k];
       const n = Math.ceil(Math.max(Math.abs(c - a) / dx, Math.abs(d - b) / dy) * 2) + 1;
       for (let s = 0; s <= n; s++) mark(a + ((c - a) * s) / n, b + ((d - b) * s) / n);
     }
+  }
   if (q.length < 3) return null;
   for (let h = 0; h < q.length; h++) {
     const i = q[h], r = (i / G) | 0, c = i % G;
     for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
       const rr = r + dr, cc = c + dc, j = rr * G + cc;
       if (rr < 0 || cc < 0 || rr >= G || cc >= G || drain[j] >= 0 || isNaN(el[j])) continue;
-      drain[j] = drain[i]; q.push(j);
+      drain[j] = drain[i]; wt[j] = wt[i]; q.push(j);
     }
   }
   const hand = new Float32Array(G * G).fill(NaN);
-  for (let i = 0; i < G * G; i++) if (drain[i] >= 0) hand[i] = Math.max(0, el[i] - el[drain[i]]);
-  return hand;
+  for (let i = 0; i < G * G; i++) if (drain[i] >= 0) hand[i] = Math.max(0, el[i] - Math.min(bed[drain[i]], el[drain[i]]));
+  return { hand, w: wt };
 }
+
+// Altura da calha cheia (m acima do nível normal) por peso do canal: rio, canal, córrego.
+export const bankfull = w => (w >= 1 ? 2.5 : w >= 0.5 ? 1.5 : 1.3);
 
 // Classes por célula: 0 nada, 1 inundação, 2 atenção, 3 encosta, 4 incêndio, 5 calor.
 export const KIND = ["", "f", "a", "s", "x", "h"];
@@ -165,9 +177,11 @@ export function classify(grid, s) {
     const e = grid.el[i]; if (isNaN(e)) continue; n.t++;
     let k = 0;
     if (s.mode === "chuva") {
-      const hv = grid.hand ? grid.hand[i] : e - grid.base;
-      if (s.rise > 0.05 && hv < s.rise) k = 1;
-      else if (s.rise > 1 && hv < s.rise + Math.max(2, s.rise * 0.35)) k = 2;
+      // lâmina acima das margens: o canal só extravasa quando a subida passa da calha cheia
+      const w = grid.hand ? grid.hand.w[i] : 1, hv = grid.hand ? grid.hand.hand[i] : e - grid.base;
+      const depth = s.rise * w - (grid.hand ? bankfull(w) : 0);
+      if (depth > 0 && hv < depth) k = 1;
+      else if (w >= 0.5 && s.rise * w > 1 && hv < depth + 1.5) k = 2; // faixa de atenção só em rios e canais
       else if (grid.slope[i] > s.slopeThr) k = 3;
     } else if (grid.veg && grid.built) {
       // incêndio: vegetação contínua com perigo FMA+ alto; calor: malha construída densa com índice de calor elevado
