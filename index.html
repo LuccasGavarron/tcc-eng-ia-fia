@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Véspera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Public+Sans:wght@400;500;600;700&display=swap">
+
+</head>
+<body>
+<div id="map" aria-label="Mapa por satélite com relevo"></div>
+<div class="viewtoggle" role="group" aria-label="Modo de visualização">
+  <button type="button" id="v3" aria-pressed="true">3D</button>
+  <button type="button" id="v2" aria-pressed="false">2D</button>
+</div>
+<div class="busy" id="busy" hidden>Lendo o relevo…</div>
+<div class="legend" aria-label="Legenda">
+  <span><i class="sw" style="background:var(--water)"></i>Inundação prevista</span>
+  <span><i class="sw" style="background:var(--ochre)"></i>Faixa de atenção</span>
+  <span><i class="sw" style="background:var(--brick)"></i>Encosta instável</span>
+  <span><i class="sw" style="background:#E6ECE8;border:2px solid var(--ink)"></i>Abrigo sugerido</span>
+</div>
+
+<section class="panel" aria-label="Painel do Véspera">
+  <header class="head">
+    <svg viewBox="0 0 400 160" preserveAspectRatio="none" aria-hidden="true">
+      <g fill="none" stroke="#E6ECE8" stroke-width="1">
+        <path d="M-10 130 C60 100 120 140 190 110 S320 70 410 100"/><path d="M-10 110 C70 80 120 120 200 90 S320 50 410 80"/>
+        <path d="M-10 90 C80 60 130 100 210 70 S330 30 410 60"/><path d="M-10 70 C90 40 140 80 220 50 S340 10 410 40"/>
+        <path d="M-10 50 C100 20 150 60 230 30 S350 -10 410 20"/><path d="M250 160 C270 135 300 132 320 145 S360 160 380 140"/>
+      </g>
+    </svg>
+    <h1 class="brand">Véspera</h1>
+    <p class="tagline">Previsão de inundações e deslizamentos para agir antes da chuva chegar.</p>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tCen" aria-selected="true" aria-controls="pCen">Cenário</button>
+      <button type="button" role="tab" id="tMet" aria-selected="false" aria-controls="pMet">Como funciona</button>
+    </div>
+  </header>
+
+  <!-- ===== ABA CENÁRIO ===== -->
+  <div class="scroll" id="pCen" role="tabpanel" aria-labelledby="tCen">
+    <div class="field">
+      <h2 class="h">Cidade</h2>
+      <div class="chips" id="cities"></div>
+      <div class="search">
+        <input id="q" type="search" placeholder="Buscar outra cidade" autocomplete="off" aria-label="Buscar cidade">
+        <ul id="sugg" hidden></ul>
+      </div>
+      <p class="context" id="context"></p>
+    </div>
+
+    <div class="field">
+      <h2 class="h">Sistema meteorológico previsto</h2>
+      <div class="systems" id="systems"></div>
+    </div>
+
+    <div class="field">
+      <h2 class="h">Precipitação acumulada em 72 h</h2>
+      <div class="gauge">
+        <div class="tube" id="tube" role="slider" tabindex="0" aria-label="Precipitação acumulada em milímetros" aria-valuemin="0" aria-valuemax="250" aria-valuenow="120">
+          <div class="ticks" id="ticks"></div>
+          <div class="glass"><div class="fill" id="fill"></div></div>
+        </div>
+        <div class="readout">
+          <div><span class="mm" id="mm">120</span><span class="unit">mm</span></div>
+          <p id="liters">120 litros por metro quadrado</p>
+          <span class="badge" id="level">Alerta</span>
+          <div class="presets">
+            <button type="button" data-v="30">Chuva comum</button>
+            <button type="button" data-v="120">Temporal</button>
+            <button type="button" data-v="220">Evento extremo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field range">
+      <div class="row"><label class="h" for="ante">Chuva antecedente (7 dias)</label><output id="anteOut">80 mm</output></div>
+      <input type="range" id="ante" min="0" max="300" step="10" value="80">
+      <p class="sub" id="soil">Solo moderadamente úmido</p>
+    </div>
+
+    <div class="field">
+      <h2 class="h">Hietograma previsto</h2>
+      <svg class="hyeto" id="hyeto" viewBox="0 0 356 128" role="img" aria-label="Chuva prevista hora a hora nas próximas 72 horas"></svg>
+      <div class="facts">
+        <div><b id="fPeak">–</b><span>Pico (mm/h)</span></div>
+        <div><b id="fWhen">–</b><span>Hora do pico</span></div>
+        <div><b id="fDay">–</b><span>Maior dia (mm)</span></div>
+      </div>
+      <div class="warn" id="inmet"></div>
+    </div>
+
+    <div class="field">
+      <h2 class="h">Área visível afetada</h2>
+      <div class="facts">
+        <div><b id="rF">–</b><span><i class="sw" style="background:var(--water)"></i>Inundação</span></div>
+        <div><b id="rA">–</b><span><i class="sw" style="background:var(--ochre)"></i>Atenção</span></div>
+        <div><b id="rS">–</b><span><i class="sw" style="background:var(--brick)"></i>Encostas</span></div>
+      </div>
+      <p class="sub" id="riseTxt"></p>
+      <div class="layers">
+        <label><input type="checkbox" id="lF" checked> Mostrar inundação</label>
+        <label><input type="checkbox" id="lS" checked> Mostrar encostas instáveis</label>
+        <label><input type="checkbox" id="lH" checked> Mostrar abrigos sugeridos</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <h2 class="h">Plano de resposta sugerido</h2>
+      <ol class="plan" id="plan"></ol>
+    </div>
+
+    <p class="note">Protótipo acadêmico. Relevo e imagens de satélite são reais (Mapbox); a chuva é um cenário que você define, e o risco é calculado por regras simplificadas, explicadas na aba Como funciona. Abrigos são escolas fora das manchas de risco, mostradas apenas como exemplo.</p>
+  </div>
+
+  <!-- ===== ABA MÉTODO ===== -->
+  <div class="scroll method" id="pMet" role="tabpanel" aria-labelledby="tMet" hidden>
+    <div class="field">
+      <h2 class="h">Da nuvem ao alerta</h2>
+      <p>O Véspera encadeia três perguntas: quanta chuva vai cair e com que intensidade, quanto dessa água o solo ainda consegue absorver, e para onde o excedente vai no relevo da cidade.</p>
+    </div>
+
+    <div class="field">
+      <h2 class="h">1. Previsão da chuva</h2>
+      <p>Num sistema real, a chuva viria de três fontes combinadas. Modelos numéricos de previsão do tempo (como GFS, ECMWF e WRF) cobrem os próximos dias. Imagens do satélite GOES mostram a temperatura do topo das nuvens: topos muito frios indicam nuvens convectivas profundas. O radar meteorológico mede a refletividade (em dBZ) e permite o nowcasting, a previsão de curtíssimo prazo, de 0 a 6 horas.</p>
+      <p>Neste protótipo, você escolhe o sistema meteorológico e o total de 72 horas, e o Véspera distribui a chuva hora a hora no hietograma, com a forma típica de cada sistema.</p>
+    </div>
+
+    <div class="field">
+      <h2 class="h">2. Solo e escoamento</h2>
+      <p>A mesma chuva causa estragos diferentes conforme o solo já esteja encharcado. Por isso o Cemaden acompanha a chuva acumulada em 72 horas, na última semana e em 30 dias, além da umidade do solo. O Véspera estima a saturação a partir da chuva antecedente e calcula quanto da chuva vira escoamento superficial.</p>
+      <div class="formula">Escoamento = C × precipitação, com C entre 0,35 (solo seco) e 0,85 (saturado)</div>
+    </div>
+
+    <div class="field">
+      <h2 class="h">3. Resposta do relevo</h2>
+      <p>O mapa amostra uma grade de 64 × 64 pontos de elevação real. Inundação: o nível de água sobe acima das cotas mais baixas da área visível (os fundos de vale, onde correm os rios), em função do escoamento e do pico de intensidade. Deslizamento: encostas com declividade acima de um limiar ficam instáveis, e esse limiar cai conforme cresce a chuva acumulada, já que solo saturado perde coesão.</p>
+    </div>
+
+    <div class="field">
+      <h2 class="h">Níveis de aviso do INMET para chuva</h2>
+      <table>
+        <thead><tr><th>Aviso</th><th>Intensidade</th><th>Acumulado diário</th></tr></thead>
+        <tbody>
+          <tr><td>Amarelo, perigo potencial</td><td>20 a 30 mm/h</td><td>até 50 mm</td></tr>
+          <tr><td>Laranja, perigo</td><td>30 a 60 mm/h</td><td>50 a 100 mm</td></tr>
+          <tr><td>Vermelho, grande perigo</td><td>acima de 60 mm/h</td><td>acima de 100 mm</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="field">
+      <h2 class="h">Glossário</h2>
+      <dl>
+        <dt>Precipitação acumulada</dt><dd>Total de chuva num período. 1 mm equivale a 1 litro de água por metro quadrado.</dd>
+        <dt>Intensidade</dt><dd>Chuva por hora (mm/h). Chuvas curtas e intensas causam alagamentos repentinos; chuvas longas encharcam o solo.</dd>
+        <dt>Hietograma</dt><dd>Gráfico da chuva ao longo do tempo, hora a hora.</dd>
+        <dt>Chuva antecedente</dt><dd>Chuva dos dias anteriores, que indica o quanto o solo já está saturado.</dd>
+        <dt>Coeficiente de escoamento (C)</dt><dd>Fração da chuva que escorre pela superfície em vez de infiltrar. Cresce com o solo saturado e com o asfalto.</dd>
+        <dt>Tempo de concentração</dt><dd>Tempo que a água leva do ponto mais distante da bacia até um ponto do rio. Bacias pequenas e urbanas reagem em minutos.</dd>
+        <dt>Frente fria</dt><dd>Massa de ar frio avançando sobre ar quente. Traz chuva organizada em faixa, com pico na passagem da frente.</dd>
+        <dt>ZCAS</dt><dd>Zona de Convergência do Atlântico Sul: faixa de nebulosidade que estaciona sobre o Sudeste no verão e causa chuva persistente por vários dias.</dd>
+        <dt>Convecção</dt><dd>Ar quente e úmido sobe rápido e forma nuvens de tempestade (cumulonimbus). Gera pancadas fortes e curtas, em geral à tarde.</dd>
+        <dt>Ciclone extratropical</dt><dd>Centro de baixa pressão que se forma ou se aprofunda perto da costa, com chuva volumosa e ventos fortes concentrados em poucas horas.</dd>
+        <dt>Nowcasting</dt><dd>Previsão de 0 a 6 horas feita principalmente com radar e satélite.</dd>
+      </dl>
+    </div>
+
+    <p class="note">Simplificações deste protótipo: a chuva é igual em toda a área, não há modelo hidrológico de bacia (vazão, tempo de concentração real, drenagem urbana) e a declividade vem de uma grade de baixa resolução. São justamente esses os pontos que um produto real precisaria resolver.</p>
+  </div>
+</section>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
