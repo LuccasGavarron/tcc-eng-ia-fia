@@ -520,7 +520,7 @@ function setHour(t, quiet) {
 /* ---------- controles ---------- */
 const tube = $("tube");
 (function () { let h = ""; for (let v = 0; v <= 250; v += 50) { const p = (v / 250) * 100; h += `<i style="bottom:${p}%"></i><span style="bottom:${p}%">${v}</span>`; } $("ticks").innerHTML = h; })();
-function setRain(v) { if (replay) { replay = null; $("evLabel").textContent = "Eventos reais"; $("evBtn").classList.remove("on"); T0 = new Date(); T0.setHours(0, 0, 0, 0); setData("hist", histGeo()); } S.rain = Math.max(0, Math.min(250, Math.round(v / 5) * 5)); update(true); }
+function setRain(v) { if (replay) { replay = null; $("evLabel").textContent = "Eventos"; $("evBtn").classList.remove("on"); T0 = new Date(); T0.setHours(0, 0, 0, 0); setData("hist", histGeo()); drawCal(); } S.rain = Math.max(0, Math.min(250, Math.round(v / 5) * 5)); update(true); }
 function fromPointer(e) { const r = tube.getBoundingClientRect(); setRain((1 - (e.clientY - r.top) / r.height) * 250); }
 tube.addEventListener("pointerdown", e => { tube.setPointerCapture(e.pointerId); fromPointer(e); });
 tube.addEventListener("pointermove", e => { if (tube.hasPointerCapture(e.pointerId)) fromPointer(e); });
@@ -591,41 +591,61 @@ TABS.forEach(k => ($("t-" + k).onclick = () => {
 }));
 $("collapse").onclick = () => setOpen(document.body.classList.contains("closed"));
 
-/* eventos reais: escolhe uma data do histórico, roda a chuva dela e destaca o que alagou */
-function eventsList() {
-  const eps = (hist?.episodios || []).filter(e => e.data).slice().sort((a, b) => b.data.localeCompare(a.data));
-  const fmtD = d => d.split("-").reverse().join("/");
-  $("evList").innerHTML = (replay ? '<li><button type="button" data-i="-1"><b>Cenário livre</b><span>Voltar ao cenário montado no painel</span><em></em></button></li>' : "") +
-    eps.map((e, i) => { const n = hist.pontos.filter(p => (p.datas || []).includes(e.data)).length;
-      return '<li><button type="button" data-i="' + i + '" aria-pressed="' + (replay === e) + '"><b>' + fmtD(e.data) + "</b><span>" + esc(e.titulo) + "</span><em>" +
-        (e.chuva_mm ? e.chuva_mm + " mm" : "") + "</em>" + (n ? "<small>" + n + (n > 1 ? " pontos registrados" : " ponto registrado") + "</small>" : "") + "</button></li>"; }).join("");
-  $("evList")._eps = eps;
+/* eventos reais (barra à direita): calendário com os dias que têm registro; clicar roda a chuva daquela data */
+const fmtD = d => d.split("-").reverse().join("/");
+const EPS = () => (hist?.episodios || []).filter(e => e.data).slice().sort((a, b) => b.data.localeCompare(a.data));
+const ptsOn = e => hist.pontos.filter(p => (p.datas || []).includes(e.data)).length;
+let calM = null; // primeiro dia do mês mostrado
+function drawCal() {
+  const eps = EPS(); if (!eps.length) return;
+  if (!calM) { calM = new Date(eps[0].data + "T00:00:00"); calM.setDate(1); }
+  const y = calM.getFullYear(), m = calM.getMonth(), key = d => y + "-" + String(m + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+  const mt = calM.toLocaleDateString("pt-BR", { month: "long" }); $("calTitle").textContent = mt[0].toUpperCase() + mt.slice(1) + " " + y;
+  const byDay = Object.fromEntries(eps.map(e => [e.data, e])), days = new Date(y, m + 1, 0).getDate(), lead = new Date(y, m, 1).getDay();
+  $("calGrid").innerHTML = ["D", "S", "T", "Q", "Q", "S", "S"].map(d => '<span class="dow">' + d + "</span>").join("") + "<span></span>".repeat(lead) +
+    Array.from({ length: days }, (_, i) => { const e = byDay[key(i + 1)], n = e ? ptsOn(e) : 0;
+      return e ? '<button type="button" class="ev' + (replay === e ? " sel" : "") + '" data-d="' + e.data + '" style="--dot:' + (n >= 6 ? "#C2473A" : n ? "#C9902A" : "#5FA3CF") + '" aria-label="' + fmtD(e.data) + ", " + esc(e.titulo) + '">' + (i + 1) + "</button>"
+        : "<button type=\"button\" disabled>" + (i + 1) + "</button>"; }).join("");
+  // pula direto entre meses com evento
+  const months = [...new Set(eps.map(e => e.data.slice(0, 7)))].sort(), cur = key(1).slice(0, 7);
+  $("calPrev").disabled = !months.some(x => x < cur); $("calNext").disabled = !months.some(x => x > cur);
+  let lastY = "";
+  $("evList").innerHTML = eps.map(e => { const n = ptsOn(e), yy = e.data.slice(0, 4), head = yy !== lastY ? '<li class="y">' + yy + "</li>" : ""; lastY = yy;
+    return head + '<li><button type="button" data-d="' + e.data + '" aria-pressed="' + (replay === e) + '"><b>' + fmtD(e.data).slice(0, 5) + "</b><span>" + esc(e.titulo) + "</span><em>" +
+      (e.chuva_mm ? Math.round(e.chuva_mm) + " mm" : "") + "</em>" + (n ? "<small>" + n + (n > 1 ? " pontos registrados" : " ponto registrado") + "</small>" : "") + "</button></li>"; }).join("");
+  $("evFree").hidden = !replay;
+}
+function stepMonth(dir) {
+  const months = [...new Set(EPS().map(e => e.data.slice(0, 7)))].sort(), cur = calM.getFullYear() + "-" + String(calM.getMonth() + 1).padStart(2, "0");
+  const next = dir > 0 ? months.find(x => x > cur) : months.filter(x => x < cur).pop();
+  if (next) { calM = new Date(next + "-01T00:00:00"); drawCal(); }
 }
 function setReplay(e) {
   replay = e;
   if (e) {
-    // a data do evento cai no dia 2 da linha do tempo; sem total medido, estima pelo número de pontos atingidos
+    // a data do evento cai no dia 2 da linha do tempo
     T0 = new Date(e.data + "T00:00:00"); T0.setDate(T0.getDate() - 1);
-    const n = hist.pontos.filter(p => (p.datas || []).includes(e.data)).length;
+    const n = ptsOn(e);
     // o total da reportagem é de um pluviômetro em 24 h; a cheia responde à bacia em vários dias, então usa o maior entre o medido e o estimado pelos pontos atingidos
     S.mode = "chuva"; S.rain = Math.min(250, Math.round(Math.max(e.chuva_mm || 0, 50 + n * 15) / 5) * 5); S.ante = Math.min(250, 40 + n * 20);
     $("ante").value = S.ante;
     S.sys = M.SYSTEMS[0]; // frente fria: pico no dia 2, o dia do evento
     document.querySelectorAll("#systems button").forEach((b, i) => b.setAttribute("aria-pressed", M.SYSTEMS[i] === S.sys));
     $("m-chuva").setAttribute("aria-pressed", true); $("m-seco").setAttribute("aria-pressed", false);
-    $("evLabel").textContent = e.data.split("-").reverse().join("/") + " · " + S.rain + " mm";
-  } else { T0 = new Date(); T0.setHours(0, 0, 0, 0); $("evLabel").textContent = "Eventos reais"; }
+    $("evLabel").textContent = fmtD(e.data);
+    calM = new Date(e.data + "T00:00:00"); calM.setDate(1);
+  } else { T0 = new Date(); T0.setHours(0, 0, 0, 0); $("evLabel").textContent = "Eventos"; }
   $("evBtn").classList.toggle("on", !!e);
   if (hist) setData("hist", histGeo());
-  update(true);
+  update(true); drawCal();
 }
-$("evBtn").onclick = () => { eventsList(); const open = $("evList").hidden; $("evList").hidden = !open; $("evBtn").setAttribute("aria-expanded", open); };
-$("evList").onclick = ev => {
-  const b = ev.target.closest("button[data-i]"); if (!b) return;
-  $("evList").hidden = true; $("evBtn").setAttribute("aria-expanded", false);
-  setReplay(+b.dataset.i < 0 ? null : $("evList")._eps[+b.dataset.i]);
-};
-document.addEventListener("click", e => { if (!e.target.closest(".tl-ev")) $("evList").hidden = true; });
+const evOpen = open => { $("evPanel").hidden = !open; document.body.classList.toggle("ev-open", open); $("evBtn").setAttribute("aria-expanded", open); if (open) drawCal(); };
+$("evBtn").onclick = () => evOpen($("evPanel").hidden);
+$("evClose").onclick = () => evOpen(false);
+$("evFree").onclick = () => setReplay(null);
+$("calPrev").onclick = () => stepMonth(-1); $("calNext").onclick = () => stepMonth(1);
+const pickDay = ev => { const b = ev.target.closest("button[data-d]"); if (b) setReplay(EPS().find(e => e.data === b.dataset.d)); };
+$("calGrid").onclick = pickDay; $("evList").onclick = pickDay;
 
 // passar o mouse no gráfico mostra a hora, a chuva e o rio daquele ponto
 $("tlTrack").addEventListener("pointermove", e => {

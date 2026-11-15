@@ -38,15 +38,12 @@
     <button type="button" id="vFoto" aria-pressed="true">Foto</button>
     <button type="button" id="vCien" aria-pressed="false">Científico</button>
   </div>
+  <button type="button" class="tb-btn" id="evBtn" aria-expanded="false" aria-controls="evPanel"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span id="evLabel">Eventos</span></button>
   <details class="legend" id="legendBox"><summary><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>Camadas</summary><div id="legend" role="group" aria-label="Filtro do mapa"></div></details>
 </div>
 <div class="spin" id="busy" role="status" aria-label="Lendo o relevo" hidden></div>
 
 <div class="timeline" aria-label="Linha do tempo da previsão">
-  <div class="tl-ev">
-    <button type="button" id="evBtn" aria-expanded="false" aria-controls="evList"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span id="evLabel">Eventos reais</span></button>
-    <ul id="evList" hidden></ul>
-  </div>
   <button type="button" id="play" aria-label="Reproduzir as 72 horas">
     <svg viewBox="0 0 16 16" aria-hidden="true"><path id="playIcon" d="M4 2l10 6-10 6z"/></svg>
   </button>
@@ -62,6 +59,16 @@
   </div>
   <button type="button" class="tl-speed" id="speed" aria-label="Velocidade da reprodução">1×</button>
 </div>
+
+<aside class="evpanel" id="evPanel" aria-label="Eventos reais" hidden>
+  <header><h2>Eventos reais</h2><button type="button" class="x" id="evClose" aria-label="Fechar">×</button></header>
+  <div class="cal">
+    <div class="cal-nav"><button type="button" id="calPrev" aria-label="Mês anterior">‹</button><b id="calTitle"></b><button type="button" id="calNext" aria-label="Próximo mês">›</button></div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+  <button type="button" class="free" id="evFree" hidden>Voltar ao cenário livre</button>
+  <ul class="evlist" id="evList"></ul>
+</aside>
 
 <section class="panel" id="panel" aria-label="Painel do Véspera">
   <header class="head">

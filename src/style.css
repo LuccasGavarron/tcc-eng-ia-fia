@@ -175,20 +175,63 @@ th{font:600 12.5px var(--body);color:var(--tx)}
 .spin.inline{position:static;border-color:var(--line-2);border-top-color:var(--tx)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ---------- linha do tempo ---------- */
-.timeline{position:absolute;left:calc(var(--rail) + var(--pw) + var(--gap));right:var(--gap);bottom:28px;z-index:2;display:flex;align-items:center;gap:14px;background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:left .22s ease}
-body.closed .timeline{left:calc(var(--rail) + var(--gap))}
-.timeline > #play{flex:none;width:36px;height:36px;border:0;border-radius:50%;background:var(--acc-2);cursor:pointer;display:grid;place-items:center}
-.timeline > #play svg{width:13px;height:13px;fill:#fff}
-.tl-now{flex:none;min-width:150px}
-.tl-now output{display:block;font:700 15px var(--display);font-variant-numeric:tabular-nums}
-.tl-vals{font-size:11.5px;color:var(--tx2);font-variant-numeric:tabular-nums;display:flex;gap:10px;white-space:nowrap}
-.tl-vals b{color:var(--tx);font-weight:600}
-.tl-track{position:relative;flex:1;min-width:0;height:66px}
-#tlChart{position:absolute;left:0;right:0;top:0;width:100%;height:50px}
-.tl-track input{position:absolute;left:0;right:0;top:0;height:50px;width:100%;margin:0;opacity:0;cursor:ew-resize}
-.tl-days{position:absolute;left:0;right:0;bottom:0;height:14px;font:600 10.5px var(--body);color:var(--tx3)}
+/* ---------- linha do tempo: HUD no estilo do Mac OS X antigo ---------- */
+.timeline{position:absolute;left:calc(var(--rail) + var(--pw) + 16px);right:16px;bottom:26px;z-index:2;display:flex;align-items:center;gap:14px;
+  padding:10px 14px 10px 10px;border-radius:24px;border:1px solid #3B424B;
+  background:linear-gradient(180deg,#2B3139 0%,#1B1F25 52%,#15181D 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 10px 30px rgba(0,0,0,.55);transition:left .22s ease,right .22s ease}
+body.closed .timeline{left:calc(var(--rail) + 16px)}
+body.ev-open .timeline{right:calc(340px + 16px)}
+/* botão de play gel, azul aqua com brilho no topo */
+.timeline > #play{position:relative;flex:none;width:46px;height:46px;border-radius:50%;border:1px solid #0A3F91;cursor:pointer;display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 120%,#7CC3FF 0%,#2F86E8 45%,#1457C2 100%);box-shadow:0 2px 6px rgba(0,0,0,.5),inset 0 -2px 6px rgba(255,255,255,.25)}
+.timeline > #play::before{content:"";position:absolute;left:7px;right:7px;top:3px;height:45%;border-radius:50% 50% 45% 45%;background:linear-gradient(rgba(255,255,255,.75),rgba(255,255,255,.08))}
+.timeline > #play svg{position:relative;width:15px;height:15px;fill:#fff;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
+/* visor de LCD, como o do iTunes */
+.tl-now{flex:none;min-width:178px;padding:6px 14px 7px;border-radius:12px;color:#1E2A1E;
+  background:linear-gradient(180deg,#EEF2E4 0%,#D6DEC6 100%);box-shadow:inset 0 1px 3px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.1)}
+.tl-now output{display:block;font:700 15px var(--display);font-variant-numeric:tabular-nums;text-align:center;letter-spacing:.01em}
+.tl-vals{font-size:11.5px;color:#46553F;font-variant-numeric:tabular-nums;display:flex;gap:10px;justify-content:center;white-space:nowrap}
+.tl-vals b{color:#1E2A1E;font-weight:700}
+/* trilho em cápsula afundada */
+.tl-track{position:relative;flex:1;min-width:0;height:66px;border-radius:14px;background:#0B0E11;box-shadow:inset 0 2px 5px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.08);padding:0 10px}
+#tlChart{position:absolute;left:10px;right:10px;top:6px;width:calc(100% - 20px);height:44px}
+.tl-track input{position:absolute;left:10px;right:10px;top:6px;height:44px;width:calc(100% - 20px);margin:0;opacity:0;cursor:ew-resize}
+.tl-days{position:absolute;left:10px;right:10px;bottom:3px;height:14px;font:600 10.5px var(--body);color:#7D8B98}
 .tl-days span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.tl-tip{position:absolute;bottom:calc(100% + 10px);transform:translateX(-50%);background:linear-gradient(#EEF2E4,#D6DEC6);color:#1E2A1E;border-radius:10px;padding:5px 10px;font-size:11.5px;white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+/* botão de velocidade em pílula de grafite */
+.tl-speed{flex:none;font:700 12px var(--display);color:#2A2F35;width:44px;height:28px;border-radius:999px;cursor:pointer;border:1px solid #6F7780;
+  background:linear-gradient(180deg,#FBFBFB 0%,#E2E4E7 50%,#CDD0D4 51%,#E7E9EC 100%);box-shadow:0 1px 3px rgba(0,0,0,.45)}
+
+/* ---------- barra de eventos à direita ---------- */
+.tb-btn{display:flex;gap:7px;align-items:center;font:600 13px var(--body);color:var(--tx);background:var(--s1);border:1px solid var(--line);border-radius:5px;padding:6px 11px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.tb-btn svg{width:16px;height:16px;fill:none;stroke:var(--tx2);stroke-width:1.7;stroke-linecap:round}
+.tb-btn.on{border-color:var(--acc)}
+.evpanel{position:absolute;top:0;right:0;bottom:0;width:340px;z-index:4;background:var(--s1);border-left:1px solid var(--line);display:flex;flex-direction:column;box-shadow:-10px 0 30px rgba(0,0,0,.35)}
+body.ev-open .toolbar{right:352px}
+.evpanel header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.evpanel h2{margin:0;font:700 15px var(--display)}
+.evpanel .x{border:0;background:none;color:var(--tx2);font-size:22px;cursor:pointer;line-height:1}
+.cal{padding:14px 16px 8px}
+.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cal-nav b{font:600 14px var(--body)}
+.cal-nav button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--s2);color:var(--tx);cursor:pointer;font-size:16px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-grid .dow{font-size:11px;color:var(--tx3);padding-bottom:2px}
+.cal-grid button{position:relative;aspect-ratio:1;border-radius:50%;border:0;background:none;color:var(--tx3);font:500 12.5px var(--body);font-variant-numeric:tabular-nums}
+.cal-grid button.ev{color:#fff;cursor:pointer;background:var(--s3);font-weight:700}
+.cal-grid button.ev::after{content:"";position:absolute;left:50%;bottom:4px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--dot,#C9902A)}
+.cal-grid button.sel{background:var(--acc-2);color:#fff}
+.free{margin:4px 16px 8px;font:600 13px var(--body);color:var(--tx);background:var(--s2);border:1px solid var(--line-2);border-radius:999px;padding:8px;cursor:pointer}
+.evlist{list-style:none;margin:0;padding:6px 10px 16px;overflow:auto;flex:1;border-top:1px solid var(--line);scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.evlist li.y{padding:10px 6px 4px;font:600 12px var(--body);color:var(--tx3)}
+.evlist button{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:52px 1fr auto;gap:2px 10px;padding:9px 8px;border-radius:10px;cursor:pointer;font-size:12.5px}
+.evlist button:focus-visible,.evlist button[aria-pressed="true"]{background:var(--s3)}
+.evlist b{font:700 12.5px var(--body);font-variant-numeric:tabular-nums}
+.evlist span{color:var(--tx)}
+.evlist em{font-style:normal;color:var(--tx2);font-variant-numeric:tabular-nums}
+.evlist small{grid-column:2/-1;color:var(--tx3)}
 
 /* ---------- popups ---------- */
 .pop{position:absolute;z-index:3;transform:translate(-50%,calc(-100% - 14px));max-width:280px;background:var(--s2);border:1px solid var(--line-2);border-radius:5px;padding:10px 28px 10px 12px;font:13.5px var(--body);color:var(--tx);box-shadow:0 8px 24px rgba(0,0,0,.5)}
@@ -200,6 +243,7 @@ body.closed .timeline{left:calc(var(--rail) + var(--gap))}
 
 @media (max-width:760px){
   :root{--pw:calc(100vw - var(--rail))}
+  .evpanel{width:100vw}
   body.closed .timeline,.timeline{left:calc(var(--rail) + 8px);right:8px;bottom:22px}
   .tl-now{width:96px}
   .toolbar{flex-wrap:wrap;justify-content:flex-end;max-width:70vw}
@@ -237,20 +281,3 @@ body.closed .find{left:calc(var(--rail) + var(--gap))}
 .find li small{font-size:11.5px;color:var(--tx3)}
 @media (max-width:760px){.find{width:calc(100vw - var(--rail) - 24px);top:58px}}
 
-/* eventos reais e interação da linha do tempo */
-.tl-ev{position:relative;flex:none}
-.tl-ev > button{display:flex;align-items:center;gap:7px;font:600 12.5px var(--body);color:var(--tx);background:var(--s2);border:1px solid var(--line);border-radius:5px;padding:7px 10px;cursor:pointer;max-width:190px}
-.tl-ev > button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tl-ev > button svg{width:16px;height:16px;flex:none;fill:none;stroke:var(--tx2);stroke-width:1.7;stroke-linecap:round}
-.tl-ev > button.on{border-color:var(--acc);background:var(--s3)}
-.tl-ev ul{position:absolute;bottom:calc(100% + 10px);left:0;width:360px;max-height:380px;overflow:auto;list-style:none;margin:0;padding:4px;background:var(--s1);border:1px solid var(--line-2);border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.55)}
-.tl-ev li button{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:78px 1fr auto;gap:2px 10px;padding:8px 9px;border-radius:4px;cursor:pointer;font-size:12.5px}
-.tl-ev li button:focus-visible,.tl-ev li button[aria-pressed="true"]{background:var(--s3)}
-.tl-ev li b{font:600 12.5px var(--body);font-variant-numeric:tabular-nums}
-.tl-ev li span{color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tl-ev li em{font-style:normal;color:var(--tx2);font-variant-numeric:tabular-nums}
-.tl-ev li small{grid-column:2/-1;color:var(--tx3)}
-.tl-ev li.sep{padding:6px 9px 2px;color:var(--tx3);font-size:11.5px}
-.tl-tip{position:absolute;bottom:calc(100% + 8px);transform:translateX(-50%);background:var(--s2);border:1px solid var(--line-2);border-radius:4px;padding:5px 8px;font-size:11.5px;white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums;color:var(--tx2)}
-.tl-tip b{color:var(--tx);font-weight:600}
-.tl-speed{flex:none;font:700 12px var(--display);color:var(--tx2);background:var(--s2);border:1px solid var(--line);border-radius:5px;width:38px;height:30px;cursor:pointer}

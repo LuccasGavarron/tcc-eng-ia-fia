@@ -144,9 +144,12 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     },
     rios(ds, fc) {
       // ponytail: linha na altura do relevo (+4 m) em vez de presa à malha 3D; polyline no chão é a camada mais cara do Cesium
+      const col = C("#7FC4F0").withAlpha(0.9);
       for (const f of fc.features) if (f.properties.w !== "s" || f.properties.n) {
-        const col = C("#7FC4F0").withAlpha(0.9);
-        ds.entities.add({ polyline: { positions: f.geometry.coordinates.map(p => pt(p, 4)), arcType: Cesium.ArcType.NONE,
+        // só os trechos dentro do município; fora dele a linha ficaria solta no preto
+        const runs = [[]];
+        for (const p of f.geometry.coordinates) { if (!clipOn || inside(p[0], p[1])) runs[runs.length - 1].push(p); else if (runs[runs.length - 1].length) runs.push([]); }
+        for (const r of runs) if (r.length > 1) ds.entities.add({ polyline: { positions: r.map(p => pt(p, 4)), arcType: Cesium.ArcType.NONE,
           width: f.properties.w === "r" ? 3.5 : f.properties.w === "c" ? 2 : 1.4, material: col, depthFailMaterial: col.withAlpha(0.45) } });
       }
     },
@@ -297,6 +300,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   }
   function focusCity(on) {
     borda.show = on; plano.show = on; clipOn = on;
+    if (DRAWN.rios) setData("rios", DRAWN.rios);
     const c = on ? clip() : undefined;
     if (tiles) tiles.clippingPolygons = c; else sc.globe.clippingPolygons = c;
     if (osm) osm.clippingPolygons = on ? clip() : undefined;
