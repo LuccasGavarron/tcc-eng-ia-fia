@@ -212,7 +212,7 @@ async function sample() {
 function render() {
   const st = hourState(S.t);
   cl = M.classify(grid, st);
-  if (!timer || S.t % 2 === 0 || S.t === H - 1) setData("risk", grid ? riskShapes() : null); // no play, a mancha muda devagar: refaz a cada 2 h
+  if (!timer || S.t % 2 === 0 || S.t === H - 1) { setData("risk", grid ? riskShapes() : null); if (focusK) spot(false); } // no play, a mancha muda devagar: refaz a cada 2 h
   drawSensorsOnMap(); drawShelters(); areaFacts(st); drawLegend();
 }
 
@@ -280,10 +280,30 @@ function areaFacts(st) {
   const n = cl.n, t = n.t || 1, pc = v => (grid ? fmt((100 * v) / t, 1) + "%" : "");
   const sw = c => '<i class="sw" style="background:' + c + '"></i>';
   const cells = S.mode === "chuva"
-    ? [[pc(n.f), sw("var(--water)") + "Inundação"], [pc(n.s), sw("var(--brick)") + "Encostas"], [histHit(), "Ocorrências na mancha"]]
-    : [[pc(n.x), sw("#E0612B") + "Incêndio"], [pc(n.h), sw("#B0368A") + "Calor extremo"], [cover ? "" : "", "&nbsp;"]];
-  $("areaFacts").innerHTML = cells.map(([v, l]) => "<div><b>" + v + "</b><span>" + l + "</span></div>").join("");
+    ? [[pc(n.f), sw("var(--water)") + "Inundação", "f"], [pc(n.s), sw("var(--brick)") + "Encostas", "s"], [histHit(), "Ocorrências na mancha", "hist"]]
+    : [[pc(n.x), sw("#E0612B") + "Incêndio", "x"], [pc(n.h), sw("#B0368A") + "Calor extremo", "h"], ["", "&nbsp;"]];
+  $("areaFacts").innerHTML = cells.map(([v, l, k]) => k ? '<button type="button" data-k="' + k + '"' + (k !== "hist" && !n[k] ? " disabled" : "") + ' aria-pressed="' + (focusK === k) + '"><b>' + v + "</b><span>" + l + "</span></button>"
+    : "<div><b>" + v + "</b><span>" + l + "</span></div>").join("");
 }
+// clicar num número da área afetada destaca aqueles lugares no mapa; clicar de novo desliga
+let focusK = null;
+function spotItems(k) {
+  if (k === "hist") return (DATA.hist?.features || []).map(f => ({ ll: f.geometry.coordinates, r: 300, pop: () => POPS.hist(f.properties) }));
+  const ms = m => m * 111320, out = [];
+  for (const f of DATA.risk?.features || []) if (f.properties.k === k && !f.properties.b)
+    for (const poly of f.geometry.coordinates) {
+      const r0 = poly[0], n = r0.length, cx = r0.reduce((a, p) => a + p[0], 0) / n, cy = r0.reduce((a, p) => a + p[1], 0) / n;
+      const r = Math.max(200, ...r0.map(p => Math.hypot(ms(p[0] - cx) * Math.cos((cy * Math.PI) / 180), ms(p[1] - cy))));
+      if (insideCity(cx, cy)) out.push({ ll: [cx, cy], r, pop: () => POPS.risk(f.properties) });
+    }
+  return out.sort((a, b) => b.r - a.r).slice(0, 12); // ponytail: as 12 maiores manchas; mais que isso vira confete
+}
+const SPOT = { f: RISK_ICON.f, s: RISK_ICON.s, x: RISK_ICON.x, h: RISK_ICON.h, hist: ["alerta", "#C2473A"] };
+function spot(fly) { if (globe) globe.spotlight(focusK && spotItems(focusK), ...(SPOT[focusK] || []), fly); }
+$("areaFacts").onclick = e => {
+  const b = e.target.closest("button[data-k]"); if (!b) return;
+  focusK = focusK === b.dataset.k ? null : b.dataset.k; spot(true); areaFacts(hourState(S.t));
+};
 
 // a legenda é o filtro: clicar num item liga ou desliga aquela camada do mapa
 const OFF = new Set(["predios"]); // prédios 3D começam desligados: são a camada mais pesada

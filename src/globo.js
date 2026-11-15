@@ -5,6 +5,8 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 import { icon, SENSOR_ICON, RISK_ICON } from "./icones.js";
 
 window.CESIUM_BASE_URL = "/cesium/";
+// o Google serve por HTTP/2: 18 pedidos simultâneos (padrão) deixava a malha chegando aos poucos
+Cesium.RequestScheduler.maximumRequestsPerServer = 48;
 const C = Cesium.Color.fromCssColorString;
 const rad = Cesium.Math.toRadians;
 const RISK = { f: ["#2F7BFF", 0.5], a: ["#F0B43C", 0.3], s: ["#E0503F", 0.32], x: ["#E0612B", 0.5], h: ["#C04A9A", 0.42] };
@@ -51,7 +53,9 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   let tiles = null;
   if (token) {
     try {
-      tiles = await Cesium.createGooglePhotorealistic3DTileset({ maximumScreenSpaceError: 32, cacheBytes: 1536 * 1024 * 1024, maximumCacheOverflowBytes: 1024 * 1024 * 1024 });
+      tiles = await Cesium.createGooglePhotorealistic3DTileset({ maximumScreenSpaceError: 20,
+        // pede blocos também durante o zoom e sem priorizar o centro: a borda da tela não fica borrada esperando
+        cullRequestsWhileMoving: false, foveatedScreenSpaceError: false, progressiveResolutionHeightFraction: 0, cacheBytes: 1536 * 1024 * 1024, maximumCacheOverflowBytes: 1024 * 1024 * 1024 });
       tiles.clippingPolygons = clip();
       sc.primitives.add(tiles);
       sc.globe.show = false;
@@ -120,11 +124,13 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
     const e = floor ?? elevAt(ll[0], ll[1]) ?? 0;
     const base = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e), top = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e + STALK);
     ds.entities.add({ _pop: pop, polyline: { positions: [base, top], width: 2, arcType: Cesium.ArcType.NONE, material: Cesium.Color.WHITE.withAlpha(0.8) } });
-    return ds.entities.add({ position: top, _pop: pop,
+    return ds.entities.add({ position: top, _pop: pop, _at: { ll, r: 260, top },
       billboard: { image: img, width: size, height: size, verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY,
         scaleByDistance: new Cesium.NearFarScalar(1500, 1.1, 40000, 0.4) },
       label: text ? { ...label(text, 12, 4), distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500) } : undefined });
   }
+  // raio da mancha em metros, para o zoom enquadrar a área inteira
+  const extent = (r, cx, cy) => Math.max(200, ...r.map(p => Math.hypot((p[0] - cx) * 111320 * Math.cos(rad(cy)), (p[1] - cy) * 110540)));
   const draw = {
     // faixas empilhadas: cada faixa mais funda soma cor sobre a anterior, o miolo fica mais escuro
     risk(ds, fc) {
@@ -144,7 +150,7 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
           if (!f.properties.b) { const edge = C(col).withAlpha(0.95);
             ds.entities.add({ _pop: () => popup("risk", f.properties), _risk: true, polyline: { positions: P(poly[0].concat([poly[0][0]])), width: 2.5, arcType: Cesium.ArcType.NONE,
               material: edge, depthFailMaterial: edge.withAlpha(0.7) } }); }
-          if (big.has(poly) && RISK_ICON[k]) { const [g, c] = RISK_ICON[k]; marker(ds, [cx, cy], icon(g, c), () => popup("risk", f.properties), null, 36); }
+          if (big.has(poly) && RISK_ICON[k]) { const [g, c] = RISK_ICON[k]; marker(ds, [cx, cy], icon(g, c), () => popup("risk", f.properties), null, 36)._at.r = extent(poly[0], cx, cy); }
         });
       }
     },
@@ -217,10 +223,50 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   h.setInputAction(e => {
     const p = sc.pick(e.position), ent = p && p.id;
     if (!ent || !ent._pop) return close();
+    if (ent._at) return goTo(ent);
     pop.innerHTML = '<button type="button" aria-label="Fechar">×</button>' + ent._pop();
     pop.firstChild.onclick = close;
     pop.style.left = e.position.x + "px"; pop.style.top = e.position.y + "px"; pop.hidden = false;
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+  // clicar num ponto: voo suave até ele, enquadrando a área; o popup abre quando a câmera chega
+  function goTo(ent) {
+    stopOrbit();
+    const { ll, r, top } = ent._at;
+    cam.flyToBoundingSphere(new Cesium.BoundingSphere(Cesium.Cartesian3.fromDegrees(ll[0], ll[1], (elevAt(ll[0], ll[1]) ?? 0) + 20), r), {
+      duration: 1.8, easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
+      offset: new Cesium.HeadingPitchRange(cam.heading, rad(-38), r * 2.6),
+      complete: () => { const xy = sc.cartesianToCanvasCoordinates(top); if (!xy) return;
+        pop.innerHTML = '<button type="button" aria-label="Fechar">×</button>' + ent._pop(); pop.firstChild.onclick = close;
+        pop.style.left = xy.x + "px"; pop.style.top = xy.y + "px"; pop.hidden = false; } });
+  }
+  // destaque: pontos de um tipo crescem e pulsam, a câmera voa até eles e gira devagar em volta
+  const foco = layer("foco"), wave = icon("anel", "#fff");
+  let orbit = null, pulse = false;
+  function stopOrbit() { if (!orbit) return; sc.preUpdate.removeEventListener(orbit); orbit = null; cam.lookAtTransform(Cesium.Matrix4.IDENTITY); }
+  sc.canvas.addEventListener("pointerdown", stopOrbit); sc.canvas.addEventListener("wheel", stopOrbit, { passive: true });
+  function spotlight(items, glyph, color, fly = true) {
+    foco.entities.removeAll();
+    if (!items || !items.length) { stopOrbit(); pulse = false; sc.requestRenderMode = true; sc.requestRender(); return; }
+    const t0 = performance.now(), pts = [];
+    items.forEach((it, i) => {
+      const e = marker(foco, it.ll, icon(glyph, color, true), it.pop, null, 54); e._at.r = it.r || 260;
+      const ph = i * 0.7, s = () => ((performance.now() - t0) / 1600 + ph) % 1;
+      e.billboard.scale = new Cesium.CallbackProperty(() => 1 + 0.08 * Math.sin(s() * 6.283), false);
+      // onda de radar saindo do ponto
+      foco.entities.add({ position: e.position.getValue(), billboard: { image: wave, width: 54, height: 54, verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY, scaleByDistance: new Cesium.NearFarScalar(1500, 1.1, 40000, 0.4),
+        scale: new Cesium.CallbackProperty(() => 1 + s() * 1.4, false), color: new Cesium.CallbackProperty(() => C(color).withAlpha(1 - s()), false) } });
+      pts.push(Cesium.Cartesian3.fromDegrees(it.ll[0], it.ll[1], elevAt(it.ll[0], it.ll[1]) ?? 0));
+    });
+    pulse = true; sc.requestRenderMode = false; // a pulsação precisa de quadro contínuo
+    if (!fly) return;
+    stopOrbit();
+    const sph = Cesium.BoundingSphere.fromPoints(pts), range = Math.max(1600, sph.radius * 2.6), pitch = rad(-40);
+    let hd = cam.heading;
+    cam.flyToBoundingSphere(sph, { duration: 2.4, easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
+      offset: new Cesium.HeadingPitchRange(hd, pitch, range),
+      complete: () => { orbit = () => { hd += rad(0.08); cam.lookAt(sph.center, new Cesium.HeadingPitchRange(hd, pitch, range)); }; sc.preUpdate.addEventListener(orbit); } });
+  }
   // passar o mouse sobre uma área de perigo mostra o que é e o dado da hora
   const tip = document.createElement("div"); tip.className = "pop tip"; tip.hidden = true; container.appendChild(tip);
   // ponytail: scene.pick redesenha a cena num buffer de seleção; só roda com o mouse parado 120 ms e sem arrasto
@@ -242,9 +288,6 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
     }, 40);
   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
   v.camera.moveStart.addEventListener(close);
-  // em movimento a malha aceita blocos menos detalhados; parou, refina
-  v.camera.moveStart.addEventListener(() => { if (tiles) tiles.maximumScreenSpaceError = 56; });
-  v.camera.moveEnd.addEventListener(() => { if (tiles) { tiles.maximumScreenSpaceError = 32; sc.requestRender(); } });
   v.camera.moveEnd.addEventListener(() => onMoveEnd && onMoveEnd());
 
   // câmera
@@ -357,7 +400,7 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
       });
       onProgress && onProgress((i + 1) / views.length);
     }
-    sc.requestRenderMode = true;
+    sc.requestRenderMode = !pulse;
   }
-  return { setData, setElevation, setScience, show, preload, flyTo, setView, center, focusCity, viewer: v, photoreal: !!tiles };
+  return { setData, setElevation, setScience, show, spotlight, preload, flyTo, setView, center, focusCity, viewer: v, photoreal: !!tiles };
 }

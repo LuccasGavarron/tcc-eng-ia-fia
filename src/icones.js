@@ -16,8 +16,10 @@ const G = {
   sol: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="#fff" stroke-width="2" stroke-linecap="round"/>',
 };
 const cache = {};
+const RING = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="#fff" stroke-width="3"/></svg>';
 // selo de 64 px: anel branco, fundo na cor, desenho branco; ruim = anel vermelho
 export function icon(glyph, color, bad) {
+  if (glyph === "anel") return "data:image/svg+xml;utf8," + encodeURIComponent(RING);
   const k = glyph + color + bad;
   return cache[k] || (cache[k] = "data:image/svg+xml;utf8," + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
