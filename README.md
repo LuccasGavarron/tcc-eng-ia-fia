@@ -35,6 +35,17 @@ O Véspera segue quatro passos: coletar, aprender, prever e recomendar. A autori
 4. Em "Área afetada", clique em Inundação, Encostas ou Ocorrências. A câmera mostra esses pontos; clique num ponto para chegar perto.
 5. Em "Eventos", escolha uma data real do histórico. O app roda a chuva daquele dia e marca os pontos que de fato alagaram.
 
+### Análise contínua
+
+No topo, troque "Anteriores" por "Contínua". Cada passo do relógio é 1 hora simulada.
+
+1. Escolha a chuva de agora e aperte o play.
+2. A cada hora, os sensores leem, o controle de qualidade reprova o que não presta e regras simples calculam um nível.
+3. Quando algo relevante muda, a IA lê o quadro inteiro e sugere o nível (normal, observação, atenção, alerta, alerta máximo), as ações e os sensores suspeitos.
+4. Acima de atenção, a autoridade aprova ou descarta a sugestão.
+
+Para testar a IA, use "Simular falha ou evento" ou mexa em cada sensor na aba Sensores (valor fixo, travado em zero, sem sinal). Exemplo: com o rio subindo sem chuva, a IA aponta a régua como suspeita em vez de subir o alerta.
+
 Mouse: o botão esquerdo arrasta o mapa, o direito gira a visão e a roda dá zoom.
 
 ## Dados por cidade

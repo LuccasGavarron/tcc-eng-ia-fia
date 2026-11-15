@@ -54,15 +54,19 @@ const S = { mode: "chuva", sys: M.SYSTEMS[0], rain: 120, ante: 80, anom: 6, heat
 let F = {};            // previsão derivada do cenário (recalculada quando o cenário muda)
 let grid = null, cl = null, rivers = null, cover = null, schools = null, hist = null, shelters = [];
 const approved = new Set(), sentLog = [];
+// análise contínua: a chuva entra hora a hora pelo controle; ov = sensores mexidos à mão { id: { k: off|zero|fix, v, from } }
+const LIVE = { on: false, hours: [], rainNow: 0, ov: {}, feed: [], level: 0, aiAt: 0, aiBusy: false, saved: null };
 const models = M.trainModels();
 
 /* ---------- previsão ---------- */
 function forecast() {
   const zeros = Array(H).fill(0);
-  const hours = S.mode === "chuva" ? M.hyetograph(S.sys, S.rain) : zeros;
+  const hours = LIVE.on ? Array.from({ length: H }, (_, t) => LIVE.hours[t] || 0) : S.mode === "chuva" ? M.hyetograph(S.sys, S.rain) : zeros;
+  if (LIVE.on) S.rain = Math.round(hours.reduce((a, b) => a + b, 0));
   const sim = M.simulate(hours, S.mode === "chuva" ? S.ante : 0);
   const dry = M.drySeries(S.mode === "seco" ? S.anom : 0, S.mode === "seco" ? S.rhMin : 70);
   const sensors = simulateSensors({ mode: S.mode, hours, sim, dry, dryDays: S.dryDays });
+  if (LIVE.on) applyOverrides(sensors, hours);
   const wet = S.mode === "chuva" ? M.scenarioState({ mode: "chuva", sys: S.sys, rain: S.rain, ante: S.ante })
     : { rain: 0, peak: 0, sat: M.satOf(M.theta0(0)), rise: 0, slideIdx: 0 };
   const dryP = S.mode === "seco" ? { mode: "seco", dryDays: S.dryDays, rhMin: S.rhMin, wind: S.wind, anom: S.anom, heatDays: S.heatDays }
@@ -400,7 +404,7 @@ function drawSensorsTab() {
         : st.c === "ana" ? "Atenção em " + fmt(st.alert, 1) + " m, transborda em " + fmt(st.over, 1) + " m acima do normal" : "";
       return '<li class="sensor' + (fl ? " is-bad" : "") + '"><div class="s-main"><b>' + esc(st.n) + "</b><span>" + sensorValue(st, t) + "</span></div>" +
         spark(st) + (fl ? '<p class="bad">Reprovada: ' + esc(fl) + (lv ? ". Modelo usa a leitura de " + lv.age + " h atrás." : ".") + "</p>" : "") +
-        (extra ? '<p class="s-meta">' + extra + "</p>" : "") + "</li>";
+        (extra ? '<p class="s-meta">' + extra + "</p>" : "") + (LIVE.on ? sensorCtl(st) : "") + "</li>";
     }).join("");
     return '<section class="connector"><header><h3>' + esc(c.n) + "</h3></header><ul>" + rows + "</ul></section>";
   }).join("");
@@ -577,7 +581,7 @@ function fromPointer(e) { const r = tube.getBoundingClientRect(); setRain((1 - (
 tube.addEventListener("pointerdown", e => { tube.setPointerCapture(e.pointerId); fromPointer(e); });
 tube.addEventListener("pointermove", e => { if (tube.hasPointerCapture(e.pointerId)) fromPointer(e); });
 tube.addEventListener("keydown", e => { const m = { ArrowUp: 5, ArrowRight: 5, ArrowDown: -5, ArrowLeft: -5, PageUp: 25, PageDown: -25 }[e.key]; if (m) { e.preventDefault(); setRain(S.rain + m); } });
-document.querySelectorAll(".presets button").forEach(b => (b.onclick = () => setRain(+b.dataset.v)));
+document.querySelectorAll("#g-chuva .presets button").forEach(b => (b.onclick = () => setRain(+b.dataset.v)));
 $("ante").oninput = e => { S.ante = +e.target.value; update(true); };
 for (const id of ["anom", "heatDays", "rhMin", "dryDays", "wind"]) { $(id).value = S[id]; $(id).oninput = e => { S[id] = +e.target.value; update(true); }; }
 
@@ -592,14 +596,180 @@ $("m-chuva").onclick = () => setMode("chuva"); $("m-seco").onclick = () => setMo
 /* linha do tempo */
 let timer = null;
 const PLAY = "M4 2l10 6-10 6z", PAUSE = "M3 2h4v12H3zM9 2h4v12H9z";
-function stop() { clearInterval(timer); timer = null; $("playIcon").setAttribute("d", PLAY); $("play").setAttribute("aria-label", "Reproduzir as 72 horas"); }
+function stop() { clearInterval(timer); timer = null; $("playIcon").setAttribute("d", PLAY); $("play").setAttribute("aria-label", LIVE.on ? "Rodar o relógio" : "Reproduzir as 72 horas"); }
 $("play").onclick = () => {
   if (timer) return stop();
+  if (LIVE.on) { $("playIcon").setAttribute("d", PAUSE); $("play").setAttribute("aria-label", "Pausar"); timer = setInterval(liveTick, 2400 / speed); return liveTick(); }
   if (S.t >= H - 1) setHour(0);
   $("playIcon").setAttribute("d", PAUSE); $("play").setAttribute("aria-label", "Pausar");
   timer = setInterval(() => { if (S.t >= H - 1) return stop(); setHour(S.t + 1); }, 260 / speed);
 };
 $("hour").oninput = e => { stop(); setHour(+e.target.value); };
+
+
+/* ---------- análise contínua ----------
+   Cada passo do relógio é 1 hora simulada: entra a chuva do controle, o modelo roda, os sensores leem,
+   as regras locais marcam o que mudou e, quando algo relevante muda, a IA lê o quadro e sugere o nível. */
+const LEVELS = [["Normal", "var(--ok, #3F7D55)"], ["Observação", "var(--s3)"], ["Atenção", "var(--ochre)"], ["Alerta", "var(--brick)"], ["Alerta máximo", "#8E1F1A"]];
+function applyOverrides(sensors, hours) {
+  for (const [id, o] of Object.entries(LIVE.ov)) {
+    const out = sensors[id], st = STATIONS.find(x => x.id === id); if (!out || !st) continue;
+    for (let t = o.from; t < H; t++) {
+      if (o.k === "off") { out.v[t] = null; out.flag[t] = "sem comunicação"; }
+      else if (o.k === "zero") { out.v[t] = 0; out.flag[t] = st.c === "cemaden" && hours[t] > 2 ? "zero com chuva nos vizinhos" : ""; }
+      else {
+        const prev = t > 0 ? out.v[t - 1] : null; out.v[t] = o.v;
+        out.flag[t] = st.c === "lora" && (o.v < 5 || o.v > 60) ? "fora da faixa física" : st.c === "ana" && t === o.from && prev != null && Math.abs(o.v - prev) > 1.2 ? "salto improvável" : "";
+      }
+    }
+  }
+}
+const UNIT = st => conOf(st.c).unit;
+function sensorCtl(st) {
+  const o = LIVE.ov[st.id] || {}, k = o.k || "";
+  return '<div class="s-ctl"><select data-id="' + st.id + '" aria-label="Simular ' + esc(st.n) + '">' +
+    [["", "Leitura do modelo"], ["fix", "Valor fixo"], ["zero", "Travado em zero"], ["off", "Sem sinal"]].map(([v, l]) => '<option value="' + v + '"' + (v === k ? " selected" : "") + ">" + l + "</option>").join("") +
+    "</select>" + (k === "fix" ? '<input type="number" data-id="' + st.id + '" step="0.1" value="' + o.v + '" aria-label="Valor"><span>' + UNIT(st) + "</span>" : "") + "</div>";
+}
+const nowValue = id => { const v = F.sensors[id].v[S.t]; return v == null ? 0 : v; };
+function setOv(id, k, v) {
+  if (!k) delete LIVE.ov[id];
+  else LIVE.ov[id] = { k, v: v ?? +nowValue(id).toFixed(1), from: S.t };
+  liveRefresh();
+}
+$("connectors").addEventListener("change", e => {
+  const el = e.target, id = el.dataset.id; if (!id || !LIVE.on) return;
+  if (el.tagName === "SELECT") setOv(id, el.value); else setOv(id, "fix", +el.value);
+});
+// leituras da hora atual, com o resultado do controle de qualidade
+function readings(t) {
+  return STATIONS.map(st => { const s = F.sensors[st.id]; return { id: st.id, c: st.c, nome: st.n, v: s.v[t], unid: UNIT(st), bad: s.flag[t] || "", st }; });
+}
+function acc24(t) {
+  const ps = STATIONS.filter(st => st.c === "cemaden");
+  const sums = ps.map(st => { let a = 0, n = 0; for (let k = Math.max(0, t - 23); k <= t; k++) { const s = F.sensors[st.id]; if (!s.flag[k] && s.v[k] != null) { a += s.v[k]; n++; } } return n ? a : null; }).filter(v => v != null);
+  return sums.length ? sums.sort((a, b) => a - b)[Math.floor(sums.length / 2)] : 0; // mediana: um pluviômetro ruim não puxa a conta
+}
+function ruleLevel(t) {
+  const r = readings(t).filter(x => !x.bad && x.v != null), a = acc24(t), lim = CITY.alertMm;
+  const g = r.filter(x => x.c === "ana"), soil = Math.max(0, ...r.filter(x => x.c === "lora").map(x => x.v));
+  if (g.some(x => x.v >= x.st.over + 0.8) || a >= lim * 2.5) return 4;
+  if (g.some(x => x.v >= x.st.over) || a >= lim * 1.6) return 3;
+  if (g.some(x => x.v >= x.st.alert) || a >= lim || soil >= 45) return 2;
+  if (LIVE.hours[t] > 5 || a >= lim / 2) return 1;
+  return 0;
+}
+// o que mudou entre a hora anterior e a atual
+function changes(t) {
+  if (t < 1) return [];
+  const out = [], a0 = acc24(t - 1), a1 = acc24(t);
+  for (const x of readings(t)) {
+    const s = F.sensors[x.id], was = s.flag[t - 1] || "", pv = s.v[t - 1];
+    if (x.bad && x.bad !== was) out.push([2, x.id + " reprovado: " + x.bad]);
+    else if (!x.bad && was) out.push([1, x.id + " voltou a ler"]);
+    if (x.bad || x.v == null || pv == null) continue;
+    if (x.c === "ana") for (const [key, nm] of [["over", "do transbordamento"], ["alert", "da cota de atenção"]]) if (x.v >= x.st[key] && pv < x.st[key]) { out.push([3, x.id + " passou " + nm + ": " + fmt(x.v, 1) + " m"]); break; }
+    if (x.c === "cemaden" && x.v >= 30 && pv < 30) out.push([2, x.id + " marca " + fmt(x.v, 0) + " mm/h"]);
+    if (x.c === "lora" && x.v >= 45 && pv < 45) out.push([2, x.id + " com solo saturado: " + fmt(x.v, 0) + "%"]);
+  }
+  if (a1 >= CITY.alertMm && a0 < CITY.alertMm) out.push([3, "Chuva de 24 h chegou a " + Math.round(a1) + " mm, critério da cidade"]);
+  return out;
+}
+// cada entrada guarda a hora em texto na criação; o índice t muda quando a janela de 72 h anda
+const stamp = t => String(t % 24).padStart(2, "0") + "h";
+const feedAdd = e => LIVE.feed.unshift({ when: stamp(e.t), ...e });
+function liveTick() {
+  if (LIVE.hours.length >= H) { LIVE.hours.splice(0, 24); T0 = new Date(T0.getTime() + 864e5); for (const o of Object.values(LIVE.ov)) o.from = Math.max(0, o.from - 24); }
+  const r = LIVE.rainNow; LIVE.hours.push(r ? Math.max(0, r * (0.85 + Math.random() * 0.3)) : 0);
+  S.t = LIVE.hours.length - 1;
+  liveRefresh(true);
+}
+function liveRefresh(stepped) {
+  forecast(); setHour(S.t, true); drawHazards(); drawHyeto(); drawHour();
+  const t = S.t, lv = ruleLevel(t), ch = stepped ? changes(t) : [];
+  ch.forEach(([sev, txt]) => feedAdd({ t, sev, txt }));
+  if (lv !== LIVE.level) { feedAdd({ t, sev: lv >= 2 ? 3 : 1, txt: "Regras locais: " + LEVELS[lv][0].toLowerCase() }); }
+  const big = ch.some(c => c[0] >= 2) || lv !== LIVE.level;
+  LIVE.level = lv; drawLive();
+  if (big) askLive();
+}
+function drawLive() {
+  const [n, c] = LEVELS[LIVE.level], ai = LIVE.feed.find(f => f.ai);
+  $("lvl").innerHTML = '<i style="background:' + c + '"></i><b>' + n + "</b><span>" + (ai ? "IA: " + LEVELS[ai.ai.nivel][0].toLowerCase() : "") + "</span>";
+  $("rainNowOut").textContent = LIVE.rainNow + " mm/h";
+  LIVE.feed.length = Math.min(LIVE.feed.length, 60);
+  $("feed").innerHTML = LIVE.feed.map((f, i) => {
+    const when = f.when;
+    if (!f.ai) return '<li class="sev' + f.sev + '"><time>' + when + "</time><span>" + esc(f.txt) + "</span></li>";
+    const a = f.ai, act = a.acoes?.length ? "<ol>" + a.acoes.map(x => "<li>" + esc(x) + "</li>").join("") + "</ol>" : "";
+    const btn = f.done ? '<p class="done">' + esc(f.done) + "</p>"
+      : a.nivel >= 2 ? '<div class="ai-btns"><button type="button" class="primary" data-ok="' + i + '">Aprovar ' + LEVELS[a.nivel][0].toLowerCase() + '</button><button type="button" class="secondary" data-no="' + i + '">Descartar</button></div>' : "";
+    return '<li class="aicard"><time>' + when + '</time><div><b><i style="background:' + LEVELS[a.nivel][1] + '"></i>' + esc(a.titulo || LEVELS[a.nivel][0]) + "</b><p>" + esc(a.leitura || "") + "</p>" + act +
+      (a.suspeitos?.length ? '<p class="sus">Sensores suspeitos: ' + esc(a.suspeitos.join(", ")) + "</p>" : "") + btn + "</div></li>";
+  }).join("");
+}
+$("feed").onclick = e => {
+  const b = e.target.closest("button[data-ok],button[data-no]"); if (!b) return;
+  const f = LIVE.feed[+(b.dataset.ok ?? b.dataset.no)], when = String(S.t % 24).padStart(2, "0") + "h";
+  f.done = b.dataset.ok != null ? "Aprovado às " + when + "." : "Descartado às " + when + ".";
+  if (b.dataset.ok != null) { feedAdd({ t: S.t, sev: 3, txt: LEVELS[f.ai.nivel][0] + " aprovado pela autoridade" }); }
+  drawLive();
+};
+async function askLive() {
+  // no máximo uma leitura a cada 8 s; o que chegar no meio espera e vai na próxima, com o quadro atualizado
+  const wait = LIVE.aiBusy ? 2000 : 8000 - (Date.now() - LIVE.aiAt);
+  if (wait > 0) { clearTimeout(LIVE.aiTmr); LIVE.aiTmr = setTimeout(() => LIVE.on && askLive(), wait); return; }
+  LIVE.aiBusy = true; LIVE.aiAt = Date.now();
+  const t = S.t, body = {
+    modo: "continua", cidade: CITY.n + ", " + CITY.uf, hora: hourLabel(t), criterio_alerta: CITY.alertTxt, nivel_regras: LEVELS[LIVE.level][0],
+    chuva_ultima_hora_mm: +(LIVE.hours[t] || 0).toFixed(1), chuva_24h_mm: Math.round(acc24(t)),
+    chuva_6h_mm: Math.round(LIVE.hours.slice(Math.max(0, t - 5), t + 1).reduce((a, b) => a + b, 0)),
+    leituras: readings(t).map(x => ({ id: x.id, tipo: conOf(x.c).n, nome: x.nome, valor: x.v, unidade: x.unid, reprovada: x.bad || undefined,
+      cota_atencao: x.st.alert, cota_transbordo: x.st.over })),
+    eventos_recentes: LIVE.feed.filter(f => !f.ai).slice(0, 10).map(f => f.when + " " + f.txt),
+  };
+  try {
+    const r = await fetch("/api/analise", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.json) throw new Error(j.error || "HTTP " + r.status);
+    const a = j.json; a.nivel = Math.max(0, Math.min(4, a.nivel | 0));
+    feedAdd({ t, ai: a });
+  } catch (e) { feedAdd({ t, sev: 2, txt: "IA indisponível: " + e.message }); }
+  finally { LIVE.aiBusy = false; drawLive(); }
+}
+$("rainNow").oninput = e => { LIVE.rainNow = +e.target.value; drawLive(); };
+$("rainPre").onclick = e => { const b = e.target.closest("button[data-v]"); if (!b) return; LIVE.rainNow = +b.dataset.v; $("rainNow").value = LIVE.rainNow; drawLive(); };
+$("simPre").onclick = e => {
+  const b = e.target.closest("button[data-s]"); if (!b) return;
+  const g = STATIONS.find(st => st.c === "ana"), p = STATIONS.find(st => st.c === "cemaden");
+  if (b.dataset.s === "rio" && g) LIVE.ov[g.id] = { k: "fix", v: +(g.over + 0.4).toFixed(1), from: S.t };
+  if (b.dataset.s === "trava" && p) LIVE.ov[p.id] = { k: "zero", from: S.t };
+  if (b.dataset.s === "sinal") STATIONS.filter(st => st.c === "lora").forEach(st => (LIVE.ov[st.id] = { k: "off", from: S.t }));
+  if (b.dataset.s === "limpa") LIVE.ov = {};
+  feedAdd({ t: S.t, sev: 1, txt: "Simulação: " + b.textContent.toLowerCase() });
+  liveRefresh(true);
+};
+function setLive(on) {
+  if (on === LIVE.on) return;
+  stop(); LIVE.on = on; clearTimeout(LIVE.aiTmr);
+  $("aAnt").setAttribute("aria-pressed", !on); $("aCon").setAttribute("aria-pressed", on);
+  document.body.classList.toggle("live", on);
+  $("g-live").hidden = !on; $("f-tipo").hidden = on; $("g-chuva").hidden = on || S.mode !== "chuva"; $("g-seco").hidden = on || S.mode !== "seco";
+  if (on) {
+    if (replay) setReplay(null);
+    LIVE.saved = { rain: S.rain, mode: S.mode, T0 };
+    S.mode = "chuva"; T0 = new Date(); T0.setHours(0, 0, 0, 0);
+    // começa com 6 h secas para o observador ter de onde comparar
+    LIVE.hours = Array(new Date().getHours() || 6).fill(0); LIVE.ov = {}; LIVE.feed = []; LIVE.level = 0;
+    S.t = LIVE.hours.length - 1; liveRefresh();
+    feedAdd({ t: S.t, sev: 1, txt: "Observador ligado. Aperte o play para o relógio andar." }); drawLive();
+  } else {
+    S.rain = LIVE.saved.rain; S.mode = LIVE.saved.mode; T0 = LIVE.saved.T0;
+    update(true);
+  }
+  stop();
+}
+$("aAnt").onclick = () => setLive(false); $("aCon").onclick = () => setLive(true);
 
 /* cidades e busca */
 function goTo(city, btn) {

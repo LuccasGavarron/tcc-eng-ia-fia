@@ -39,6 +39,10 @@
   <ul id="findRes" hidden></ul>
 </div>
 <div class="toolbar">
+  <div class="seg-sm" role="group" aria-label="Tipo de análise">
+    <button type="button" id="aAnt" aria-pressed="true">Anteriores</button>
+    <button type="button" id="aCon" aria-pressed="false">Contínua</button>
+  </div>
   <div class="seg-sm" role="group" aria-label="Modo de visualização">
     <button type="button" id="v3" aria-pressed="true">3D</button>
     <button type="button" id="v2" aria-pressed="false">2D</button>
@@ -102,7 +106,34 @@
       <ul class="hazards" id="hazards"></ul>
     </div>
 
-    <div class="field">
+    <!-- análise contínua: a IA observa os sensores a cada hora simulada -->
+    <div class="group" id="g-live" hidden>
+      <div class="field">
+        <h2 class="h">Nível sugerido</h2>
+        <div class="lvl" id="lvl"></div>
+      </div>
+      <div class="field range">
+        <div class="row"><label class="h" for="rainNow">Chuva agora</label><output id="rainNowOut">0 mm/h</output></div>
+        <input type="range" id="rainNow" min="0" max="80" step="1" value="0">
+        <div class="presets" id="rainPre">
+          <button type="button" data-v="0">Sem chuva</button><button type="button" data-v="6">Fraca</button>
+          <button type="button" data-v="25">Forte</button><button type="button" data-v="60">Temporal</button>
+        </div>
+      </div>
+      <div class="field">
+        <h2 class="h">Simular falha ou evento</h2>
+        <div class="presets" id="simPre">
+          <button type="button" data-s="rio">Rio sobe sem chuva</button><button type="button" data-s="trava">Pluviômetro trava</button>
+          <button type="button" data-s="sinal">Encostas sem sinal</button><button type="button" data-s="limpa">Sensores normais</button>
+        </div>
+      </div>
+      <div class="field">
+        <h2 class="h">Observador</h2>
+        <ul class="feed" id="feed"></ul>
+      </div>
+    </div>
+
+    <div class="field" id="f-tipo">
       <h2 class="h">Tipo de evento</h2>
       <div class="seg" role="group" aria-label="Tipo de evento">
         <button type="button" id="m-chuva" aria-pressed="true">Chuva forte</button>
