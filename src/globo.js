@@ -15,7 +15,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     navigationHelpButton: false, fullscreenButton: false, infoBox: false, selectionIndicator: false,
     baseLayer: token ? false : Cesium.ImageryLayer.fromProviderAsync(Cesium.ArcGisMapServerImageryProvider.fromUrl(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer")),
-    requestRenderMode: true, maximumRenderTimeChange: Infinity, msaaSamples: 4,
+    requestRenderMode: true, maximumRenderTimeChange: Infinity, msaaSamples: 2,
   });
   const sc = v.scene;
   // a cidade solta no espaço
@@ -29,7 +29,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   let tiles = null;
   if (token) {
     try {
-      tiles = await Cesium.createGooglePhotorealistic3DTileset();
+      tiles = await Cesium.createGooglePhotorealistic3DTileset({ maximumScreenSpaceError: 24, cacheBytes: 768 * 1024 * 1024 });
       tiles.clippingPolygons = clip();
       sc.primitives.add(tiles);
       sc.globe.show = false;
@@ -67,8 +67,10 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   // camadas dinâmicas
   const layers = {};
   const layer = id => { if (!layers[id]) { layers[id] = new Cesium.CustomDataSource(id); v.dataSources.add(layers[id]); } return layers[id]; };
-  const pt = (ll, h = 0) => Cesium.Cartesian3.fromDegrees(ll[0], ll[1], h);
-  const ground = { heightReference: Cesium.HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Number.POSITIVE_INFINITY };
+  // ponytail: altura vem do relevo (Terrarium) + folga; prender ao 3D Tiles (CLAMP_TO_GROUND) refaz consulta a cada quadro e derrubava o FPS
+  let elevAt = () => null;
+  const pt = (ll, up = 25) => { const e = elevAt(ll[0], ll[1]); return Cesium.Cartesian3.fromDegrees(ll[0], ll[1], (e ?? 0) + up); };
+  const ground = { disableDepthTestDistance: Number.POSITIVE_INFINITY };
   const shrink = { scaleByDistance: new Cesium.NearFarScalar(3000, 1, 40000, 0.5) };
   const label = (text, size, offY) => ({ text, font: "600 " + size + "px Archivo, sans-serif", fillColor: Cesium.Color.WHITE,
     outlineColor: C("#1B2A31"), outlineWidth: 3, style: Cesium.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new Cesium.Cartesian2(0, offY),
@@ -85,7 +87,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
       }
     },
     rios(ds, fc) {
-      for (const f of fc.features) ds.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArray(f.geometry.coordinates.flat()),
+      for (const f of fc.features) if (f.properties.w !== "s" || f.properties.n) ds.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArray(f.geometry.coordinates.flat()),
         width: f.properties.w === "r" ? 4 : f.properties.w === "c" ? 2.2 : 1.5, clampToGround: true, material: C("#7FC4F0").withAlpha(0.9) } });
     },
     hist(ds, fc) {
@@ -103,7 +105,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     },
     // nível 0: um nome a cada 2,6 km; nível 1: a cada 900 m; nível 2: o resto, só bem de perto
     bairros(ds, list) {
-      const far = [26000, 7000, 2500], size = [14, 12, 11];
+      const far = [14000, 4500, 1800], size = [13, 12, 11];
       for (const [n, lon, lat, t] of list) ds.entities.add({ position: pt([lon, lat]),
         label: { ...label(n.toUpperCase(), size[t], 0), verticalOrigin: Cesium.VerticalOrigin.CENTER,
           distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, far[t]),
@@ -111,11 +113,13 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     },
   };
   function setData(id, data) {
-    const ds = layer(id);
+    const ds = layer(id); DRAWN[id] = data;
     ds.entities.suspendEvents(); ds.entities.removeAll();
     if (data) draw[id](ds, data);
     ds.entities.resumeEvents(); sc.requestRender();
   }
+  const DRAWN = {};
+  const setElevation = fn => { elevAt = fn; for (const id of ["hist", "sens", "shel", "bairros"]) if (DRAWN[id]) setData(id, DRAWN[id]); };
   const show = (id, on) => { layer(id).show = on; sc.requestRender(); };
 
   // popup próprio, preso ao ponto clicado
@@ -137,6 +141,44 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   // câmera
   const cam = v.camera, ctrl = sc.screenSpaceCameraController;
   ctrl.zoomFactor = 14; // padrão 5 é lento no trackpad
+  // navegação: esquerdo arrasta o mapa, direito gira a visão em primeira pessoa, roda dá zoom, Ctrl+esquerdo ou meio inclina
+  const E = Cesium.CameraEventType;
+  ctrl.rotateEventTypes = []; ctrl.lookEventTypes = []; ctrl.translateEventTypes = [];
+  ctrl.zoomEventTypes = [E.WHEEL, E.PINCH];
+  ctrl.tiltEventTypes = [E.MIDDLE_DRAG, E.PINCH, { eventType: E.LEFT_DRAG, modifier: Cesium.KeyboardEventModifier.CTRL }];
+  sc.canvas.addEventListener("contextmenu", e => e.preventDefault());
+  let drag = null; // { mode, plane, p0, x, y }
+  const groundAt = pos => {
+    let p = sc.pickPositionSupported ? sc.pickPosition(pos) : null;
+    if (!p) p = cam.pickEllipsoid(pos);
+    return p;
+  };
+  const nav = new Cesium.ScreenSpaceEventHandler(sc.canvas);
+  nav.setInputAction(e => {
+    const p0 = groundAt(e.position);
+    if (!p0) return;
+    drag = { mode: "pan", p0, plane: Cesium.Plane.fromPointNormal(p0, Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(p0, new Cesium.Cartesian3())) };
+  }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+  nav.setInputAction(e => { drag = { mode: "look", x: e.position.x, y: e.position.y }; }, Cesium.ScreenSpaceEventType.RIGHT_DOWN);
+  const end = () => (drag = null);
+  nav.setInputAction(end, Cesium.ScreenSpaceEventType.LEFT_UP);
+  nav.setInputAction(end, Cesium.ScreenSpaceEventType.RIGHT_UP);
+  nav.setInputAction(e => {
+    if (!drag) return;
+    if (drag.mode === "pan") {
+      // o ponto agarrado fica sob o cursor: desloca a câmera no plano do chão
+      const hit = Cesium.IntersectionTests.rayPlane(cam.getPickRay(e.endPosition), drag.plane);
+      if (!hit) return;
+      cam.position = Cesium.Cartesian3.add(cam.position, Cesium.Cartesian3.subtract(drag.p0, hit, new Cesium.Cartesian3()), new Cesium.Cartesian3());
+    } else {
+      const dx = e.endPosition.x - drag.x, dy = e.endPosition.y - drag.y, k = 0.0035;
+      drag.x = e.endPosition.x; drag.y = e.endPosition.y;
+      cam.look(Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(cam.positionWC, new Cesium.Cartesian3()), dx * k); // gira em torno da vertical
+      if (is3D) cam.lookUp(-dy * k); // arrastar para cima olha para cima
+    }
+    sc.requestRender();
+  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+  nav.setInputAction(e => {}, Cesium.ScreenSpaceEventType.LEFT_DOWN, Cesium.KeyboardEventModifier.CTRL); // Ctrl+esquerdo fica com a inclinação
   let is3D = true;
   function flyTo(lon, lat, radius, duration = 2.6) {
     const sphere = new Cesium.BoundingSphere(Cesium.Cartesian3.fromDegrees(lon, lat, 600), radius);
@@ -163,5 +205,5 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     if (layers.bairros) layers.bairros.show = on;
     sc.requestRender();
   }
-  return { setData, show, flyTo, setView, center, focusCity, viewer: v, photoreal: !!tiles };
+  return { setData, setElevation, show, flyTo, setView, center, focusCity, viewer: v, photoreal: !!tiles };
 }

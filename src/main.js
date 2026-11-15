@@ -96,6 +96,8 @@ const POPS = {
 createGlobe($("map"), { token: import.meta.env.VITE_CESIUM_TOKEN, limite: LIMITE, onMoveEnd: scheduleSample, popup: (k, p) => POPS[k](p) }).then(g => {
   globe = g;
   for (const id in DATA) g.setData(id, DATA[id]);
+  // relevo de Sorocaba uma vez, para pousar pontos e rótulos sem prender ao 3D Tiles
+  loadElevation(-47.58, -23.6, -47.29, -23.34, 300).then(fn => g.setElevation(fn));
   if (!$("lO").checked) g.show("hist", false);
   const c = CITIES[0]; g.flyTo(c.c[0], c.c[1], c.r, 0);
   if (import.meta.env.DEV) window.vespera = { globe, S, get grid() { return grid; } };
@@ -178,8 +180,10 @@ function riskShapes() {
     for (let i = 0; i < G * G; i++) if (cl.f[i] === k || (k === 2 && cl.f[i] === 1)) { v[i] = 1; any = true; }
     if (!any) continue;
     const [mp] = contour(v);
-    feats.push({ type: "Feature", properties: { k: M.KIND[k] },
-      geometry: { type: "MultiPolygon", coordinates: mp.coordinates.map(poly => poly.map(ring => ring.map(toLL))) } });
+    const area = r => Math.abs(r.reduce((a, p, i) => { const q = r[(i + 1) % r.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
+    const polys = mp.coordinates.filter(poly => area(poly[0]) >= 3); // ponytail: manchas menores que 3 células viram ruído e custam um polígono cada
+    if (polys.length) feats.push({ type: "Feature", properties: { k: M.KIND[k] },
+      geometry: { type: "MultiPolygon", coordinates: polys.map(poly => poly.map(ring => ring.map(toLL))) } });
   }
   return { type: "FeatureCollection", features: feats };
 }
@@ -477,7 +481,7 @@ $("play").onclick = () => {
   if (timer) return stop();
   if (S.t >= H - 1) setHour(0);
   $("playIcon").setAttribute("d", PAUSE); $("play").setAttribute("aria-label", "Pausar");
-  timer = setInterval(() => { if (S.t >= H - 1) return stop(); setHour(S.t + 1); }, 140);
+  timer = setInterval(() => { if (S.t >= H - 1) return stop(); setHour(S.t + 1); }, 260);
 };
 $("hour").oninput = e => { stop(); setHour(+e.target.value); };
 
