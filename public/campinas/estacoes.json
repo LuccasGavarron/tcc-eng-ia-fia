@@ -4,10 +4,10 @@
   {"id":"P3","c":"cemaden","n":"Sousas (350950205A)","ll":[-46.965,-22.878],"rain":1.12,"fault":"entupido","fonte":"https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/6434/24"},
   {"id":"P4","c":"cemaden","n":"Vila Aeroporto (350950206A)","ll":[-47.133,-22.979],"rain":0.92,"fonte":"https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/6435/24"},
   {"id":"P5","c":"cemaden","n":"Jardim das Bandeiras (350950208A)","ll":[-47.09081,-22.95334],"rain":0.97,"fonte":"https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/7031/24"},
-  {"id":"U1","c":"lora","n":"Encosta de Sousas","ll":[-46.96332,-22.88386],"soil":1.05,"declive":27.8},
-  {"id":"U2","c":"lora","n":"Encosta de Joaquim Egídio","ll":[-46.943,-22.88567],"soil":1.02,"declive":26.4},
-  {"id":"U3","c":"lora","n":"Encosta da Vila Brandina","ll":[-47.02355,-22.89043],"soil":1.0,"fault":"sem sinal","declive":24.2},
-  {"id":"U4","c":"lora","n":"Encosta do São Quirino","ll":[-47.04686,-22.85493],"soil":0.97,"fault":"bateria","declive":19.5},
+  {"id":"U1","c":"lora","n":"Encosta do Jardim São Marcos (setor CPRM 02)","ll":[-47.11207,-22.84646],"soil":1.04,"declive":13.0},
+  {"id":"U2","c":"lora","n":"Encosta de Sousas","ll":[-46.96332,-22.88386],"soil":1.02,"declive":27.8},
+  {"id":"U3","c":"lora","n":"Encosta do Jardim São Fernando (setor CPRM 10)","ll":[-47.02538,-22.91582],"soil":1.0,"fault":"sem sinal","declive":17.2},
+  {"id":"U4","c":"lora","n":"Encosta do Jardim Florence (setores CPRM 04 e 05)","ll":[-47.15584,-22.95047],"soil":0.97,"fault":"bateria","declive":16.5},
   {"id":"R1","c":"ana","n":"Rio Capivari, Jardim Yeda (350950217H)","ll":[-47.1186,-22.9571],"base":0,"gain":1,"lag":0,"alert":1.36,"over":2.73,"ref":"metros acima da cota de atenção do Cemaden (4,10 m na régua; alerta 5,46 m; transbordamento 6,83 m)","fonte":"https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/6599/24"},
   {"id":"R2","c":"ana","n":"Córrego do Serafim, Av. Orosimbo Maia (350950230H)","ll":[-47.06,-22.893],"base":0,"gain":0.6,"lag":-5,"alert":0.8,"over":1.4,"ref":"estimativa: o Cemaden não publica cota para esta régua","fonte":"https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/9631/24"},
   {"id":"R3","c":"ana","n":"Rio Atibaia, Desembargador Furtado (DAEE 3D-003T, ANA 62680000)","ll":[-46.9894,-22.7694],"base":0,"gain":0.8,"lag":4,"alert":0.29,"over":0.9,"ref":"metros acima da cota de atenção do DAEE (2,11 m; alerta 2,399 m; extravasamento 3,01 m), boletim de 31/12/2019","fonte":"https://www.sigrh.sp.gov.br/public/uploads/ckfinder/files/4c.pdf"},
@@ -15,6 +15,6 @@
   {"id":"R5","c":"ana","n":"Ribeirão das Cabras, Joaquim Egídio (350950231H)","ll":[-46.939,-22.888],"base":0,"gain":0.5,"lag":-4,"alert":0.7,"over":1.2,"ref":"estimativa: o Cemaden não publica cota para esta régua","fonte":"https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/9628/24"},
   {"id":"M1","c":"inmet","n":"Bragança Paulista (A744), a 55 km de Campinas","ll":[-46.5261,-22.94917],"fonte":"https://apitempo.inmet.gov.br/estacoes/T"},
   {"id":"D1","c":"radar","n":"Célula sobre o Centro","ll":[-47.0608,-22.9056],"rain":1.0},
-  {"id":"T1","c":"transito","n":"Av. Orosimbo Maia, sobre o Córrego do Serafim","ll":[-47.0605,-22.8935],"free":50,"river":"R2"},
-  {"id":"T2","c":"transito","n":"Av. Ruy Rodrigues, ponte do Rio Capivari","ll":[-47.1186,-22.9568],"free":60,"river":"R1"}
+  {"id":"T1","c":"transito","n":"Av. Orosimbo Maia x Av. Brasil, sobre o Córrego do Serafim","ll":[-47.06055,-22.89354],"free":50,"river":"R2"},
+  {"id":"T2","c":"transito","n":"Estrada da Rhodia x R. Dr. Alcindo Soares, Barão Geraldo","ll":[-47.07754,-22.80805],"free":50,"river":"R4"}
 ]

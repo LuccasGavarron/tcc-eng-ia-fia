@@ -51,7 +51,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   let tiles = null;
   if (token) {
     try {
-      tiles = await Cesium.createGooglePhotorealistic3DTileset({ maximumScreenSpaceError: 32, cacheBytes: 768 * 1024 * 1024 });
+      tiles = await Cesium.createGooglePhotorealistic3DTileset({ maximumScreenSpaceError: 32, cacheBytes: 1536 * 1024 * 1024, maximumCacheOverflowBytes: 1024 * 1024 * 1024 });
       tiles.clippingPolygons = clip();
       sc.primitives.add(tiles);
       sc.globe.show = false;
@@ -242,6 +242,9 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     }, 40);
   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
   v.camera.moveStart.addEventListener(close);
+  // em movimento a malha aceita blocos menos detalhados; parou, refina
+  v.camera.moveStart.addEventListener(() => { if (tiles) tiles.maximumScreenSpaceError = 56; });
+  v.camera.moveEnd.addEventListener(() => { if (tiles) { tiles.maximumScreenSpaceError = 32; sc.requestRender(); } });
   v.camera.moveEnd.addEventListener(() => onMoveEnd && onMoveEnd());
 
   // câmera
@@ -320,7 +323,9 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
       float w = max(fwidth(h), 0.01);
       float d5 = abs(fract(h / 10.0 + 0.5) - 0.5) * 10.0, d25 = abs(fract(h / 50.0 + 0.5) - 0.5) * 50.0;
       float l5 = 1.0 - smoothstep(0.0, w, d5), l25 = 1.0 - smoothstep(0.0, w * 1.8, d25);
-      col = mix(col, vec3(0.90, 0.97, 1.0), max(l5 * 0.18, l25 * 0.75));
+      // de longe a malha é grosseira e as curvas viram zigue-zague: somem quando 1 pixel cobre mais de ~1,5 m de altura
+      float fade = 1.0 - smoothstep(0.5, 1.5, w);
+      col = mix(col, vec3(0.90, 0.97, 1.0), max(l5 * 0.18, l25 * 0.75) * fade);
       material.diffuse = col;
     }` });
   function setScience(on) {
@@ -337,5 +342,22 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     if (layers.bairros) layers.bairros.show = on;
     sc.requestRender();
   }
-  return { setData, setElevation, setScience, show, flyTo, setView, center, focusCity, viewer: v, photoreal: !!tiles };
+  // pré-carregamento: percorre pontos de vista com a cena desenhando sem parar e espera os blocos de cada um
+  async function preload(views, onProgress) {
+    if (!tiles) return;
+    sc.requestRenderMode = false;
+    for (let i = 0; i < views.length; i++) {
+      const [lon, lat, r, hd, pt] = views[i];
+      cam.flyToBoundingSphere(new Cesium.BoundingSphere(Cesium.Cartesian3.fromDegrees(lon, lat, 600), r),
+        { duration: 0, offset: new Cesium.HeadingPitchRange(rad(hd), rad(pt), r * 2.3) });
+      await new Promise(res => {
+        const t0 = performance.now();
+        const tick = () => (tiles.tilesLoaded && performance.now() - t0 > 400) || performance.now() - t0 > 7000 ? res() : setTimeout(tick, 100);
+        setTimeout(tick, 150);
+      });
+      onProgress && onProgress((i + 1) / views.length);
+    }
+    sc.requestRenderMode = true;
+  }
+  return { setData, setElevation, setScience, show, preload, flyTo, setView, center, focusCity, viewer: v, photoreal: !!tiles };
 }

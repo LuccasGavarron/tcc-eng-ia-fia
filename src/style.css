@@ -298,3 +298,25 @@ body.closed .find{left:calc(var(--rail) + var(--gap))}
 .facts{background:none;border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0}
 .facts div{padding:9px 10px 9px 0}
 .facts div + div{padding-left:12px}
+
+/* tela de início: escolhe a cidade e pré-carrega a malha antes de mostrar o app */
+.splash{position:fixed;inset:0;z-index:20;background:radial-gradient(ellipse at 50% 40%,#0F1820 0%,#070B0F 70%);display:grid;place-items:center;transition:opacity .6s ease}
+.splash.out{opacity:0;pointer-events:none}
+.sp-in{display:flex;flex-direction:column;align-items:center;gap:18px}
+.sp-logo{width:84px;height:84px;border-radius:20px;background:var(--s2);border:1px solid var(--line);display:grid;place-items:center}
+.sp-logo svg{width:58px;height:58px}
+.splash h1{margin:0;font:700 44px/1 var(--display);font-variation-settings:"wdth" 112;letter-spacing:-.03em}
+.sp-cities{display:flex;gap:10px;margin-top:10px}
+.sp-cities button{font:600 15px var(--body);color:var(--tx);background:var(--s2);border:1px solid var(--line-2);border-radius:999px;padding:11px 22px;cursor:pointer}
+.sp-cities button:disabled{opacity:.4;cursor:default}
+.sp-bar{width:260px;height:4px;border-radius:2px;background:var(--s3);overflow:hidden;margin-top:14px}
+.sp-bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s ease}
+body.intro .rail,body.intro .panel,body.intro .timeline,body.intro .toolbar,body.intro .find{visibility:hidden}
+
+/* legenda do modo científico */
+.sci-legend{position:absolute;right:12px;bottom:128px;z-index:2;width:230px;background:var(--s1);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--tx2);box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.sci-legend b{display:block;font:600 12.5px var(--body);color:var(--tx);margin-bottom:6px}
+.sci-legend .ramp{height:10px;border-radius:5px;background:linear-gradient(90deg,#26355f,#2a6f78 25%,#2f9a96 50%,#a9b06a 75%,#f2d35a)}
+.sci-legend .ticks{display:flex;justify-content:space-between;margin-top:3px;font-variant-numeric:tabular-nums}
+.sci-legend p{margin:8px 0 0;display:flex;gap:7px;align-items:center}
+.sci-legend p i{width:18px;height:2px;background:#E6F7FF;flex:none}

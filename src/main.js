@@ -109,6 +109,7 @@ createGlobe($("map"), { token: import.meta.env.VITE_CESIUM_TOKEN, limite: LIMITE
   loadElevation(-47.58, -23.6, -47.29, -23.34, 300).then(fn => g.setElevation(fn));
   applyFilter();
   const c = CITIES[0]; g.flyTo(c.c[0], c.c[1], c.r, 0);
+  globeReady();
   if (import.meta.env.DEV) window.vespera = { globe, S, get grid() { return grid; } };
 });
 
@@ -121,6 +122,7 @@ $("v3").onclick = () => setView(true); $("v2").onclick = () => setView(false);
 function setStyle(sci) {
   $("vFoto").setAttribute("aria-pressed", !sci); $("vCien").setAttribute("aria-pressed", sci);
   globe && globe.setScience(sci);
+  $("sciLegend").hidden = !sci;
 }
 $("vFoto").onclick = () => setStyle(false); $("vCien").onclick = () => setStyle(true);
 
@@ -662,6 +664,25 @@ $("speed").onclick = () => { speed = speed === 4 ? 1 : speed * 2; $("speed").tex
 
 $("cityBtn").onclick = () => { const o = $("cityMenu").hidden; $("cityMenu").hidden = !o; $("cityBtn").setAttribute("aria-expanded", o); if (o) $("q").focus(); };
 document.addEventListener("click", e => { if (!e.target.closest(".citysel")) $("cityMenu").hidden = true; });
+
+/* tela de início: a cidade é escolhida aqui; depois a câmera percorre a cidade para encher o cache da malha 3D */
+// vista geral, 9 vistas médias sobre a área urbana e 5 vistas de perto nos pontos que mais alagam
+const PRELOAD = { Sorocaba: [[-47.437, -23.47, 15000, -18, -48],
+  ...[-23.44, -23.48, -23.52].flatMap(lat => [-47.50, -47.45, -47.40].map(lon => [lon, lat, 2600, -18, -45])),
+  [-47.4515, -23.4977, 700, -18, -40], [-47.4473, -23.4702, 700, 60, -40], [-47.4580, -23.5005, 700, 160, -40], [-47.4952, -23.4898, 700, -18, -40], [-47.4380, -23.4176, 700, -18, -40]] };
+let globeReady, picked = null;
+const globeOk = new Promise(r => (globeReady = r));
+$("spCities").innerHTML = ["Sorocaba"].map(n => '<button type="button" data-n="' + n + '">' + n + "</button>").join("");
+$("spCities").onclick = async e => {
+  const b = e.target.closest("button[data-n]"); if (!b || picked) return;
+  picked = b.dataset.n; $("spCities").hidden = true; $("spBar").hidden = false;
+  await globeOk;
+  await globe.preload(PRELOAD[picked] || [], p => ($("spFill").style.width = Math.round(p * 100) + "%"));
+  const c = CITIES.find(x => x.n === picked) || CITIES[0];
+  globe.flyTo(c.c[0], c.c[1], c.r, 0);
+  document.body.classList.remove("intro"); $("splash").classList.add("out");
+  setTimeout(() => $("splash").remove(), 700);
+};
 
 /* busca no mapa: dados locais primeiro, depois ruas e lugares do Photon dentro de Sorocaba */
 const norm = t => String(t).normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();

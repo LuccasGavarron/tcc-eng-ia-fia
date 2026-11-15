@@ -1,0 +1,868 @@
+{
+ "pontos": [
+  {
+   "nome": "Av. Orosimbo Maia x Av. Dona Libânia",
+   "bairro": "Centro / Cambuí",
+   "tipo": "alagamento",
+   "lat": -22.89418,
+   "lon": -47.06079,
+   "aprox": false,
+   "datas": [
+    "2024"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais"
+   ]
+  },
+  {
+   "nome": "Av. Orosimbo Maia x Av. Brasil / R. Santa Cruz",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.89354,
+   "lon": -47.06055,
+   "aprox": false,
+   "datas": [
+    "2024",
+    "2025-01-29"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://olhardacidade.com.br/forte-chuva-causou-alagamento-em-13-pontos-de-campinas-mario-gatti-teve-novamente-problemas/",
+    "https://sampi.net.br/campinas/noticias/2881570/campinas/2025/01/temporal-causa-alagamentos-e-carros-ficam-ilhados-em-campinas"
+   ]
+  },
+  {
+   "nome": "Av. Orosimbo Maia x R. Paula Bueno / R. Dr. Carlos Guimarães",
+   "bairro": "Centro / Taquaral",
+   "tipo": "alagamento",
+   "lat": -22.88948,
+   "lon": -47.05772,
+   "aprox": false,
+   "datas": [
+    "2024",
+    "2025-01-29"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://olhardacidade.com.br/forte-chuva-causou-alagamento-em-13-pontos-de-campinas-mario-gatti-teve-novamente-problemas/",
+    "https://sampi.net.br/campinas/noticias/2881570/campinas/2025/01/temporal-causa-alagamentos-e-carros-ficam-ilhados-em-campinas"
+   ]
+  },
+  {
+   "nome": "Av. Orosimbo Maia x R. Rafael Sampaio",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.89043,
+   "lon": -47.05838,
+   "aprox": false,
+   "datas": [
+    "2024",
+    "2025-09-22"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://correio.rac.com.br/campinasermc/chuva-forte-provoca-alagamentos-queda-de-arvores-e-danos-em-campinas-1.1712761",
+    "https://diariocampineiro.com.br/chuva-forte-provoca-alagamentos-em-vias-de-campinas-no-inicio-da-manha/"
+   ]
+  },
+  {
+   "nome": "Av. Orosimbo Maia x R. Delfino Cintra",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.90069,
+   "lon": -47.06322,
+   "aprox": false,
+   "datas": [
+    "2023-01-17",
+    "2024",
+    "2025-01-29",
+    "2025-09-23",
+    "2026-10-11"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuva-deixa-campinas-em-estado-de-atenc-o-1.1332910",
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais",
+    "https://olhardacidade.com.br/forte-chuva-causou-alagamento-em-13-pontos-de-campinas-mario-gatti-teve-novamente-problemas/",
+    "https://correio.rac.com.br/campinasermc/chuva-acima-do-esperado-causa-transtornos-em-campinas-1.1713103",
+    "https://www.acidadeon.com/campinas/cotidiano/temporal-provoca-pontos-de-alagamentos-em-campinas-saiba-onde/"
+   ]
+  },
+  {
+   "nome": "Av. Orosimbo Maia x Av. Francisco Glicério",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.89898,
+   "lon": -47.06266,
+   "aprox": false,
+   "datas": [
+    "2023-01-17",
+    "2024"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuva-deixa-campinas-em-estado-de-atenc-o-1.1332910",
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais"
+   ]
+  },
+  {
+   "nome": "Av. José de Souza Campos (Norte-Sul) x Av. Orosimbo Maia",
+   "bairro": "Taquaral / Cambuí",
+   "tipo": "alagamento",
+   "lat": -22.88649,
+   "lon": -47.04449,
+   "aprox": true,
+   "datas": [
+    "2023-01-17",
+    "2024",
+    "2025-09-23"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuva-deixa-campinas-em-estado-de-atenc-o-1.1332910",
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais",
+    "https://correio.rac.com.br/campinasermc/chuva-acima-do-esperado-causa-transtornos-em-campinas-1.1713103"
+   ]
+  },
+  {
+   "nome": "Av. Princesa D'Oeste x Av. Dr. Antônio Carlos Sales Jr.",
+   "bairro": "Jardim Proença",
+   "tipo": "alagamento",
+   "lat": -22.91912,
+   "lon": -47.04446,
+   "aprox": false,
+   "datas": [
+    "2022-12-12",
+    "2023-01-17",
+    "2024",
+    "2026-10-25"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/temporal-castiga-campinas-pelo-segundo-dia-consecutivo-1.1320567",
+    "https://correio.rac.com.br/campinasermc/chuva-deixa-campinas-em-estado-de-atenc-o-1.1332910",
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais",
+    "https://www.acidadeon.com/campinas/cotidiano/chuva-de-1013-mm-provoca-alagamentos-quedas-de-arvores-e-muros-em-campinas/"
+   ]
+  },
+  {
+   "nome": "Av. Princesa D'Oeste x Av. Ayrton Senna da Silva / R. Conde D'Eu",
+   "bairro": "Jardim Proença",
+   "tipo": "alagamento",
+   "lat": -22.91017,
+   "lon": -47.04498,
+   "aprox": false,
+   "datas": [
+    "2024",
+    "2025-01-29"
+   ],
+   "fontes": [
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais",
+    "https://olhardacidade.com.br/forte-chuva-causou-alagamento-em-13-pontos-de-campinas-mario-gatti-teve-novamente-problemas/",
+    "https://sampi.net.br/campinas/noticias/2881570/campinas/2025/01/temporal-causa-alagamentos-e-carros-ficam-ilhados-em-campinas"
+   ]
+  },
+  {
+   "nome": "Av. Dr. Heitor Penteado x Kartódromo (Lagoa do Taquaral)",
+   "bairro": "Taquaral",
+   "tipo": "alagamento",
+   "lat": -22.87201,
+   "lon": -47.06033,
+   "aprox": true,
+   "datas": [
+    "2024",
+    "2025-01-29",
+    "2025-09-22",
+    "2026-02-17",
+    "2026-02-25",
+    "2026-09-01",
+    "2026-10-11",
+    "2026-10-25",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://olhardacidade.com.br/forte-chuva-causou-alagamento-em-13-pontos-de-campinas-mario-gatti-teve-novamente-problemas/",
+    "https://sampi.net.br/campinas/noticias/2881570/campinas/2025/01/temporal-causa-alagamentos-e-carros-ficam-ilhados-em-campinas",
+    "https://correio.rac.com.br/campinasermc/chuva-forte-provoca-alagamentos-queda-de-arvores-e-danos-em-campinas-1.1712761",
+    "https://diariocampineiro.com.br/chuva-forte-provoca-alagamentos-em-vias-de-campinas-no-inicio-da-manha/",
+    "https://www.correiodamanha.com.br/opiniao/editorial/2026/02/260535-em-temporal-avisado-afunda-quem-quer.html",
+    "https://www.acidadeon.com/campinas/cotidiano/forte-temporal-provoca-alagamentos-e-quedas-de-arvores-galhos-e-muro-em-campinas/",
+    "https://sampi.net.br/campinas/noticias/3001937/campinas/2026/09/chuva-derruba-arvores-e-volta-a-alagar-taquaral-em-campinas",
+    "https://www.acidadeon.com/campinas/cotidiano/temporal-provoca-pontos-de-alagamentos-em-campinas-saiba-onde/",
+    "https://www.acidadeon.com/campinas/cotidiano/chuva-de-1013-mm-provoca-alagamentos-quedas-de-arvores-e-muros-em-campinas/",
+    "https://www.acidadeon.com/campinas/cotidiano/temporal-provoca-alagamentos-e-queda-de-galhos-em-campinas-veja-os-estragos/",
+    "https://www.piranot.com.br/2026/11/08/noticias/meio-ambiente/temporal-campinas-quedas-arvores-estragos/"
+   ]
+  },
+  {
+   "nome": "Região do Curtume: Av. Sylvio Moro x Av. Dr. Carlos de Campos (Córrego Piçarrão)",
+   "bairro": "Vila Industrial",
+   "tipo": "alagamento",
+   "lat": -22.91468,
+   "lon": -47.08412,
+   "aprox": false,
+   "datas": [
+    "2024",
+    "2024-10-24",
+    "2025-01-29",
+    "2025-09-22",
+    "2026-10-11",
+    "2026-10-25"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://correio.rac.com.br/campinasermc/mapeamento-identifica-43-locais-com-risco-de-alagamento-em-campinas-1.1583543",
+    "https://sbtnews.sbt.com.br/noticia/brasil/mulher-e-arrastada-por-enxurrada-durante-temporal-em-campinas-sp",
+    "https://olhardacidade.com.br/forte-chuva-causou-alagamento-em-13-pontos-de-campinas-mario-gatti-teve-novamente-problemas/",
+    "https://sampi.net.br/campinas/noticias/2881570/campinas/2025/01/temporal-causa-alagamentos-e-carros-ficam-ilhados-em-campinas",
+    "https://correio.rac.com.br/campinasermc/chuva-forte-provoca-alagamentos-queda-de-arvores-e-danos-em-campinas-1.1712761",
+    "https://diariocampineiro.com.br/chuva-forte-provoca-alagamentos-em-vias-de-campinas-no-inicio-da-manha/",
+    "https://www.acidadeon.com/campinas/cotidiano/temporal-provoca-pontos-de-alagamentos-em-campinas-saiba-onde/",
+    "https://www.acidadeon.com/campinas/cotidiano/chuva-de-1013-mm-provoca-alagamentos-quedas-de-arvores-e-muros-em-campinas/"
+   ]
+  },
+  {
+   "nome": "Av. Prefeito Magalhães Teixeira sob o viaduto da Av. Prestes Maia",
+   "bairro": "Jardim do Trevo / Jardim Proença",
+   "tipo": "alagamento",
+   "lat": -22.92413,
+   "lon": -47.06712,
+   "aprox": false,
+   "datas": [
+    "2024"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais"
+   ]
+  },
+  {
+   "nome": "Av. Lix da Cunha sob o viaduto da Praça João dos Santos Teixeira",
+   "bairro": "Jardim Chapadão",
+   "tipo": "alagamento",
+   "lat": -22.89704,
+   "lon": -47.09646,
+   "aprox": true,
+   "datas": [
+    "2024"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais"
+   ]
+  },
+  {
+   "nome": "Av. Barão de Itapura x Av. Brasil",
+   "bairro": "Guanabara",
+   "tipo": "alagamento",
+   "lat": -22.89116,
+   "lon": -47.06306,
+   "aprox": false,
+   "datas": [
+    "2024"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais"
+   ]
+  },
+  {
+   "nome": "Av. Barão de Itapura x R. Cândido Gomide",
+   "bairro": "Guanabara",
+   "tipo": "alagamento",
+   "lat": -22.89802,
+   "lon": -47.06894,
+   "aprox": false,
+   "datas": [
+    "2025-01-29"
+   ],
+   "fontes": [
+    "https://olhardacidade.com.br/forte-chuva-causou-alagamento-em-13-pontos-de-campinas-mario-gatti-teve-novamente-problemas/"
+   ]
+  },
+  {
+   "nome": "Av. Dr. Moraes Sales x Viaduto São Paulo",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.9091,
+   "lon": -47.06142,
+   "aprox": true,
+   "datas": [
+    "2024"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais"
+   ]
+  },
+  {
+   "nome": "Av. Brasil x R. Alberto Faria",
+   "bairro": "Jardim Brasil",
+   "tipo": "alagamento",
+   "lat": -22.889,
+   "lon": -47.06509,
+   "aprox": false,
+   "datas": [
+    "2025-09-22"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuva-forte-provoca-alagamentos-queda-de-arvores-e-danos-em-campinas-1.1712761",
+    "https://diariocampineiro.com.br/chuva-forte-provoca-alagamentos-em-vias-de-campinas-no-inicio-da-manha/"
+   ]
+  },
+  {
+   "nome": "Av. Anchieta x R. Barreto Leme",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.90035,
+   "lon": -47.05828,
+   "aprox": false,
+   "datas": [
+    "2023-01-17",
+    "2024",
+    "2025-01-29"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuva-deixa-campinas-em-estado-de-atenc-o-1.1332910",
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://olhardacidade.com.br/forte-chuva-causou-alagamento-em-13-pontos-de-campinas-mario-gatti-teve-novamente-problemas/",
+    "https://sampi.net.br/campinas/noticias/2881570/campinas/2025/01/temporal-causa-alagamentos-e-carros-ficam-ilhados-em-campinas"
+   ]
+  },
+  {
+   "nome": "R. Álvaro Müller x R. Barata Ribeiro",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.89554,
+   "lon": -47.063,
+   "aprox": false,
+   "datas": [
+    "2024",
+    "2025-01-29",
+    "2026-11-07"
+   ],
+   "fontes": [
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais",
+    "https://sampi.net.br/campinas/noticias/2881570/campinas/2025/01/temporal-causa-alagamentos-e-carros-ficam-ilhados-em-campinas",
+    "https://www.acidadeon.com/campinas/cotidiano/temporal-provoca-alagamentos-e-queda-de-galhos-em-campinas-veja-os-estragos/",
+    "https://www.piranot.com.br/2026/11/08/noticias/meio-ambiente/temporal-campinas-quedas-arvores-estragos/"
+   ]
+  },
+  {
+   "nome": "R. Barão de Atibaia x R. Barata Ribeiro",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.89507,
+   "lon": -47.06365,
+   "aprox": false,
+   "datas": [
+    "2025-09-22",
+    "2025-09-23"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuva-forte-provoca-alagamentos-queda-de-arvores-e-danos-em-campinas-1.1712761",
+    "https://diariocampineiro.com.br/chuva-forte-provoca-alagamentos-em-vias-de-campinas-no-inicio-da-manha/",
+    "https://correio.rac.com.br/campinasermc/chuva-acima-do-esperado-causa-transtornos-em-campinas-1.1713103"
+   ]
+  },
+  {
+   "nome": "Terminal Mercado / Mercadão (Av. Benjamin Constant)",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.90338,
+   "lon": -47.06365,
+   "aprox": true,
+   "datas": [
+    "2025-01-29",
+    "2025-09-22"
+   ],
+   "fontes": [
+    "https://olhardacidade.com.br/forte-chuva-causou-alagamento-em-13-pontos-de-campinas-mario-gatti-teve-novamente-problemas/",
+    "https://sampi.net.br/campinas/noticias/2881570/campinas/2025/01/temporal-causa-alagamentos-e-carros-ficam-ilhados-em-campinas",
+    "https://diariocampineiro.com.br/chuva-forte-provoca-alagamentos-em-vias-de-campinas-no-inicio-da-manha/"
+   ]
+  },
+  {
+   "nome": "Praça Agenor Oliveira Cartola",
+   "bairro": "Vila Lemos",
+   "tipo": "alagamento",
+   "lat": -22.91923,
+   "lon": -47.04473,
+   "aprox": false,
+   "datas": [
+    "2025-01-29"
+   ],
+   "fontes": [
+    "https://olhardacidade.com.br/forte-chuva-causou-alagamento-em-13-pontos-de-campinas-mario-gatti-teve-novamente-problemas/",
+    "https://sampi.net.br/campinas/noticias/2881570/campinas/2025/01/temporal-causa-alagamentos-e-carros-ficam-ilhados-em-campinas"
+   ]
+  },
+  {
+   "nome": "Av. John Boyd Dunlop x acesso à Rod. Anhanguera",
+   "bairro": "Jardim Ipaussurama / Campo Grande",
+   "tipo": "alagamento",
+   "lat": -22.91291,
+   "lon": -47.09987,
+   "aprox": true,
+   "datas": [
+    "2023-01-17",
+    "2024",
+    "2025-09-22"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuva-deixa-campinas-em-estado-de-atenc-o-1.1332910",
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://correio.rac.com.br/campinasermc/chuva-forte-provoca-alagamentos-queda-de-arvores-e-danos-em-campinas-1.1712761",
+    "https://diariocampineiro.com.br/chuva-forte-provoca-alagamentos-em-vias-de-campinas-no-inicio-da-manha/"
+   ]
+  },
+  {
+   "nome": "Av. John Boyd Dunlop x R. Lucas Pereira de Castro",
+   "bairro": "Campo Grande",
+   "tipo": "alagamento",
+   "lat": -22.9092,
+   "lon": -47.09085,
+   "aprox": true,
+   "datas": [
+    "2026-10-11"
+   ],
+   "fontes": [
+    "https://www.acidadeon.com/campinas/cotidiano/temporal-provoca-pontos-de-alagamentos-em-campinas-saiba-onde/"
+   ]
+  },
+  {
+   "nome": "Av. das Amoreiras x R. Dr. Alves do Banho",
+   "bairro": "São Bernardo",
+   "tipo": "alagamento",
+   "lat": -22.92437,
+   "lon": -47.07959,
+   "aprox": true,
+   "datas": [
+    "2024",
+    "2026-10-11"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://www.acidadeon.com/campinas/cotidiano/temporal-provoca-pontos-de-alagamentos-em-campinas-saiba-onde/"
+   ]
+  },
+  {
+   "nome": "Av. das Amoreiras x R. Laranjal Paulista",
+   "bairro": "Jardim do Trevo",
+   "tipo": "alagamento",
+   "lat": -22.93009,
+   "lon": -47.08563,
+   "aprox": false,
+   "datas": [
+    "2026-10-11"
+   ],
+   "fontes": [
+    "https://www.acidadeon.com/campinas/cotidiano/temporal-provoca-pontos-de-alagamentos-em-campinas-saiba-onde/"
+   ]
+  },
+  {
+   "nome": "Av. Rosa Belloto Grande x R. Contabilistas (Ribeirão Anhumas)",
+   "bairro": "Jardim Novo Cambuí",
+   "tipo": "transbordamento de rio",
+   "lat": -22.88493,
+   "lon": -47.04295,
+   "aprox": false,
+   "datas": [
+    "2024"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://correio.rac.com.br/campinasermc/mapeamento-identifica-43-locais-com-risco-de-alagamento-em-campinas-1.1583543"
+   ]
+  },
+  {
+   "nome": "R. Arlindo Carpino x R. Leonardo da Vinci",
+   "bairro": "Novo Taquaral",
+   "tipo": "alagamento",
+   "lat": -22.87328,
+   "lon": -47.03849,
+   "aprox": false,
+   "datas": [
+    "2024"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://correio.rac.com.br/campinasermc/mapeamento-identifica-43-locais-com-risco-de-alagamento-em-campinas-1.1583543"
+   ]
+  },
+  {
+   "nome": "Av. Dr. Jesuíno Marcondes Machado x R. Piquete",
+   "bairro": "Nova Campinas",
+   "tipo": "alagamento",
+   "lat": -22.894,
+   "lon": -47.04085,
+   "aprox": false,
+   "datas": [
+    "2024"
+   ],
+   "fontes": [
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/",
+    "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais"
+   ]
+  },
+  {
+   "nome": "Estrada da Rhodia x R. Dr. Alcindo Soares",
+   "bairro": "Barão Geraldo",
+   "tipo": "alagamento",
+   "lat": -22.80805,
+   "lon": -47.07754,
+   "aprox": true,
+   "datas": [
+    "2023-01-17",
+    "2024"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuva-deixa-campinas-em-estado-de-atenc-o-1.1332910",
+    "https://horacampinas.com.br/veja-pontos-a-evitar-em-caso-de-chuva-forte-em-campinas/"
+   ]
+  },
+  {
+   "nome": "Ruas Benedito Pedro Bastos Cruz, David Belloti e Sebastião Wenceslau Pinheiro",
+   "bairro": "Chácaras Vale das Garças (Barão Geraldo)",
+   "tipo": "alagamento",
+   "lat": -22.74536,
+   "lon": -47.06532,
+   "aprox": true,
+   "datas": [
+    "2026-02-25"
+   ],
+   "fontes": [
+    "https://www.acidadeon.com/campinas/cotidiano/forte-temporal-provoca-alagamentos-e-quedas-de-arvores-galhos-e-muro-em-campinas/"
+   ]
+  },
+  {
+   "nome": "Ponte da R. Ferdinando Turquete (córrego)",
+   "bairro": "Jardim das Bandeiras II",
+   "tipo": "transbordamento de rio",
+   "lat": -22.95269,
+   "lon": -47.09094,
+   "aprox": true,
+   "datas": [
+    "2023-01-19"
+   ],
+   "fontes": [
+    "https://www.gazetasp.com.br/estado/chuva-derruba-ponte-e-causa-diversos-estragos-em-campinas/1119930",
+    "https://www.metropoles.com/sao-paulo/prefeitura-de-campinas-tera-que-ressarcir-carro-arrastado-por-enchente"
+   ]
+  },
+  {
+   "nome": "Beco do Mokarzel, R. Quinze de Novembro (Rio Atibaia)",
+   "bairro": "Sousas",
+   "tipo": "transbordamento de rio",
+   "lat": -22.87813,
+   "lon": -46.96791,
+   "aprox": true,
+   "datas": [
+    "2023-01-19",
+    "2026-10-25"
+   ],
+   "fontes": [
+    "https://www.metropoles.com/sao-paulo/campinas-decreta-estado-de-emergencia-apos-estragos-causados-por-chuvas",
+    "https://www.acidadeon.com/campinas/cotidiano/chuva-de-1013-mm-provoca-alagamentos-quedas-de-arvores-e-muros-em-campinas/"
+   ]
+  },
+  {
+   "nome": "R. Serra Dourada",
+   "bairro": "Jardim São Fernando",
+   "tipo": "deslizamento",
+   "lat": -22.91799,
+   "lon": -47.02146,
+   "aprox": true,
+   "datas": [
+    "2023-01-17",
+    "2024-11-08"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuva-deixa-campinas-em-estado-de-atenc-o-1.1332910",
+    "https://correio.rac.com.br/campinasermc/chuvas-causam-20-ocorrencias-e-campinas-entra-em-alerta-com-equipes-de-sobreaviso-1.1587623"
+   ]
+  },
+  {
+   "nome": "R. Ademar Pereira de Barros (galeria pluvial)",
+   "bairro": "Vila Formosa",
+   "tipo": "alagamento",
+   "lat": -22.94201,
+   "lon": -47.02179,
+   "aprox": true,
+   "datas": [
+    "2024-10-24"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/mapeamento-identifica-43-locais-com-risco-de-alagamento-em-campinas-1.1583543"
+   ]
+  }
+ ],
+ "episodios": [
+  {
+   "data": "2016-06-05",
+   "titulo": "Microexplosão: 74 mm em 45 minutos",
+   "chuva_mm": 74,
+   "resumo": "Defesa Civil mediu 74 mm em 45 minutos na madrugada. Avenidas alagadas. Taquaral, Cambuí, São Quirino e centro foram os mais atingidos.",
+   "pontos": [],
+   "fontes": [
+    "https://istoe.com.br/possivel-tornado-deixa-feridos-e-causa-estragos-campinas"
+   ]
+  },
+  {
+   "data": "2016-10-20",
+   "titulo": "Vendaval e granizo alagam quatro bairros",
+   "chuva_mm": null,
+   "resumo": "Alagamentos e quedas de árvores no Cambuí, Jardim Aurélia, Nova Europa e São Bernardo.",
+   "pontos": [],
+   "fontes": [
+    "https://istoedinheiro.com.br/interior-paulista-tem-vendaval-e-granizo"
+   ]
+  },
+  {
+   "data": "2017",
+   "titulo": "Rio Atibaia transborda em Desembargador Furtado",
+   "chuva_mm": null,
+   "resumo": "Sistema SAISP registrou o Atibaia transbordando na região de Desembargador Furtado em janeiro.",
+   "pontos": [],
+   "fontes": [
+    "https://www.climatempo.com.br/noticia/2017/01/17/chuva-em-sp-rio-atibaia-transborda-6663"
+   ]
+  },
+  {
+   "data": "2022-12-12",
+   "titulo": "Segundo dia de temporal arrasta carros na Princesa D'Oeste",
+   "chuva_mm": 63.4,
+   "resumo": "50 mm em menos de uma hora no Jardim Parque das Bandeiras e 63,4 mm até o meio da tarde. Dois carros arrastados na Princesa D'Oeste. 17 imóveis alagados.",
+   "pontos": [
+    "Av. Princesa D'Oeste x Av. Dr. Antônio Carlos Sales Jr."
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/temporal-castiga-campinas-pelo-segundo-dia-consecutivo-1.1320567"
+   ]
+  },
+  {
+   "data": "2023-01-17",
+   "titulo": "70,8 mm em uma hora; 13 pontos de alagamento",
+   "chuva_mm": 70.8,
+   "resumo": "Emdec registrou 13 pontos de alagamento em vias. 15 imóveis alagados e quatro deslizamentos. Prefeitura declarou estado de atenção.",
+   "pontos": [
+    "Av. Orosimbo Maia x R. Delfino Cintra",
+    "Av. Orosimbo Maia x Av. Francisco Glicério",
+    "Av. José de Souza Campos (Norte-Sul) x Av. Orosimbo Maia",
+    "Av. Princesa D'Oeste x Av. Dr. Antônio Carlos Sales Jr.",
+    "Av. Anchieta x R. Barreto Leme",
+    "Estrada da Rhodia x R. Dr. Alcindo Soares",
+    "Av. John Boyd Dunlop x acesso à Rod. Anhanguera",
+    "R. Serra Dourada"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuva-deixa-campinas-em-estado-de-atenc-o-1.1332910"
+   ]
+  },
+  {
+   "data": "2023-01-19",
+   "titulo": "Chuva derruba ponte e desaloja 31 famílias; emergência",
+   "chuva_mm": 147.3,
+   "resumo": "147,3 mm em cerca de sete horas em Sousas. Ponte da R. Ferdinando Turquete cedeu e um carro caiu no córrego. 31 famílias desalojadas, 20 no Mokarzel. Decreto de emergência 22.618/2023 cita 209,6 mm de 17 a 20 de janeiro.",
+   "pontos": [
+    "Ponte da R. Ferdinando Turquete (córrego)",
+    "Beco do Mokarzel, R. Quinze de Novembro (Rio Atibaia)"
+   ],
+   "fontes": [
+    "https://www.gazetasp.com.br/estado/chuva-derruba-ponte-e-causa-diversos-estragos-em-campinas/1119930",
+    "https://www.metropoles.com/sao-paulo/campinas-decreta-estado-de-emergencia-apos-estragos-causados-por-chuvas",
+    "https://www.metropoles.com/sao-paulo/prefeitura-de-campinas-tera-que-ressarcir-carro-arrastado-por-enchente"
+   ]
+  },
+  {
+   "data": "2024-10-24",
+   "titulo": "120 mm em três horas; duas mortes por enxurrada",
+   "chuva_mm": 120,
+   "resumo": "120 mm em três horas na região do Curtume. Uma jovem foi arrastada na Av. Sylvio Moro até o Piçarrão. Um rapaz morreu levado pela água numa galeria da R. Ademar Pereira de Barros.",
+   "pontos": [
+    "Região do Curtume: Av. Sylvio Moro x Av. Dr. Carlos de Campos (Córrego Piçarrão)",
+    "R. Ademar Pereira de Barros (galeria pluvial)"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/mapeamento-identifica-43-locais-com-risco-de-alagamento-em-campinas-1.1583543",
+    "https://sbtnews.sbt.com.br/noticia/brasil/mulher-e-arrastada-por-enxurrada-durante-temporal-em-campinas-sp"
+   ]
+  },
+  {
+   "data": "2024-11-08",
+   "titulo": "Perto de 200 mm em três dias; deslizamentos no São Fernando",
+   "chuva_mm": 48.37,
+   "resumo": "48,37 mm no dia em Barão Geraldo e cerca de 200 mm em três dias. Três deslizamentos: dois no Jardim São Fernando e um no Parque Centenário. Imóveis interditados na R. Serra Dourada.",
+   "pontos": [
+    "R. Serra Dourada"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuvas-causam-20-ocorrencias-e-campinas-entra-em-alerta-com-equipes-de-sobreaviso-1.1587623"
+   ]
+  },
+  {
+   "data": "2025-01-29",
+   "titulo": "59,2 mm em duas horas; 13 pontos e carros ilhados",
+   "chuva_mm": 59.2,
+   "resumo": "Cepagri mediu 59,2 mm. 32 mm caíram em pouco mais de uma hora. Carros ilhados na R. Barata Ribeiro e 13 pontos de alagamento.",
+   "pontos": [
+    "Av. Orosimbo Maia x Av. Brasil / R. Santa Cruz",
+    "Av. Orosimbo Maia x R. Paula Bueno / R. Dr. Carlos Guimarães",
+    "Av. Orosimbo Maia x R. Delfino Cintra",
+    "Av. Princesa D'Oeste x Av. Ayrton Senna da Silva / R. Conde D'Eu",
+    "Av. Anchieta x R. Barreto Leme",
+    "Av. Barão de Itapura x R. Cândido Gomide",
+    "Terminal Mercado / Mercadão (Av. Benjamin Constant)",
+    "Praça Agenor Oliveira Cartola",
+    "Av. Dr. Heitor Penteado x Kartódromo (Lagoa do Taquaral)",
+    "Região do Curtume: Av. Sylvio Moro x Av. Dr. Carlos de Campos (Córrego Piçarrão)",
+    "R. Álvaro Müller x R. Barata Ribeiro"
+   ],
+   "fontes": [
+    "https://olhardacidade.com.br/forte-chuva-causou-alagamento-em-13-pontos-de-campinas-mario-gatti-teve-novamente-problemas/",
+    "https://sampi.net.br/campinas/noticias/2881570/campinas/2025/01/temporal-causa-alagamentos-e-carros-ficam-ilhados-em-campinas"
+   ]
+  },
+  {
+   "data": "2025-09-22",
+   "titulo": "Seis pontos de alagamento; água no Mercadão",
+   "chuva_mm": 55.6,
+   "resumo": "20 mm em duas horas no centro e 55,6 mm no total. Seis pontos de alagamento. Água entrou no Mercadão, no Mário Gattinho e em seis centros de saúde.",
+   "pontos": [
+    "Av. Orosimbo Maia x R. Rafael Sampaio",
+    "Av. Dr. Heitor Penteado x Kartódromo (Lagoa do Taquaral)",
+    "Região do Curtume: Av. Sylvio Moro x Av. Dr. Carlos de Campos (Córrego Piçarrão)",
+    "R. Barão de Atibaia x R. Barata Ribeiro",
+    "Av. John Boyd Dunlop x acesso à Rod. Anhanguera",
+    "Av. Brasil x R. Alberto Faria",
+    "Terminal Mercado / Mercadão (Av. Benjamin Constant)"
+   ],
+   "fontes": [
+    "https://correio.rac.com.br/campinasermc/chuva-forte-provoca-alagamentos-queda-de-arvores-e-danos-em-campinas-1.1712761",
+    "https://diariocampineiro.com.br/chuva-forte-provoca-alagamentos-em-vias-de-campinas-no-inicio-da-manha/",
+    "https://correio.rac.com.br/campinasermc/chuva-acima-do-esperado-causa-transtornos-em-campinas-1.1713103"
+   ]
+  },
+  {
+   "data": "2026-02-17",
+   "titulo": "21 carros submersos no antigo kartódromo",
+   "chuva_mm": null,
+   "resumo": "21 veículos ficaram submersos na área do antigo kartódromo do Taquaral.",
+   "pontos": [
+    "Av. Dr. Heitor Penteado x Kartódromo (Lagoa do Taquaral)"
+   ],
+   "fontes": [
+    "https://www.correiodamanha.com.br/opiniao/editorial/2026/02/260535-em-temporal-avisado-afunda-quem-quer.html"
+   ]
+  },
+  {
+   "data": "2026-02-25",
+   "titulo": "115 mm em quatro horas em Barão Geraldo",
+   "chuva_mm": 115,
+   "resumo": "Cepagri mediu 115 mm em quatro horas em Barão Geraldo. Ruas da região ficaram cobertas de água. Heitor Penteado alagou.",
+   "pontos": [
+    "Av. Dr. Heitor Penteado x Kartódromo (Lagoa do Taquaral)",
+    "Ruas Benedito Pedro Bastos Cruz, David Belloti e Sebastião Wenceslau Pinheiro"
+   ],
+   "fontes": [
+    "https://www.acidadeon.com/campinas/cotidiano/forte-temporal-provoca-alagamentos-e-quedas-de-arvores-galhos-e-muro-em-campinas/"
+   ]
+  },
+  {
+   "data": "2026-09-01",
+   "titulo": "Taquaral alaga duas vezes no mesmo dia",
+   "chuva_mm": 31,
+   "resumo": "31 mm segundo a Defesa Civil. Heitor Penteado alagou de madrugada no antigo kartódromo e às 8h perto do portão 1 da Lagoa.",
+   "pontos": [
+    "Av. Dr. Heitor Penteado x Kartódromo (Lagoa do Taquaral)"
+   ],
+   "fontes": [
+    "https://sampi.net.br/campinas/noticias/3001937/campinas/2026/09/chuva-derruba-arvores-e-volta-a-alagar-taquaral-em-campinas"
+   ]
+  },
+  {
+   "data": "2026-10-11",
+   "titulo": "59,2 mm em 1h40",
+   "chuva_mm": 59.2,
+   "resumo": "Cepagri mediu 59,2 mm em 1h40 e 93,7 mm em 72 horas. Emdec bloqueou pontos no Curtume, Amoreiras, Heitor Penteado e John Boyd Dunlop.",
+   "pontos": [
+    "Região do Curtume: Av. Sylvio Moro x Av. Dr. Carlos de Campos (Córrego Piçarrão)",
+    "Av. das Amoreiras x R. Dr. Alves do Banho",
+    "Av. das Amoreiras x R. Laranjal Paulista",
+    "Av. Dr. Heitor Penteado x Kartódromo (Lagoa do Taquaral)",
+    "Av. John Boyd Dunlop x R. Lucas Pereira de Castro",
+    "Av. Orosimbo Maia x R. Delfino Cintra"
+   ],
+   "fontes": [
+    "https://www.acidadeon.com/campinas/cotidiano/temporal-provoca-pontos-de-alagamentos-em-campinas-saiba-onde/"
+   ]
+  },
+  {
+   "data": "2026-10-25",
+   "titulo": "101,3 mm em dois dias; Atibaia inunda o Mokarzel",
+   "chuva_mm": 101.3,
+   "resumo": "101,3 mm entre sábado e domingo. O Rio Atibaia transbordou no Beco do Mokarzel. Bloqueio total na R. Maneco Rosa, em Sousas.",
+   "pontos": [
+    "Beco do Mokarzel, R. Quinze de Novembro (Rio Atibaia)",
+    "Av. Dr. Heitor Penteado x Kartódromo (Lagoa do Taquaral)",
+    "Av. Princesa D'Oeste x Av. Dr. Antônio Carlos Sales Jr.",
+    "Região do Curtume: Av. Sylvio Moro x Av. Dr. Carlos de Campos (Córrego Piçarrão)"
+   ],
+   "fontes": [
+    "https://www.acidadeon.com/campinas/cotidiano/chuva-de-1013-mm-provoca-alagamentos-quedas-de-arvores-e-muros-em-campinas/"
+   ]
+  },
+  {
+   "data": "2026-11-07",
+   "titulo": "Temporal de sábado: 51 ocorrências",
+   "chuva_mm": 70,
+   "resumo": "Máximo de 70 mm segundo a Defesa Civil; 48 mm no Parque Oziel. Acesso bloqueado na Heitor Penteado. Água acumulada na Álvaro Müller com Barata Ribeiro.",
+   "pontos": [
+    "Av. Dr. Heitor Penteado x Kartódromo (Lagoa do Taquaral)",
+    "R. Álvaro Müller x R. Barata Ribeiro"
+   ],
+   "fontes": [
+    "https://www.acidadeon.com/campinas/cotidiano/temporal-provoca-alagamentos-e-queda-de-galhos-em-campinas-veja-os-estragos/",
+    "https://www.acidadeon.com/campinas/cotidiano/temporal-em-campinas-cidade-registra-51-ocorrencias-entre-quedas-de-arvores-e-alagamentos/",
+    "https://www.piranot.com.br/2026/11/08/noticias/meio-ambiente/temporal-campinas-quedas-arvores-estragos/"
+   ]
+  }
+ ],
+ "areas_risco": [
+  {
+   "nome": "18 setores de alto risco de movimento de massa e inundação mapeados pelo CPRM (Decreto 24.684/2026): 01 Vale das Garças - Vila Holândia; 02 Jardim Santa Mônica, Jardim São Marcos e Jardim Campineiro; 03 Jardim Ipaussurama; 04 Jardim Rossin - Núcleo Princesa D'Oeste, Jardim Florence; 05 Jardim Florence I; 06 Jardim Campina Grande, Satélite Íris; 07 Sousas - R. Quinze de Novembro (Beco do Mokarzel); 08 Jardim Novo Flamboyant (Buraco do Sapo); 09 Jardim Novo Flamboyant; 10 Jardim Itatiaia - Jardim São Fernando - Jardim Baronesa; 11 Jardim Andorinhas; 12 Jardim Tamoio - R. Salomão Abud; 13 Parque Oziel; 14 Jardim Monte Cristo - Jardim do Lago I - Jardim das Bandeiras II; 15 Jardim Irmãos Sigrist; 16 Jardim Santo Antônio - R. Martinica; 17 Parque Universitário - Av. Aglaia; 18 Jardim Campos Elíseos",
+   "tipo": "deslizamento; inundação",
+   "fonte": "https://portal-adm.campinas.sp.gov.br/sites/default/files/publicacoes-dom/dom/2064651503131015031320646514.pdf"
+  },
+  {
+   "nome": "Plano de Contingência em 4 níveis: observação até 79,9 mm; atenção a partir de 80 mm (72 h) com vistoria; alerta com remoção preventiva após vistoria da CEPDEC; alerta máximo com remoção de toda a população das áreas de risco",
+   "tipo": "critério de alerta",
+   "fonte": "https://portal-adm.campinas.sp.gov.br/sites/default/files/publicacoes-dom/dom/2064651503131015031320646514.pdf"
+  },
+  {
+   "nome": "Parques, bosques e Lagoa do Taquaral fecham quando a chuva acumulada em 72 h chega a 80 mm, por região",
+   "tipo": "critério de alerta",
+   "fonte": "https://portal-adm.campinas.sp.gov.br/sites/default/files/publicacoes-dom/dom/2064651503131015031320646514.pdf"
+  },
+  {
+   "nome": "Operação Chuvas de Verão 2026/2027: de 14/10/2026 a 31/03/2027, antecipada pelo El Niño",
+   "tipo": "plano de verão",
+   "fonte": "https://www.correiodamanha.com.br/nacional/sao-paulo/campinas/2026/10/327106-campinas-antecipa-operacao-chuvas-de-verao-por-causa-dos-efeitos-do-el-nino.html"
+  },
+  {
+   "nome": "18 áreas monitoradas pela Defesa Civil: 12 de inundação e 6 de deslizamento; 530 famílias removidas de áreas de risco entre jan/2020 e nov/2023",
+   "tipo": "inundação; deslizamento",
+   "fonte": "https://www.acidadeon.com/campinas/cotidiano/veja-as-areas-com-risco-de-deslizamento-em-campinas-durante-as-chuvas/"
+  },
+  {
+   "nome": "43 pontos com risco de alagamento em 2024 (34 no fim de 2022), oito deles mais críticos; seis piscinões previstos, um em obra na Praça Paranapanema (Jardim Proença)",
+   "tipo": "alagamento",
+   "fonte": "https://correio.rac.com.br/campinasermc/mapeamento-identifica-43-locais-com-risco-de-alagamento-em-campinas-1.1583543"
+  },
+  {
+   "nome": "Emdec monitora 52 pontos sujeitos a alagamento, 13 com bloqueio prioritário",
+   "tipo": "alagamento",
+   "fonte": "https://sampi.net.br/campinas/noticias/2866926/campinas/2024/11/campinas-tem-52-pontos-criticos-de-alagamento-saiba-quais"
+  }
+ ],
+ "estacoes": []
+}
