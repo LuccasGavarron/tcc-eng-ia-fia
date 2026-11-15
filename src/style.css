@@ -178,15 +178,15 @@ th{font:600 12.5px var(--body);color:var(--tx)}
 /* ---------- linha do tempo ---------- */
 .timeline{position:absolute;left:calc(var(--rail) + var(--pw) + var(--gap));right:var(--gap);bottom:28px;z-index:2;display:flex;align-items:center;gap:14px;background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:left .22s ease}
 body.closed .timeline{left:calc(var(--rail) + var(--gap))}
-.timeline > button{flex:none;width:36px;height:36px;border:0;border-radius:50%;background:var(--acc-2);cursor:pointer;display:grid;place-items:center}
-.timeline > button svg{width:13px;height:13px;fill:#fff}
-.tl-now{flex:none;width:150px}
+.timeline > #play{flex:none;width:36px;height:36px;border:0;border-radius:50%;background:var(--acc-2);cursor:pointer;display:grid;place-items:center}
+.timeline > #play svg{width:13px;height:13px;fill:#fff}
+.tl-now{flex:none;min-width:150px}
 .tl-now output{display:block;font:700 15px var(--display);font-variant-numeric:tabular-nums}
 .tl-vals{font-size:11.5px;color:var(--tx2);font-variant-numeric:tabular-nums;display:flex;gap:10px;white-space:nowrap}
 .tl-vals b{color:var(--tx);font-weight:600}
-.tl-track{position:relative;flex:1;min-width:0;height:62px}
-#tlChart{position:absolute;left:0;right:0;top:0;width:100%;height:46px}
-.tl-track input{position:absolute;left:0;right:0;top:0;height:46px;width:100%;margin:0;opacity:0;cursor:pointer}
+.tl-track{position:relative;flex:1;min-width:0;height:66px}
+#tlChart{position:absolute;left:0;right:0;top:0;width:100%;height:50px}
+.tl-track input{position:absolute;left:0;right:0;top:0;height:50px;width:100%;margin:0;opacity:0;cursor:ew-resize}
 .tl-days{position:absolute;left:0;right:0;bottom:0;height:14px;font:600 10.5px var(--body);color:var(--tx3)}
 .tl-days span{position:absolute;transform:translateX(-50%);white-space:nowrap}
 
@@ -236,3 +236,21 @@ body.closed .find{left:calc(var(--rail) + var(--gap))}
 .find li b{font:500 13.5px var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .find li small{font-size:11.5px;color:var(--tx3)}
 @media (max-width:760px){.find{width:calc(100vw - var(--rail) - 24px);top:58px}}
+
+/* eventos reais e interação da linha do tempo */
+.tl-ev{position:relative;flex:none}
+.tl-ev > button{display:flex;align-items:center;gap:7px;font:600 12.5px var(--body);color:var(--tx);background:var(--s2);border:1px solid var(--line);border-radius:5px;padding:7px 10px;cursor:pointer;max-width:190px}
+.tl-ev > button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-ev > button svg{width:16px;height:16px;flex:none;fill:none;stroke:var(--tx2);stroke-width:1.7;stroke-linecap:round}
+.tl-ev > button.on{border-color:var(--acc);background:var(--s3)}
+.tl-ev ul{position:absolute;bottom:calc(100% + 10px);left:0;width:360px;max-height:380px;overflow:auto;list-style:none;margin:0;padding:4px;background:var(--s1);border:1px solid var(--line-2);border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.55)}
+.tl-ev li button{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:78px 1fr auto;gap:2px 10px;padding:8px 9px;border-radius:4px;cursor:pointer;font-size:12.5px}
+.tl-ev li button:focus-visible,.tl-ev li button[aria-pressed="true"]{background:var(--s3)}
+.tl-ev li b{font:600 12.5px var(--body);font-variant-numeric:tabular-nums}
+.tl-ev li span{color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-ev li em{font-style:normal;color:var(--tx2);font-variant-numeric:tabular-nums}
+.tl-ev li small{grid-column:2/-1;color:var(--tx3)}
+.tl-ev li.sep{padding:6px 9px 2px;color:var(--tx3);font-size:11.5px}
+.tl-tip{position:absolute;bottom:calc(100% + 8px);transform:translateX(-50%);background:var(--s2);border:1px solid var(--line-2);border-radius:4px;padding:5px 8px;font-size:11.5px;white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums;color:var(--tx2)}
+.tl-tip b{color:var(--tx);font-weight:600}
+.tl-speed{flex:none;font:700 12px var(--display);color:var(--tx2);background:var(--s2);border:1px solid var(--line);border-radius:5px;width:38px;height:30px;cursor:pointer}

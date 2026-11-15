@@ -43,6 +43,10 @@
 <div class="spin" id="busy" role="status" aria-label="Lendo o relevo" hidden></div>
 
 <div class="timeline" aria-label="Linha do tempo da previsão">
+  <div class="tl-ev">
+    <button type="button" id="evBtn" aria-expanded="false" aria-controls="evList"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span id="evLabel">Eventos reais</span></button>
+    <ul id="evList" hidden></ul>
+  </div>
   <button type="button" id="play" aria-label="Reproduzir as 72 horas">
     <svg viewBox="0 0 16 16" aria-hidden="true"><path id="playIcon" d="M4 2l10 6-10 6z"/></svg>
   </button>
@@ -50,11 +54,13 @@
     <output id="hourOut"></output>
     <div class="tl-vals" id="tlVals"></div>
   </div>
-  <div class="tl-track">
+  <div class="tl-track" id="tlTrack">
+    <div class="tl-tip" id="tlTip" hidden></div>
     <svg id="tlChart" viewBox="0 0 1000 64" preserveAspectRatio="none" aria-hidden="true"></svg>
     <input type="range" id="hour" min="0" max="71" value="0" aria-label="Hora da previsão">
     <div class="tl-days" id="tlDays"></div>
   </div>
+  <button type="button" class="tl-speed" id="speed" aria-label="Velocidade da reprodução">1×</button>
 </div>
 
 <section class="panel" id="panel" aria-label="Painel do Véspera">

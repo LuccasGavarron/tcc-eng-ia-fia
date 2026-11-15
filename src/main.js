@@ -12,7 +12,8 @@ const G = M.G, H = M.H;
 const fmt = (v, d = 0) => v.toFixed(d).replace(".", ",");
 const pct = p => (p > 0.99 ? "> 99%" : p < 0.01 ? "< 1%" : Math.round(p * 100) + "%");
 // a previsão começa à meia-noite de hoje; rótulos com o dia real da semana
-const T0 = new Date(); T0.setHours(0, 0, 0, 0);
+let T0 = new Date(); T0.setHours(0, 0, 0, 0);
+let replay = null; // episódio real em reprodução
 const dayName = t => { const d = new Date(T0.getTime() + Math.floor(t / 24) * 864e5); return d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "") + " " + d.getDate(); };
 const hourLabel = t => dayName(t) + ", " + String(t % 24).padStart(2, "0") + "h";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -130,8 +131,9 @@ getJSON("/bairros-sorocaba.json").then(j => { bairros = j; if (j) setData("bairr
 getJSON("/cobertura-sorocaba.json").then(j => { cover = j; scheduleSample(); });
 getJSON("/escolas-sorocaba.json").then(j => { schools = j; pickShelters(); });
 getJSON("/historico-sorocaba.json").then(j => { hist = j; if (j) { setData("hist", histGeo()); drawHistory(); plan(); } });
+const isHit = p => !!replay && ((p.datas || []).includes(replay.data) || (replay.pontos || []).some(n => p.nome.includes(n) || n.includes(p.nome)));
 const histGeo = () => ({ type: "FeatureCollection", features: (hist?.pontos || []).filter(p => p.lat && p.lon).map(p => ({ type: "Feature",
-  properties: { nome: p.nome, tipo: p.tipo + (p.bairro ? ", " + p.bairro : ""), datas: (p.datas || []).join(", "), fonte: (p.fontes || [])[0] || "" },
+  properties: { nome: p.nome, tipo: p.tipo + (p.bairro ? ", " + p.bairro : ""), datas: (p.datas || []).join(", "), fonte: (p.fontes || [])[0] || "", hit: isHit(p) },
   geometry: { type: "Point", coordinates: [p.lon, p.lat] } })) });
 
 /* ---------- leitura do relevo ---------- */
@@ -442,13 +444,15 @@ function drawHyeto() {
     const his = Array.from({ length: H }, (_, t) => F.hiAt(t)), hmax = Math.max(40, ...his), hy = v => Hh - 2 - ((v - 15) / (hmax - 15)) * (Hh - 8);
     s += `<polyline points="${his.map((v, t) => ((t + 0.5) * cw).toFixed(1) + "," + hy(v).toFixed(1)).join(" ")}" fill="none" stroke="#E0612B" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`;
   }
+  if (replay) s += `<rect x="${24 * cw}" y="0" width="${24 * cw}" height="${Hh}" fill="#C2473A" opacity="0.08"/>`;
   const xt = (S.t + 0.5) * cw;
   s += `<line x1="${xt}" x2="${xt}" y1="0" y2="${Hh}" stroke="#E3E9EE" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
   $("tlChart").innerHTML = s;
   $("tlDays").innerHTML = [0, 1, 2].map(d => '<span style="left:' + ((d * 24 + 12) / H) * 100 + '%">' + dayName(d * 24) + "</span>").join("");
-  $("tlVals").innerHTML = S.mode === "chuva"
+  const hits = replay && grid && cl ? hist.pontos.filter(isHit).map(p => cellOf([p.lon, p.lat])).filter(i => i >= 0) : null;
+  $("tlVals").innerHTML = (hits && hits.length ? "<span>Acertos <b>" + hits.filter(i => cl.f[i] === 1 || cl.f[i] === 2).length + "/" + hits.length + "</b></span>" : "") + (S.mode === "chuva"
     ? "<span>Chuva <b>" + fmt(F.hours[S.t], 1) + "</b> mm/h</span><span>Rio <b>" + fmt(F.sim.rise[S.t], 1) + "</b> m</span>"
-    : "<span>Calor <b>" + fmt(F.hiAt(S.t), 0) + "</b> °C</span>";
+    : "<span>Calor <b>" + fmt(F.hiAt(S.t), 0) + "</b> °C</span>");
   $("fPeak").textContent = fmt(F.peak, F.peak < 10 ? 1 : 0);
   $("fWhen").textContent = S.rain ? dayName(F.peakT).split(" ")[0] + " " + String(F.peakT % 24).padStart(2, "0") + "h" : "";
   $("fDay").textContent = Math.round(F.dayMax);
@@ -481,7 +485,7 @@ function setHour(t, quiet) {
 /* ---------- controles ---------- */
 const tube = $("tube");
 (function () { let h = ""; for (let v = 0; v <= 250; v += 50) { const p = (v / 250) * 100; h += `<i style="bottom:${p}%"></i><span style="bottom:${p}%">${v}</span>`; } $("ticks").innerHTML = h; })();
-function setRain(v) { S.rain = Math.max(0, Math.min(250, Math.round(v / 5) * 5)); update(true); }
+function setRain(v) { if (replay) { replay = null; $("evLabel").textContent = "Eventos reais"; $("evBtn").classList.remove("on"); T0 = new Date(); T0.setHours(0, 0, 0, 0); setData("hist", histGeo()); } S.rain = Math.max(0, Math.min(250, Math.round(v / 5) * 5)); update(true); }
 function fromPointer(e) { const r = tube.getBoundingClientRect(); setRain((1 - (e.clientY - r.top) / r.height) * 250); }
 tube.addEventListener("pointerdown", e => { tube.setPointerCapture(e.pointerId); fromPointer(e); });
 tube.addEventListener("pointermove", e => { if (tube.hasPointerCapture(e.pointerId)) fromPointer(e); });
@@ -506,7 +510,7 @@ $("play").onclick = () => {
   if (timer) return stop();
   if (S.t >= H - 1) setHour(0);
   $("playIcon").setAttribute("d", PAUSE); $("play").setAttribute("aria-label", "Pausar");
-  timer = setInterval(() => { if (S.t >= H - 1) return stop(); setHour(S.t + 1); }, 260);
+  timer = setInterval(() => { if (S.t >= H - 1) return stop(); setHour(S.t + 1); }, 260 / speed);
 };
 $("hour").oninput = e => { stop(); setHour(+e.target.value); };
 
@@ -551,6 +555,54 @@ TABS.forEach(k => ($("t-" + k).onclick = () => {
   if (closed) setOpen(true);
 }));
 $("collapse").onclick = () => setOpen(document.body.classList.contains("closed"));
+
+/* eventos reais: escolhe uma data do histórico, roda a chuva dela e destaca o que alagou */
+function eventsList() {
+  const eps = (hist?.episodios || []).filter(e => e.data).slice().sort((a, b) => b.data.localeCompare(a.data));
+  const fmtD = d => d.split("-").reverse().join("/");
+  $("evList").innerHTML = (replay ? '<li><button type="button" data-i="-1"><b>Cenário livre</b><span>Voltar ao cenário montado no painel</span><em></em></button></li>' : "") +
+    eps.map((e, i) => { const n = hist.pontos.filter(p => (p.datas || []).includes(e.data)).length;
+      return '<li><button type="button" data-i="' + i + '" aria-pressed="' + (replay === e) + '"><b>' + fmtD(e.data) + "</b><span>" + esc(e.titulo) + "</span><em>" +
+        (e.chuva_mm ? e.chuva_mm + " mm" : "") + "</em>" + (n ? "<small>" + n + (n > 1 ? " pontos registrados" : " ponto registrado") + "</small>" : "") + "</button></li>"; }).join("");
+  $("evList")._eps = eps;
+}
+function setReplay(e) {
+  replay = e;
+  if (e) {
+    // a data do evento cai no dia 2 da linha do tempo; sem total medido, estima pelo número de pontos atingidos
+    T0 = new Date(e.data + "T00:00:00"); T0.setDate(T0.getDate() - 1);
+    const n = hist.pontos.filter(p => (p.datas || []).includes(e.data)).length;
+    // o total da reportagem é de um pluviômetro em 24 h; a cheia responde à bacia em vários dias, então usa o maior entre o medido e o estimado pelos pontos atingidos
+    S.mode = "chuva"; S.rain = Math.min(250, Math.round(Math.max(e.chuva_mm || 0, 50 + n * 15) / 5) * 5); S.ante = Math.min(250, 40 + n * 20);
+    $("ante").value = S.ante;
+    S.sys = M.SYSTEMS[0]; // frente fria: pico no dia 2, o dia do evento
+    document.querySelectorAll("#systems button").forEach((b, i) => b.setAttribute("aria-pressed", M.SYSTEMS[i] === S.sys));
+    $("m-chuva").setAttribute("aria-pressed", true); $("m-seco").setAttribute("aria-pressed", false);
+    $("evLabel").textContent = e.data.split("-").reverse().join("/") + " · " + S.rain + " mm";
+  } else { T0 = new Date(); T0.setHours(0, 0, 0, 0); $("evLabel").textContent = "Eventos reais"; }
+  $("evBtn").classList.toggle("on", !!e);
+  if (hist) setData("hist", histGeo());
+  update(true);
+}
+$("evBtn").onclick = () => { eventsList(); const open = $("evList").hidden; $("evList").hidden = !open; $("evBtn").setAttribute("aria-expanded", open); };
+$("evList").onclick = ev => {
+  const b = ev.target.closest("button[data-i]"); if (!b) return;
+  $("evList").hidden = true; $("evBtn").setAttribute("aria-expanded", false);
+  setReplay(+b.dataset.i < 0 ? null : $("evList")._eps[+b.dataset.i]);
+};
+document.addEventListener("click", e => { if (!e.target.closest(".tl-ev")) $("evList").hidden = true; });
+
+// passar o mouse no gráfico mostra a hora, a chuva e o rio daquele ponto
+$("tlTrack").addEventListener("pointermove", e => {
+  const r = $("tlChart").getBoundingClientRect(), x = e.clientX - r.left;
+  if (x < 0 || x > r.width || e.clientY > r.bottom) { $("tlTip").hidden = true; return; }
+  const t = Math.min(H - 1, Math.floor((x / r.width) * H));
+  $("tlTip").innerHTML = "<b>" + hourLabel(t) + "</b> · " + (S.mode === "chuva" ? fmt(F.hours[t], 1) + " mm/h · rio " + fmt(F.sim.rise[t], 1) + " m" : "calor " + fmt(F.hiAt(t), 0) + " °C");
+  $("tlTip").style.left = x + "px"; $("tlTip").hidden = false;
+});
+$("tlTrack").addEventListener("pointerleave", () => ($("tlTip").hidden = true));
+let speed = 1;
+$("speed").onclick = () => { speed = speed === 4 ? 1 : speed * 2; $("speed").textContent = speed + "×"; if (timer) { stop(); $("play").click(); } };
 
 /* busca no mapa: dados locais primeiro, depois ruas e lugares do Photon dentro de Sorocaba */
 const norm = t => String(t).normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();

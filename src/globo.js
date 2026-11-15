@@ -160,7 +160,9 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
         width: f.properties.w === "r" ? 4 : f.properties.w === "c" ? 2.2 : 1.5, clampToGround: true, material: C("#7FC4F0").withAlpha(0.9) } });
     },
     hist(ds, fc) {
-      for (const f of fc.features) marker(ds, f.geometry.coordinates, icon("alerta", "#C98A12"), () => popup("hist", f.properties), null, 28);
+      // no replay de um evento, os pontos que alagaram naquela data ficam vermelhos, maiores e com nome
+      for (const f of fc.features) marker(ds, f.geometry.coordinates, icon("alerta", f.properties.hit ? "#C2473A" : "#C98A12", f.properties.hit), () => popup("hist", f.properties),
+        f.properties.hit ? f.properties.nome : null, f.properties.hit ? 40 : 28);
     },
     sens(ds, fc) {
       for (const f of fc.features) {
