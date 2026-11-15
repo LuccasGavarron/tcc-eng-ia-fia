@@ -222,3 +222,17 @@ body.closed .timeline{left:calc(var(--rail) + var(--gap))}
 .db .empty{padding:10px 12px;color:var(--tx3);font-size:12px;margin:0}
 .tagrow{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--tx2)}
 .tagrow b{font:600 12px var(--body);color:#fff;padding:3px 8px;border-radius:4px}
+
+/* busca no mapa */
+.find{position:absolute;top:12px;left:calc(var(--rail) + var(--pw) + var(--gap));width:min(340px,30vw);z-index:3;transition:left .22s ease}
+body.closed .find{left:calc(var(--rail) + var(--gap))}
+.find svg{position:absolute;left:10px;top:9px;width:17px;height:17px;fill:none;stroke:var(--tx2);stroke-width:1.8;stroke-linecap:round}
+.find input{width:100%;font:13.5px var(--body);padding:8px 10px 8px 34px;background:var(--s1);border:1px solid var(--line);border-radius:5px;color:var(--tx);box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.find input::placeholder{color:var(--tx3)}
+.find ul{list-style:none;margin:4px 0 0;padding:4px;background:var(--s1);border:1px solid var(--line-2);border-radius:5px;max-height:340px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.find li button{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:20px 1fr;gap:2px 9px;align-items:center;padding:7px 8px;border-radius:4px;cursor:pointer}
+.find li button:focus,.find li button.on{background:var(--s3)}
+.find li img{width:20px;height:20px;grid-row:span 2}
+.find li b{font:500 13.5px var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.find li small{font-size:11.5px;color:var(--tx3)}
+@media (max-width:760px){.find{width:calc(100vw - var(--rail) - 24px);top:58px}}

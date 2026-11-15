@@ -11,6 +11,8 @@ const G = {
   gota: '<path d="M12 2.5C9 7 6 10.5 6 14a6 6 0 0 0 12 0c0-3.5-3-7-6-11.5z"/>',
   encosta: '<path d="M2 20l7-11 4 5 3-3 6 9z"/><circle cx="17" cy="6" r="2.2"/><circle cx="20.5" cy="10" r="1.4"/>',
   fogo: '<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 1.6-4.6 3-6 0 2 1 3 2 3-1-3 0-6 1-9z"/>',
+  pino: '<path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.6" fill="currentColor"/>',
+  rua: '<path d="M8 3L5 21M16 3l3 18" stroke="#fff" stroke-width="2" fill="none"/><path d="M12 4v3M12 10v3M12 16v3" stroke="#fff" stroke-width="2"/>',
   sol: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="#fff" stroke-width="2" stroke-linecap="round"/>',
 };
 const cache = {};

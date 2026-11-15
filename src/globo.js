@@ -139,6 +139,9 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     shel(ds, fc) {
       for (const f of fc.features) marker(ds, f.geometry.coordinates, icon("casa", "#3F7D55"), () => popup("shel", f.properties), f.properties.name, 40);
     },
+    busca(ds, fc) {
+      for (const f of fc.features) marker(ds, f.geometry.coordinates, icon("pino", "#E3E9EE"), () => "<b>" + f.properties.name + "</b><br><small>" + f.properties.kind + "</small>", f.properties.name, 42);
+    },
     // nível 0: um nome a cada 2,6 km; nível 1: a cada 900 m; nível 2: o resto, só bem de perto
     bairros(ds, list) {
       const far = [14000, 4500, 1800], size = [13, 12, 11];

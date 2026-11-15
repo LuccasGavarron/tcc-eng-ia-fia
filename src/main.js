@@ -5,7 +5,7 @@ import { CONNECTORS, STATIONS, simulateSensors, lastValid, gaugeCross } from "./
 import LIMITE from "./limite-sorocaba.json";
 import { createGlobe } from "./globo.js";
 import { loadElevation } from "./relevo.js";
-import { icon } from "./icones.js";
+import { icon, SENSOR_ICON } from "./icones.js";
 
 const $ = id => document.getElementById(id);
 const G = M.G, H = M.H;
@@ -551,6 +551,54 @@ TABS.forEach(k => ($("t-" + k).onclick = () => {
   if (closed) setOpen(true);
 }));
 $("collapse").onclick = () => setOpen(document.body.classList.contains("closed"));
+
+/* busca no mapa: dados locais primeiro, depois ruas e lugares do Photon dentro de Sorocaba */
+const norm = t => String(t).normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+function localHits(q) {
+  const src = [
+    ...(bairros || []).map(([n, x, y]) => [n, x, y, "Bairro", "pino", "#5FA3CF"]),
+    ...(schools || []).map(([n, x, y]) => [n, x, y, "Escola", "casa", "#3F7D55"]),
+    ...(hist?.pontos || []).map(p => [p.nome, p.lon, p.lat, "Ocorrência registrada", "alerta", "#C98A12"]),
+    ...STATIONS.map(st => [st.n, st.ll[0], st.ll[1], "Sensor " + st.id, ...SENSOR_ICON[st.c]]),
+    ...(rivers?.features || []).filter(f => f.properties.n).map(f => { const c = f.geometry.coordinates[Math.floor(f.geometry.coordinates.length / 2)]; return [f.properties.n, c[0], c[1], "Rio ou córrego", "regua", "#1F7A8C"]; }),
+  ];
+  const seen = new Set(), out = [];
+  for (const r of src) { const k = norm(r[0]); if (!k.includes(q) || seen.has(k)) continue; seen.add(k); out.push(r); }
+  return out.sort((a, b) => norm(a[0]).indexOf(q) - norm(b[0]).indexOf(q)).slice(0, 7);
+}
+let findTmr, findHits = [];
+function showHits(list) {
+  findHits = list;
+  $("findRes").innerHTML = list.map(([n, , , kind, g, c], i) => '<li><button type="button" data-i="' + i + '"' + (i ? "" : ' class="on"') + '><img src="' + icon(g, c) + '" alt=""><b>' + esc(n) + "</b><small>" + esc(kind) + "</small></button></li>").join("");
+  $("findRes").hidden = !list.length;
+}
+function pickHit(i) {
+  const h = findHits[i]; if (!h) return;
+  $("findRes").hidden = true; $("find").value = h[0];
+  setData("busca", { type: "FeatureCollection", features: [{ type: "Feature", properties: { name: h[0], kind: h[3] }, geometry: { type: "Point", coordinates: [h[1], h[2]] } }] });
+  globe && globe.flyTo(h[1], h[2], 450, 1.8);
+}
+$("find").addEventListener("input", e => {
+  const q = norm(e.target.value.trim()); clearTimeout(findTmr);
+  if (q.length < 2) { showHits([]); if (!q) setData("busca", null); return; }
+  const local = localHits(q); showHits(local);
+  if (q.length < 3) return;
+  findTmr = setTimeout(() => fetch("https://photon.komoot.io/api/?limit=6&bbox=-47.58,-23.6,-47.29,-23.34&q=" + encodeURIComponent(e.target.value.trim()))
+    .then(r => r.json()).then(j => {
+      if (norm($("find").value.trim()) !== q) return;
+      const kinds = { street: "Rua", house: "Endereço", city: "Cidade", district: "Bairro", locality: "Localidade" };
+      const geo = (j.features || []).map(f => { const p = f.properties; return [p.name || p.street || "", f.geometry.coordinates[0], f.geometry.coordinates[1],
+        (kinds[p.type] || "Lugar") + (p.district ? ", " + p.district : ""), p.type === "street" ? "rua" : "pino", "#4E6068"]; })
+        .filter(r => r[0] && !local.some(l => norm(l[0]) === norm(r[0])));
+      showHits(local.concat(geo).slice(0, 10));
+    }).catch(() => {}), 300);
+});
+$("find").addEventListener("keydown", e => {
+  if (e.key === "Enter") { e.preventDefault(); pickHit(0); }
+  if (e.key === "Escape") { $("findRes").hidden = true; }
+});
+$("findRes").onclick = e => { const b = e.target.closest("button[data-i]"); if (b) pickHit(+b.dataset.i); };
+document.addEventListener("click", e => { if (!e.target.closest(".find")) $("findRes").hidden = true; });
 
 /* banco de dados: tudo que o Véspera usa, com origem e registros */
 let bairros = null;

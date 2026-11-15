@@ -24,6 +24,11 @@
 
 <div id="map" aria-label="Mapa 3D da cidade"></div>
 
+<div class="find" role="search">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+  <input id="find" type="search" placeholder="Buscar rua, bairro, escola ou sensor" autocomplete="off" aria-label="Buscar lugar no mapa">
+  <ul id="findRes" hidden></ul>
+</div>
 <div class="toolbar">
   <div class="seg-sm" role="group" aria-label="Modo de visualização">
     <button type="button" id="v3" aria-pressed="true">3D</button>
