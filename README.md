@@ -24,4 +24,4 @@ A análise por IA usa `/api/analise` (função do Vercel). Defina `XAI_API_KEY` 
 
 ## Fontes
 
-Satélite Sentinel-2 cloudless 2023 (EOX, CC BY-NC-SA 4.0), relevo Terrain Tiles (AWS Open Data), rótulos OpenFreeMap, dados © colaboradores do OpenStreetMap. Uso não comercial.
+Imagens de satélite Esri World Imagery (Esri, Maxar, Earthstar Geographics), limite municipal IBGE, relevo Terrain Tiles (AWS Open Data), rótulos OpenFreeMap, dados © colaboradores do OpenStreetMap. Uso não comercial.

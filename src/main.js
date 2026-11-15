@@ -4,6 +4,7 @@ import "./style.css";
 import { contours } from "d3-contour";
 import * as M from "./model.js";
 import { CONNECTORS, STATIONS, simulateSensors, lastValid, gaugeCross } from "./sensores.js";
+import LIMITE from "./limite-sorocaba.json";
 
 const $ = id => document.getElementById(id);
 const G = M.G, H = M.H;
@@ -13,7 +14,7 @@ const hourLabel = t => "dia " + (Math.floor(t / 24) + 1) + ", " + String(t % 24)
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 const CITIES = [
-  { n: "Sorocaba", c: [-47.452, -23.492], z: 12.6, ctx: "Cortada pelo Rio Sorocaba, com avenidas marginais e bairros baixos junto ao leito." },
+  { n: "Sorocaba", c: [-47.44, -23.47], z: 11.1, ctx: "Cortada pelo Rio Sorocaba, com avenidas marginais e bairros baixos junto ao leito." },
   { n: "Petrópolis", c: [-43.178, -22.505], z: 13, ctx: "Serra fluminense. Em 2022, chuvas extremas causaram deslizamentos com centenas de mortes." },
   { n: "São Sebastião", c: [-45.68, -23.79], z: 12.4, ctx: "Litoral norte de SP. Em 2023, deslizamentos atingiram a Vila Sahy após chuva recorde." },
   { n: "Porto Alegre", c: [-51.215, -30.03], z: 12, ctx: "Às margens do Guaíba. Em 2024, a cidade viveu a maior enchente de sua história." },
@@ -87,23 +88,33 @@ const DEM = { type: "raster-dem", tiles: ["https://s3.amazonaws.com/elevation-ti
   attribution: '<a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a>' };
 const STYLE = { version: 8, glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
   sources: {
-    sat: { type: "raster", tiles: ["https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2023_3857/default/g/{z}/{y}/{x}.jpg"], tileSize: 256, maxzoom: 15,
-      attribution: '<a href="https://s2maps.eu">Sentinel-2 cloudless 2023</a> por EOX (dados Copernicus modificados)' },
+    sat: { type: "raster", tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"], tileSize: 256, maxzoom: 19,
+      attribution: "Imagens Esri, Maxar, Earthstar Geographics" },
     omt: { type: "vector", url: "https://tiles.openfreemap.org/planet",
       attribution: '<a href="https://openfreemap.org">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' },
     dem: DEM, hs: { ...DEM },
   },
-  layers: [{ id: "sat", type: "raster", source: "sat", paint: { "raster-saturation": -0.15, "raster-contrast": 0.08 } }] };
-const map = new maplibregl.Map({ container: "map", style: STYLE, attributionControl: { compact: true }, center: CITIES[0].c, zoom: CITIES[0].z, pitch: 62, bearing: -18, maxPitch: 75, maxZoom: 17 });
+  layers: [{ id: "fundo", type: "background", paint: { "background-color": "#000" } },
+    { id: "sat", type: "raster", source: "sat", paint: { "raster-saturation": -0.1, "raster-contrast": 0.05 } }] };
+// Sorocaba solta no espaço: tudo fora do limite municipal (IBGE) fica preto
+const WORLD = [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]];
+const MASK = { type: "Feature", geometry: { type: "Polygon", coordinates: [WORLD, LIMITE.coordinates[0]] } };
+const BAIRRO = ["any", ["in", ["get", "class"], ["literal", ["suburb", "town", "city"]]], [">=", ["zoom"], 14]];
+const IN_CITY = ["within", { type: "Feature", geometry: LIMITE }];
+const map = new maplibregl.Map({ container: "map", style: STYLE, attributionControl: { compact: true }, center: CITIES[0].c, zoom: CITIES[0].z, pitch: 62, bearing: -18, maxPitch: 75, maxZoom: 18.5 });
+// painel lateral cobre a esquerda: centraliza a cidade na área livre
+if (innerWidth > 900) map.setPadding({ left: 440, top: 80 });
 map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "bottom-right");
 map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-left");
 const FONT = ["Noto Sans Bold"];
 const EMPTY = { type: "FeatureCollection", features: [] };
 const setData = (id, d) => { const s = map.getSource(id); if (s) s.setData(d); };
 
+// créditos começam recolhidos no botão (i)
+map.once("load", () => document.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show"));
 map.on("style.load", () => {
   map.setTerrain({ source: "dem", exaggeration: S.is3D ? 1.6 : 1 });
-  try { map.setSky({ "sky-color": "#28507F", "horizon-color": "#DCE6EC", "fog-color": "#DCE6EC", "sky-horizon-blend": 0.6, "horizon-fog-blend": 0.6, "fog-ground-blend": 0.85 }); } catch (e) {}
+  try { map.setSky({ "sky-color": "#000", "horizon-color": "#000", "fog-color": "#000", "sky-horizon-blend": 0, "horizon-fog-blend": 0, "fog-ground-blend": 1, "atmosphere-blend": 0 }); } catch (e) {}
   map.addLayer({ id: "hillshade", type: "hillshade", source: "hs", layout: { visibility: S.is3D ? "none" : "visible" },
     paint: { "hillshade-exaggeration": 0.55, "hillshade-shadow-color": "#1B2A31" } });
   map.addSource("risk", { type: "geojson", data: EMPTY });
@@ -113,14 +124,18 @@ map.on("style.load", () => {
   map.addSource("rios", { type: "geojson", data: rivers || EMPTY });
   map.addLayer({ id: "rios", type: "line", source: "rios", paint: { "line-color": "#7FC4F0",
     "line-width": ["match", ["get", "w"], "r", 3, "c", 1.6, 1.1], "line-opacity": 0.9 } });
+  map.addSource("limite", { type: "geojson", data: MASK });
+  map.addLayer({ id: "fora", type: "fill", source: "limite", paint: { "fill-color": "#000", "fill-antialias": false } });
+  map.addLayer({ id: "borda-luz", type: "line", source: "limite", paint: { "line-color": "#7FC4F0", "line-width": 9, "line-blur": 8, "line-opacity": 0.45 } });
+  map.addLayer({ id: "borda", type: "line", source: "limite", paint: { "line-color": "#CFE9FA", "line-width": 1.4 } });
   map.addSource("predios", { type: "geojson", data: EMPTY });
   map.addLayer({ id: "predios", type: "fill-extrusion", source: "predios", minzoom: 13, paint: {
     "fill-extrusion-color": "#E3E6E1", "fill-extrusion-height": ["get", "h"], "fill-extrusion-opacity": 0.85 } });
   const halo = { "text-color": "#fff", "text-halo-color": "rgba(27,42,49,.9)", "text-halo-width": 1.4 };
   map.addLayer({ id: "ruas", type: "symbol", source: "omt", "source-layer": "transportation_name", minzoom: 14,
-    layout: { "text-field": ["get", "name"], "text-font": ["Noto Sans Regular"], "text-size": 11, "symbol-placement": "line" }, paint: halo });
+    layout: { "text-field": ["get", "name"], "text-font": ["Noto Sans Regular"], "text-size": 11, "symbol-placement": "line" }, filter: IN_CITY, paint: halo });
   map.addLayer({ id: "bairros", type: "symbol", source: "omt", "source-layer": "place", minzoom: 11,
-    filter: ["any", ["in", ["get", "class"], ["literal", ["suburb", "town", "city"]]], [">=", ["zoom"], 14]],
+    filter: ["all", IN_CITY, BAIRRO],
     layout: { "text-field": ["get", "name"], "text-font": FONT, "text-size": ["match", ["get", "class"], "city", 15, "town", 13, 11.5],
       "text-transform": "uppercase", "text-letter-spacing": 0.06 }, paint: halo });
   getJSON("/predios-sorocaba.geojson").then(j => j && setData("predios", j));
@@ -533,9 +548,17 @@ $("play").onclick = () => {
 $("hour").oninput = e => { stop(); setHour(+e.target.value); };
 
 /* cidades e busca */
+// máscara e corte dos rótulos só existem para Sorocaba; nas outras cidades o mapa fica inteiro
+function focusCity(on) {
+  if (!map.getLayer("fora")) return;
+  for (const id of ["fora", "borda-luz", "borda"]) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+  map.setFilter("ruas", on ? IN_CITY : null);
+  map.setFilter("bairros", on ? ["all", IN_CITY, BAIRRO] : BAIRRO);
+}
 function goTo(city, btn) {
   document.querySelectorAll("#cities button").forEach(x => x.setAttribute("aria-pressed", x === btn));
   $("context").textContent = city.ctx || "";
+  focusCity(city.n === "Sorocaba");
   map.flyTo({ center: city.c, zoom: city.z || 12.5, pitch: S.is3D ? 62 : 0, bearing: S.is3D ? -18 : 0, duration: 2600, essential: true });
 }
 CITIES.forEach((c, i) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c.n; b.setAttribute("aria-pressed", i === 0); b.onclick = () => goTo(c, b); $("cities").appendChild(b); });
