@@ -2,7 +2,8 @@
 // sem token, cai para satélite Esri sobre o globo liso. O resto do app só fala com esta interface.
 import * as Cesium from "cesium";
 import "cesium/Build/Cesium/Widgets/widgets.css";
-import { icon, SENSOR_ICON, RISK_ICON } from "./icones.js";
+import { icon as icon0, SENSOR_ICON, RISK_ICON } from "./icones.js";
+const icon = (g, c, bad) => icon0(g, c, bad, 30); // selos dos pontos, com haste
 
 window.CESIUM_BASE_URL = "/cesium/";
 // o Google serve por HTTP/2: 18 pedidos simultâneos (padrão) deixava a malha chegando aos poucos
@@ -115,20 +116,16 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   const layer = id => { if (!layers[id]) { layers[id] = new Cesium.CustomDataSource(id); v.dataSources.add(layers[id]); if (GROUP[id]) group(layers[id], GROUP[id]); } return layers[id]; };
   // pontos muito juntos na tela viram um selo só com o número; clicar nele aproxima a câmera
   const GROUP = { hist: "#C98A12", foco: "#C2473A", shel: "#3F7D55", sens: "#2C6CB0" };
-  const hidden = new Set();
   function group(ds, color) {
-    const cl = ds.clustering; cl.enabled = true; cl.pixelRange = 34; cl.minimumClusterSize = 3; cl.clusterLabels = false; cl.clusterPoints = false;
+    const cl = ds.clustering; cl.enabled = true; cl.pixelRange = 34; cl.minimumClusterSize = ds.name === "foco" ? 6 : 3; // no destaque cada ponto tem 3 billboards (haste, selo, onda): 6 = dois pontos cl.clusterLabels = false; cl.clusterPoints = false;
     cl.clusterEvent.addEventListener((list, c) => {
-      const col = ds._groupColor || color, n = list.filter(e => !e._wave).length;
-      for (const e of list) { if (e._stalkEnt) { e._stalkEnt.show = false; hidden.add(e._stalkEnt); } }
+      const col = ds._groupColor || color, n = list.filter(e => e._head).length;
       c.label.show = false; c.billboard.show = true; c.billboard.id = { _cluster: list };
       c.billboard.image = count(n, col); c.billboard.width = c.billboard.height = n > 9 ? 50 : 44;
       c.billboard.color = dimOn && ds !== layers.foco ? DIM : Cesium.Color.WHITE;
       c.billboard.verticalOrigin = Cesium.VerticalOrigin.CENTER; c.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
     });
   }
-  // a cada novo agrupamento as hastes voltam e só as dos pontos agrupados somem de novo
-  cam.changed.addEventListener(() => { for (const e of hidden) e.show = true; hidden.clear(); });
   const countCache = {};
   const count = (n, col) => countCache[n + col] || (countCache[n + col] = "data:image/svg+xml;utf8," + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="${col}" fill-opacity=".35"/>
@@ -143,13 +140,12 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
     verticalOrigin: Cesium.VerticalOrigin.TOP, ...ground });
 
   // marcador 3D: haste branca saindo do chão e selo com ícone no topo, sempre virado para a câmera
-  const STALK = 60;
+  // a haste faz parte da imagem: um só billboard por ponto, que o agrupamento esconde inteiro (haste em polyline piscava)
+  const STALK = 30;
   function marker(ds, ll, img, pop, text, size, floor) {
-    const e = floor ?? elevAt(ll[0], ll[1]) ?? 0;
-    const base = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e), top = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e + STALK);
-    const stalk = ds.entities.add({ _pop: pop, _stalk: true, polyline: { positions: [base, top], width: 2, arcType: Cesium.ArcType.NONE, material: Cesium.Color.WHITE.withAlpha(0.8) } });
-    return ds.entities.add({ _stalkEnt: stalk, position: top, _pop: pop, _at: { ll, r: 260, top },
-      billboard: { image: img, width: size, height: size, verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    const e = floor ?? elevAt(ll[0], ll[1]) ?? 0, base = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e);
+    return ds.entities.add({ position: base, _pop: pop, _head: true, _at: { ll, r: 260, top: base },
+      billboard: { image: img, width: size, height: size * (64 + STALK) / 64, verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY,
         scaleByDistance: new Cesium.NearFarScalar(1500, 1.1, 40000, 0.4) },
       label: text ? { ...label(text, 12, 4), distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500) } : undefined });
   }
@@ -268,31 +264,32 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
         pop.style.left = xy.x + "px"; pop.style.top = xy.y + "px"; pop.hidden = false; } });
   }
   // destaque: pontos de um tipo crescem e pulsam, a câmera voa até eles e gira devagar em volta
-  const foco = layer("foco"), wave = icon("anel", "#fff");
+  const foco = layer("foco"), wave = icon0("anel");
   let orbit = null, pulse = false;
   function stopOrbit() { if (!orbit) return; sc.preUpdate.removeEventListener(orbit); orbit = null; cam.lookAtTransform(Cesium.Matrix4.IDENTITY); }
   sc.canvas.addEventListener("pointerdown", stopOrbit); sc.canvas.addEventListener("wheel", stopOrbit, { passive: true });
   // com destaque ligado, os outros pontos ficam apagados
   let dimOn = false;
   const DIM = Cesium.Color.WHITE.withAlpha(0.28);
-  const dimDs = ds => { for (const e of ds.entities.values) { if (e.billboard) e.billboard.color = dimOn ? DIM : Cesium.Color.WHITE; if (e._stalk) e.polyline.show = !dimOn; } };
+  const dimDs = ds => { for (const e of ds.entities.values) { if (e.billboard) e.billboard.color = dimOn ? DIM : Cesium.Color.WHITE; } };
   function dim(on) { if (dimOn === on) return; dimOn = on; for (const id of ["hist", "sens", "shel", "risk", "busca"]) if (layers[id]) dimDs(layers[id]); }
   function spotlight(items, glyph, color, fly = true) {
     foco.entities.removeAll();
     if (!items || !items.length) { stopOrbit(); pulse = false; dim(false); sc.requestRenderMode = true; sc.requestRender(); return; }
     const t0 = performance.now(), pts = []; foco._groupColor = color;
+    const sbd = new Cesium.NearFarScalar(1500, 1.1, 40000, 0.45);
+    const bb = { verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY, scaleByDistance: sbd, pixelOffsetScaleByDistance: sbd };
     items.forEach((it, i) => {
-      // o ponto sobe do chão até bem acima dos outros, saindo rápido e parando devagar
+      // o ponto sobe do chão bem acima dos outros: sai rápido e para devagar
       const g = elevAt(it.ll[0], it.ll[1]) ?? 0, ph = i * 0.7, s = () => ((performance.now() - t0) / 1600 + ph) % 1;
-      const h = () => { const k = Math.min(1, (performance.now() - t0 - i * 40) / 900); return g + 60 + 240 * (k <= 0 ? 0 : 1 - Math.pow(2, -10 * k)); };
-      const base = Cesium.Cartesian3.fromDegrees(it.ll[0], it.ll[1], g), top = new Cesium.CallbackPositionProperty(() => Cesium.Cartesian3.fromDegrees(it.ll[0], it.ll[1], h()), false);
-      const at = { ll: it.ll, r: it.r || 260, get top() { return top.getValue(); } };
-      const stalk = foco.entities.add({ _pop: it.pop, _at: at, polyline: { positions: new Cesium.CallbackProperty(() => [base, top.getValue()], false), width: 2.5, arcType: Cesium.ArcType.NONE, material: C(color) } });
-      const bb = { verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY, scaleByDistance: new Cesium.NearFarScalar(1500, 1.1, 40000, 0.45) };
-      foco.entities.add({ position: top, _pop: it.pop, _at: at, _stalkEnt: stalk, billboard: { ...bb, image: icon(glyph, color, true), width: 56, height: 56,
+      const rise = () => { const k = Math.min(1, (performance.now() - t0 - i * 40) / 1100); return 24 + 96 * (k <= 0 ? 0 : 1 - Math.pow(2, -10 * k)); };
+      const base = Cesium.Cartesian3.fromDegrees(it.ll[0], it.ll[1], g), at = { ll: it.ll, r: it.r || 260, top: base };
+      const up = new Cesium.CallbackProperty(() => new Cesium.Cartesian2(0, -rise()), false);
+      foco.entities.add({ position: base, _pop: it.pop, _at: at, billboard: { ...bb, image: icon0("haste", color), width: 3, height: new Cesium.CallbackProperty(rise, false) } });
+      foco.entities.add({ position: base, _pop: it.pop, _at: at, _head: true, billboard: { ...bb, image: icon0(glyph, color, true), width: 56, height: 56, pixelOffset: up,
         scale: new Cesium.CallbackProperty(() => 1 + 0.06 * Math.sin(s() * 6.283), false) } });
       // onda de radar saindo do ponto
-      foco.entities.add({ position: top, _wave: true, billboard: { ...bb, image: wave, width: 56, height: 56,
+      foco.entities.add({ position: base, billboard: { ...bb, image: wave, width: 56, height: 56, pixelOffset: up,
         scale: new Cesium.CallbackProperty(() => 1 + s() * 1.4, false), color: new Cesium.CallbackProperty(() => C(color).withAlpha(1 - s()), false) } });
       pts.push(base);
     });
@@ -304,7 +301,11 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
     let hd = cam.heading;
     cam.flyToBoundingSphere(sph, { duration: 3, easingFunction: EASE,
       offset: new Cesium.HeadingPitchRange(hd, pitch, range),
-      complete: () => { orbit = () => { hd += rad(0.08); cam.lookAt(sph.center, new Cesium.HeadingPitchRange(hd, pitch, range)); }; sc.preUpdate.addEventListener(orbit); } });
+      // depois do voo, um giro de 70° que começa rápido e para devagar
+      complete: () => { const h0 = hd, t1 = performance.now();
+        orbit = () => { const k = Math.min(1, (performance.now() - t1) / 4200);
+          cam.lookAt(sph.center, new Cesium.HeadingPitchRange(h0 + rad(70) * (1 - Math.pow(2, -10 * k)), pitch, range)); if (k >= 1) stopOrbit(); };
+        sc.preUpdate.addEventListener(orbit); } });
   }
   // passar o mouse sobre uma área de perigo mostra o que é e o dado da hora
   const tip = document.createElement("div"); tip.className = "pop tip"; tip.hidden = true; container.appendChild(tip);

@@ -18,11 +18,13 @@ const G = {
 const cache = {};
 const RING = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="#fff" stroke-width="3"/></svg>';
 // selo de 64 px: anel branco, fundo na cor, desenho branco; ruim = anel vermelho
-export function icon(glyph, color, bad) {
+// stalk: haste em pixels embaixo do selo (64 + stalk de altura), ancorada no chão
+export function icon(glyph, color, bad, stalk = 0) {
   if (glyph === "anel") return "data:image/svg+xml;utf8," + encodeURIComponent(RING);
-  const k = glyph + color + bad;
+  if (glyph === "haste") return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="4" height="64"><rect width="4" height="64" fill="' + color + '"/></svg>');
+  const k = glyph + color + bad + stalk;
   return cache[k] || (cache[k] = "data:image/svg+xml;utf8," + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="${64 + stalk}" viewBox="0 0 64 ${64 + stalk}">${stalk ? `<rect x="30.5" y="60" width="3" height="${stalk + 4}" fill="#fff" fill-opacity=".85"/>` : ""}
       <circle cx="32" cy="32" r="29" fill="${bad ? "#E5484D" : "#fff"}"/><circle cx="32" cy="32" r="24.5" fill="${color}"/>
       <g transform="translate(17 17) scale(1.25)" fill="#fff" color="${color}">${G[glyph]}</g></svg>`));
 }
