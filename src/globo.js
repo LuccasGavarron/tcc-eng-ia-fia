@@ -55,7 +55,9 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   let tiles = null;
   if (token) {
     try {
-      tiles = await Cesium.createGooglePhotorealistic3DTileset({ maximumScreenSpaceError: 20,
+      tiles = await Cesium.createGooglePhotorealistic3DTileset({ onlyUsingWithGoogleGeocoder: true }, { maximumScreenSpaceError: 20,
+        // colisão da câmera lia a malha de volta da GPU a cada quadro: travadas de 1,5 a 3,7 s
+        enableCollision: false,
         // pede blocos também durante o zoom e sem priorizar o centro: a borda da tela não fica borrada esperando
         cullRequestsWhileMoving: false, foveatedScreenSpaceError: false, progressiveResolutionHeightFraction: 0, cacheBytes: 1536 * 1024 * 1024, maximumCacheOverflowBytes: 1024 * 1024 * 1024 });
       tiles.clippingPolygons = clip();
@@ -307,6 +309,11 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   // câmera
   const ctrl = sc.screenSpaceCameraController;
   ctrl.zoomFactor = 14; // padrão 5 é lento no trackpad
+  // piso da câmera pelo relevo (Terrarium), no lugar da colisão com a malha 3D, que travava
+  sc.preUpdate.addEventListener(() => {
+    const c = cam.positionCartographic, g = elevAt(Cesium.Math.toDegrees(c.longitude), Cesium.Math.toDegrees(c.latitude)) ?? alt[1];
+    if (c.height < g + 80) cam.position = Cesium.Cartesian3.fromRadians(c.longitude, c.latitude, g + 80);
+  });
   ctrl.inertiaZoom = 0.9; ctrl.inertiaTranslate = 0.9; // o zoom continua deslizando e para devagar
   // navegação: esquerdo arrasta o mapa, direito gira a visão em primeira pessoa, roda dá zoom, Ctrl+esquerdo ou meio inclina
   const E = Cesium.CameraEventType;
