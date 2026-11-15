@@ -175,7 +175,7 @@ export function classify(grid, s) {
   const out = new Uint8Array(G * G), n = { f: 0, a: 0, s: 0, x: 0, h: 0, t: 0 };
   if (!grid) return { f: out, n };
   for (let i = 0; i < G * G; i++) {
-    const e = grid.el[i]; if (isNaN(e)) continue; n.t++;
+    const e = grid.el[i]; if (isNaN(e) || (grid.inCity && !grid.inCity[i])) continue; n.t++;
     let k = 0;
     if (s.mode === "chuva") {
       // lâmina acima das margens: o canal só extravasa quando a subida passa da calha cheia
@@ -183,7 +183,7 @@ export function classify(grid, s) {
       const depth = s.rise * w - (grid.hand ? bankfull(w) : 0);
       if (depth > 0 && hv < depth) k = 1;
       else if (w >= 0.5 && s.rise * w > 1 && hv < depth + 1.5) k = 2; // faixa de atenção só em rios e canais
-      else if (grid.slope[i] > s.slopeThr) k = 3;
+      else if (grid.slope[i] > s.slopeThr && (!grid.occ || grid.occ[i])) k = 3; // encosta só conta se ocupada
     } else if (grid.veg && grid.built) {
       // incêndio: vegetação contínua com perigo FMA+ alto; calor: malha construída densa com índice de calor elevado
       if (s.fireClass >= 3 && grid.veg[i] > 55 - 8 * (s.fireClass - 3)) k = 4;

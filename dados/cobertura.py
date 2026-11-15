@@ -1,9 +1,10 @@
 # Gera a cobertura (fração de vegetação e de área construída por célula de 0,002°, ~200 m)
-# a partir do OpenStreetMap. Rodar: python3 dados/cobertura.py [sorocaba|campinas]
+# a partir do OpenStreetMap. Rodar: python3 dados/cobertura.py [sorocaba|campinas|petropolis]
 import json, math, sys, glob
 CIDADES={  # caixa W,S,E,N; arquivos do Overpass; saída
  'sorocaba':((-47.60,-23.60,-47.33,-23.38),'dados/osm_veg.json',['dados/osm_building.json'],'public/cobertura-sorocaba.json'),
  'campinas':((-47.25,-23.07,-46.81,-22.72),'dados/campinas/osm_veg.json',sorted(glob.glob('dados/campinas/bld/*.json')),'public/campinas/cobertura.json'),
+ 'petropolis':((-43.38,-22.58,-42.97,-22.20),'dados/petropolis/osm_veg.json',sorted(glob.glob('dados/petropolis/bld/*.json')),'public/petropolis/cobertura.json'),
 }
 (W,S,E,N),VEG,BLD,OUT=CIDADES[sys.argv[1] if len(sys.argv)>1 else 'sorocaba']
 D=0.002

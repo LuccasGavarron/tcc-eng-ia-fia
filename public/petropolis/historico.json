@@ -1,0 +1,813 @@
+{
+ "pontos": [
+  {
+   "nome": "Rio Quitandinha – R. Coronel Veiga (régua INEA Cel Veiga)",
+   "bairro": "Valparaíso",
+   "tipo": "transbordamento de rio",
+   "lat": -22.52631,
+   "lon": -43.19378,
+   "aprox": false,
+   "datas": [
+    "2018-03-21",
+    "2022-02-15",
+    "2022-12-13",
+    "2023-10-17",
+    "2024-03-22",
+    "2026-05-20"
+   ],
+   "fontes": [
+    "https://www.petropolis.rj.gov.br/pmp/phocadownload/defesa-civil/relatorios/2025/Relatrio%20-%20%20Eventos%20chuvosos%20de%2015%20de%20fevereiro%20de%202022.pdf",
+    "https://alertadecheias.inea.rj.gov.br/mapa.php",
+    "https://www.jb.com.br/rio/noticias/2018/03/21/amp/chuvas-atingem-petropolis-e-terra-desliza-na-rua-do-palacio-quitandinha.html",
+    "https://www.brasildefato.com.br/2022/12/13/municipio-de-petropolis-rj-e-atingido-por-forte-chuva-nesta-terca-feira-13/",
+    "https://www.correiodamanha.com.br/correio-petropolitano/regiao-serrana/2023/10/99587-despreparo-para-as-chuvas.html",
+    "https://brasildefato.com.br/2024/03/22/petropolis-rj-tem-ruas-interditadas-devido-a-inundacoes-causadas-pelo-transbordamento-do-rio-quitandinha",
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html",
+    "https://www.petropolisemcena.com.br/2026/05/boletim-defesa-civil-duas-ocorrencias-e.html"
+   ]
+  },
+  {
+   "nome": "R. Washington Luiz (ônibus arrastados para o Rio Quitandinha)",
+   "bairro": "Centro / Valparaíso",
+   "tipo": "transbordamento de rio",
+   "lat": -22.51827,
+   "lon": -43.18636,
+   "aprox": true,
+   "datas": [
+    "2022-02-15",
+    "2025-12-17"
+   ],
+   "fontes": [
+    "https://www.brasildefato.com.br/2022/03/04/mp-rj-vai-investigar-responsabilidades-em-onibus-arrastados-nas-chuvas-de-petropolis/",
+    "https://www.mprj.mp.br/web/guest/visualizar?noticiaId=111411",
+    "https://www.folhape.com.br/noticias/temporal-petropolis-suspende-aulas-nas-escolas-do-municipio-angra/456574/"
+   ]
+  },
+  {
+   "nome": "R. do Imperador (Centro Histórico)",
+   "bairro": "Centro",
+   "tipo": "transbordamento de rio",
+   "lat": -22.50948,
+   "lon": -43.17412,
+   "aprox": true,
+   "datas": [
+    "2022-12-13",
+    "2024-03-22",
+    "2025-12-17"
+   ],
+   "fontes": [
+    "https://www.brasildefato.com.br/2022/12/13/municipio-de-petropolis-rj-e-atingido-por-forte-chuva-nesta-terca-feira-13/",
+    "https://brasildefato.com.br/2024/03/22/petropolis-rj-tem-ruas-interditadas-devido-a-inundacoes-causadas-pelo-transbordamento-do-rio-quitandinha",
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html",
+    "https://www.folhape.com.br/noticias/temporal-petropolis-suspende-aulas-nas-escolas-do-municipio-angra/456574/"
+   ]
+  },
+  {
+   "nome": "Av. Barão do Rio Branco",
+   "bairro": "Retiro",
+   "tipo": "alagamento",
+   "lat": -22.49088,
+   "lon": -43.17787,
+   "aprox": true,
+   "datas": [
+    "2025-04-05",
+    "2025-12-17"
+   ],
+   "fontes": [
+    "https://eixos.com.br/energia-eletrica/chuva-em-petropolis-destruicao-falta-de-luz-e-acumulado-de-agua-de-um-mes-e-meio-em-24-horas/",
+    "https://www.folhape.com.br/noticias/temporal-petropolis-suspende-aulas-nas-escolas-do-municipio-angra/456574/"
+   ]
+  },
+  {
+   "nome": "R. Visconde de Souza Franco (Túnel Extravasor, carros arrastados)",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.51094,
+   "lon": -43.17077,
+   "aprox": true,
+   "datas": [
+    "2025-12-17"
+   ],
+   "fontes": [
+    "https://diariodepetropolis.com.br/integra/chuva-causa-alagamentos-deslizamentos-e-arrasta-carros-em-petropolis-36993"
+   ]
+  },
+  {
+   "nome": "Rio Piabanha – Bingen/Vila Militar (régua INEA Bingen)",
+   "bairro": "Bingen",
+   "tipo": "transbordamento de rio",
+   "lat": -22.50928,
+   "lon": -43.19569,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.petropolis.rj.gov.br/pmp/phocadownload/defesa-civil/relatorios/2025/Relatrio%20-%20%20Eventos%20chuvosos%20de%2015%20de%20fevereiro%20de%202022.pdf",
+    "https://alertadecheias.inea.rj.gov.br/mapa.php"
+   ]
+  },
+  {
+   "nome": "Rio Palatinado – Alto da Serra (régua INEA Alto da Serra)",
+   "bairro": "Alto da Serra",
+   "tipo": "transbordamento de rio",
+   "lat": -22.51383,
+   "lon": -43.17292,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.petropolis.rj.gov.br/pmp/phocadownload/defesa-civil/relatorios/2025/Relatrio%20-%20%20Eventos%20chuvosos%20de%2015%20de%20fevereiro%20de%202022.pdf",
+    "https://alertadecheias.inea.rj.gov.br/mapa.php"
+   ]
+  },
+  {
+   "nome": "Rio Piabanha – Corrêas (régua INEA Corrêas Igreja)",
+   "bairro": "Corrêas",
+   "tipo": "transbordamento de rio",
+   "lat": -22.44339,
+   "lon": -43.14145,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.petropolis.rj.gov.br/pmp/phocadownload/defesa-civil/relatorios/2025/Relatrio%20-%20%20Eventos%20chuvosos%20de%2015%20de%20fevereiro%20de%202022.pdf",
+    "https://alertadecheias.inea.rj.gov.br/mapa.php"
+   ]
+  },
+  {
+   "nome": "Rio Piabanha – Nogueira (régua INEA Nogueira)",
+   "bairro": "Nogueira",
+   "tipo": "transbordamento de rio",
+   "lat": -22.42964,
+   "lon": -43.13478,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.petropolis.rj.gov.br/pmp/phocadownload/defesa-civil/relatorios/2025/Relatrio%20-%20%20Eventos%20chuvosos%20de%2015%20de%20fevereiro%20de%202022.pdf",
+    "https://alertadecheias.inea.rj.gov.br/mapa.php"
+   ]
+  },
+  {
+   "nome": "Morro da Oficina",
+   "bairro": "Alto da Serra",
+   "tipo": "deslizamento",
+   "lat": -22.53,
+   "lon": -43.16994,
+   "aprox": true,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-02/em-petropolis-prefeito-quer-ajuda-para-monitorar-morro-da-oficina",
+    "https://rigeo.sgb.gov.br/bitstream/doc/22668/1/Relatorio%20Tecnico%20Petropolis.pdf"
+   ]
+  },
+  {
+   "nome": "Servidão Alípio Gomes da Costa",
+   "bairro": "Alto da Serra",
+   "tipo": "deslizamento",
+   "lat": -22.52592,
+   "lon": -43.17529,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.rj.gov.br/drm/sites/default/files/arquivos_paginas/Revisita%20003%20CPRM_Petr%C3%B3polis_Servid%C3%A3o_Al%C3%ADpio_Gomes_da_Costa.pdf"
+   ]
+  },
+  {
+   "nome": "R. Teresa (deslizamentos e lama)",
+   "bairro": "Alto da Serra",
+   "tipo": "deslizamento",
+   "lat": -22.51749,
+   "lon": -43.17014,
+   "aprox": true,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://rigeo.sgb.gov.br/bitstream/doc/22668/1/Relatorio%20Tecnico%20Petropolis.pdf"
+   ]
+  },
+  {
+   "nome": "R. Teresa (alagamento)",
+   "bairro": "Alto da Serra",
+   "tipo": "alagamento",
+   "lat": -22.52623,
+   "lon": -43.17185,
+   "aprox": true,
+   "datas": [
+    "2022-12-13"
+   ],
+   "fontes": [
+    "https://www.brasildefato.com.br/2022/12/13/municipio-de-petropolis-rj-e-atingido-por-forte-chuva-nesta-terca-feira-13/"
+   ]
+  },
+  {
+   "nome": "Vila Felipe (fluxo de detritos de 250 m)",
+   "bairro": "Vila Felipe",
+   "tipo": "deslizamento",
+   "lat": -22.53501,
+   "lon": -43.17821,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.rj.gov.br/drm/sites/default/files/arquivos_paginas/066-CPRM_EstradaVelha_e_VilaFelipe_0.pdf",
+    "https://www.petropolis.rj.gov.br/pmp/phocadownload/defesa-civil/relatorios/2025/Relatrio%20-%20%20Eventos%20chuvosos%20de%2015%20de%20fevereiro%20de%202022.pdf"
+   ]
+  },
+  {
+   "nome": "Estrada Velha (RJ-107), Meio da Serra",
+   "bairro": "Serra Velha",
+   "tipo": "deslizamento",
+   "lat": -22.53929,
+   "lon": -43.17885,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.rj.gov.br/drm/sites/default/files/arquivos_paginas/066-CPRM_EstradaVelha_e_VilaFelipe_0.pdf"
+   ]
+  },
+  {
+   "nome": "R. Linha Férrea, Pontilhão",
+   "bairro": "Serra Velha",
+   "tipo": "deslizamento",
+   "lat": -22.53493,
+   "lon": -43.16998,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.rj.gov.br/drm/sites/default/files/arquivos_paginas/043-CPRM_Relat%C3%B3rio_Petr%C3%B3polis_20-02-22_Bairro_Serra_Velha_0.pdf"
+   ]
+  },
+  {
+   "nome": "R. E / R. Jamiro Guarizzi",
+   "bairro": "Sargento Boening",
+   "tipo": "deslizamento",
+   "lat": -22.5353,
+   "lon": -43.18472,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.rj.gov.br/drm/sites/default/files/arquivos_paginas/072%20CPRM_Relat%C3%B3rio_Petr%C3%B3polis_28-02-22_Bairro_Sargento_Boening_0.pdf"
+   ]
+  },
+  {
+   "nome": "R. Stephan Zweig",
+   "bairro": "Moinho Preto",
+   "tipo": "deslizamento",
+   "lat": -22.48425,
+   "lon": -43.21126,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.rj.gov.br/drm/sites/default/files/arquivos_paginas/030-CPRM_Relat%C3%B3rio_Petr%C3%B3polis_19-02-22_Bairro_Moinho_Preto_0.pdf"
+   ]
+  },
+  {
+   "nome": "R. João Martins de Barros (antiga Rua F)",
+   "bairro": "Mosela",
+   "tipo": "deslizamento",
+   "lat": -22.48844,
+   "lon": -43.19871,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.rj.gov.br/drm/sites/default/files/arquivos_paginas/031-CPRM_Relat%C3%B3rio_Petr%C3%B3polis_19-02-22_Bairro_Mosella_0.pdf"
+   ]
+  },
+  {
+   "nome": "R. Uruguai",
+   "bairro": "Quitandinha",
+   "tipo": "deslizamento",
+   "lat": -22.52359,
+   "lon": -43.20462,
+   "aprox": false,
+   "datas": [
+    "2022-02-15"
+   ],
+   "fontes": [
+    "https://www.rj.gov.br/drm/sites/default/files/arquivos_paginas/Revisita%20008%20-%20P40%20CPRM_02-03-22_Quitandinha.pdf"
+   ]
+  },
+  {
+   "nome": "Quitandinha (bairro)",
+   "bairro": "Quitandinha",
+   "tipo": "deslizamento",
+   "lat": -22.52721,
+   "lon": -43.21477,
+   "aprox": true,
+   "datas": [
+    "2013-03-18",
+    "2022-03-20",
+    "2024-03-22"
+   ],
+   "fontes": [
+    "https://vermelho.org.br/?p=275820",
+    "https://www2.camara.leg.br/atividade-legislativa/comissoes/comissoes-temporarias/externas/54a-legislatura/desastres-na-regiao-serrana-do-rio-de-janeiro/audiencias-publicas-1/apresentacao-do-prof.-dr.-antonio-jose-teixeira-guerra-professor-da-ufrj",
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-03/petropolis-registrou-250-deslizamentos-em-24-horas-por-causa-da-chuva",
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html"
+   ]
+  },
+  {
+   "nome": "R. Itaboraí (Palácio Quitandinha)",
+   "bairro": "Quitandinha",
+   "tipo": "deslizamento",
+   "lat": -22.52925,
+   "lon": -43.21549,
+   "aprox": true,
+   "datas": [
+    "2018-03-21"
+   ],
+   "fontes": [
+    "https://www.jb.com.br/rio/noticias/2018/03/21/amp/chuvas-atingem-petropolis-e-terra-desliza-na-rua-do-palacio-quitandinha.html"
+   ]
+  },
+  {
+   "nome": "Independência (desabamento de prédio)",
+   "bairro": "Independência",
+   "tipo": "deslizamento",
+   "lat": -22.53923,
+   "lon": -43.20951,
+   "aprox": true,
+   "datas": [
+    "2013-03-18",
+    "2022-03-20",
+    "2024-03-22"
+   ],
+   "fontes": [
+    "https://vermelho.org.br/?p=275820",
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-03/petropolis-registrou-250-deslizamentos-em-24-horas-por-causa-da-chuva",
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html"
+   ]
+  },
+  {
+   "nome": "Chácara Flora",
+   "bairro": "Castelânea",
+   "tipo": "deslizamento",
+   "lat": -22.53027,
+   "lon": -43.18504,
+   "aprox": true,
+   "datas": [
+    "2022-03-20"
+   ],
+   "fontes": [
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-03/petropolis-registrou-250-deslizamentos-em-24-horas-por-causa-da-chuva"
+   ]
+  },
+  {
+   "nome": "Castelânea",
+   "bairro": "Castelânea",
+   "tipo": "deslizamento",
+   "lat": -22.5285,
+   "lon": -43.18994,
+   "aprox": true,
+   "datas": [
+    "2022-03-20",
+    "2024-03-22"
+   ],
+   "fontes": [
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-03/petropolis-registrou-250-deslizamentos-em-24-horas-por-causa-da-chuva",
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html"
+   ]
+  },
+  {
+   "nome": "Duarte da Silveira",
+   "bairro": "Duarte da Silveira",
+   "tipo": "deslizamento",
+   "lat": -22.50109,
+   "lon": -43.22422,
+   "aprox": true,
+   "datas": [
+    "2022-03-20",
+    "2024-03-22"
+   ],
+   "fontes": [
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-03/petropolis-registrou-250-deslizamentos-em-24-horas-por-causa-da-chuva",
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html"
+   ]
+  },
+  {
+   "nome": "São Sebastião",
+   "bairro": "São Sebastião",
+   "tipo": "deslizamento",
+   "lat": -22.54174,
+   "lon": -43.19421,
+   "aprox": true,
+   "datas": [
+    "2022-03-20",
+    "2024-03-22"
+   ],
+   "fontes": [
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-03/petropolis-registrou-250-deslizamentos-em-24-horas-por-causa-da-chuva",
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html"
+   ]
+  },
+  {
+   "nome": "Siméria",
+   "bairro": "Siméria",
+   "tipo": "deslizamento",
+   "lat": -22.53682,
+   "lon": -43.19928,
+   "aprox": true,
+   "datas": [
+    "2022-03-20",
+    "2025-12-17"
+   ],
+   "fontes": [
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-03/petropolis-registrou-250-deslizamentos-em-24-horas-por-causa-da-chuva",
+    "https://diariodepetropolis.com.br/integra/chuva-causa-alagamentos-deslizamentos-e-arrasta-carros-em-petropolis-36993"
+   ]
+  },
+  {
+   "nome": "Valparaíso",
+   "bairro": "Valparaíso",
+   "tipo": "deslizamento",
+   "lat": -22.51858,
+   "lon": -43.19127,
+   "aprox": true,
+   "datas": [
+    "2022-02-15",
+    "2022-03-20",
+    "2024-03-22"
+   ],
+   "fontes": [
+    "https://rigeo.sgb.gov.br/bitstream/doc/22668/1/Relatorio%20Tecnico%20Petropolis.pdf",
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-03/petropolis-registrou-250-deslizamentos-em-24-horas-por-causa-da-chuva",
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html"
+   ]
+  },
+  {
+   "nome": "Av. Portugal",
+   "bairro": "Valparaíso",
+   "tipo": "alagamento",
+   "lat": -22.52078,
+   "lon": -43.19554,
+   "aprox": true,
+   "datas": [
+    "2022-12-13"
+   ],
+   "fontes": [
+    "https://www.brasildefato.com.br/2022/12/13/municipio-de-petropolis-rj-e-atingido-por-forte-chuva-nesta-terca-feira-13/"
+   ]
+  },
+  {
+   "nome": "R. Vinte e Quatro de Maio",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.51733,
+   "lon": -43.17729,
+   "aprox": true,
+   "datas": [
+    "2022-12-13"
+   ],
+   "fontes": [
+    "https://www.brasildefato.com.br/2022/12/13/municipio-de-petropolis-rj-e-atingido-por-forte-chuva-nesta-terca-feira-13/"
+   ]
+  },
+  {
+   "nome": "Estrada da Saudade",
+   "bairro": "Quissamã",
+   "tipo": "deslizamento",
+   "lat": -22.48663,
+   "lon": -43.15798,
+   "aprox": true,
+   "datas": [
+    "2022-03-20",
+    "2024-03-22"
+   ],
+   "fontes": [
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-03/petropolis-registrou-250-deslizamentos-em-24-horas-por-causa-da-chuva",
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html"
+   ]
+  },
+  {
+   "nome": "Quissamã",
+   "bairro": "Quissamã",
+   "tipo": "alagamento",
+   "lat": -22.49287,
+   "lon": -43.15908,
+   "aprox": true,
+   "datas": [
+    "2023-10-17"
+   ],
+   "fontes": [
+    "https://www.correiodamanha.com.br/correio-petropolitano/regiao-serrana/2023/10/99587-despreparo-para-as-chuvas.html"
+   ]
+  },
+  {
+   "nome": "Morin",
+   "bairro": "Morin",
+   "tipo": "deslizamento",
+   "lat": -22.52661,
+   "lon": -43.16089,
+   "aprox": true,
+   "datas": [
+    "2022-03-20"
+   ],
+   "fontes": [
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-03/petropolis-registrou-250-deslizamentos-em-24-horas-por-causa-da-chuva"
+   ]
+  },
+  {
+   "nome": "R. Montecaseros / Av. Sete de Abril",
+   "bairro": "Centro",
+   "tipo": "alagamento",
+   "lat": -22.50814,
+   "lon": -43.18716,
+   "aprox": true,
+   "datas": [
+    "2018-03-21"
+   ],
+   "fontes": [
+    "https://www.jb.com.br/rio/noticias/2018/03/21/amp/chuvas-atingem-petropolis-e-terra-desliza-na-rua-do-palacio-quitandinha.html"
+   ]
+  },
+  {
+   "nome": "Itaipava",
+   "bairro": "Itaipava",
+   "tipo": "deslizamento",
+   "lat": -22.4127,
+   "lon": -43.1421,
+   "aprox": true,
+   "datas": [
+    "2024-03-22"
+   ],
+   "fontes": [
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html"
+   ]
+  },
+  {
+   "nome": "Araras",
+   "bairro": "Araras",
+   "tipo": "deslizamento",
+   "lat": -22.42516,
+   "lon": -43.2215,
+   "aprox": true,
+   "datas": [
+    "2024-03-22"
+   ],
+   "fontes": [
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html"
+   ]
+  },
+  {
+   "nome": "Vale do Cuiabá (corrida de massa no Rio Cuiabá)",
+   "bairro": "Itaipava",
+   "tipo": "deslizamento",
+   "lat": -22.37528,
+   "lon": -43.0725,
+   "aprox": true,
+   "datas": [
+    "2011-01-12"
+   ],
+   "fontes": [
+    "https://www2.camara.leg.br/atividade-legislativa/comissoes/comissoes-temporarias/externas/54a-legislatura/desastres-na-regiao-serrana-do-rio-de-janeiro/audiencias-publicas-1/apresentacao-do-prof.-dr.-antonio-jose-teixeira-guerra-professor-da-ufrj"
+   ]
+  }
+ ],
+ "episodios": [
+  {
+   "data": "2011-01-12",
+   "titulo": "Tragédia da Região Serrana: Vale do Cuiabá",
+   "chuva_mm": 180,
+   "resumo": "Cerca de 180 mm em 12 horas na noite de 11 para 12/1. Corrida de massa no Vale do Cuiabá, em Itaipava. 71 mortos em Petrópolis.",
+   "pontos": [
+    "Vale do Cuiabá (corrida de massa no Rio Cuiabá)"
+   ],
+   "fontes": [
+    "https://www2.camara.leg.br/atividade-legislativa/comissoes/comissoes-temporarias/externas/54a-legislatura/desastres-na-regiao-serrana-do-rio-de-janeiro/audiencias-publicas-1/apresentacao-do-prof.-dr.-antonio-jose-teixeira-guerra-professor-da-ufrj"
+   ]
+  },
+  {
+   "data": "2013-03-18",
+   "titulo": "428 mm em 24 h no Quitandinha",
+   "chuva_mm": 428,
+   "resumo": "Chuva da noite de 17/3 à madrugada de 18/3. 33 mortos, 20 deles no Quitandinha. Independência teve 3 mortes.",
+   "pontos": [
+    "Quitandinha (bairro)",
+    "Independência (desabamento de prédio)"
+   ],
+   "fontes": [
+    "https://vermelho.org.br/?p=275820",
+    "https://www2.camara.leg.br/atividade-legislativa/comissoes/comissoes-temporarias/externas/54a-legislatura/desastres-na-regiao-serrana-do-rio-de-janeiro/audiencias-publicas-1/apresentacao-do-prof.-dr.-antonio-jose-teixeira-guerra-professor-da-ufrj"
+   ]
+  },
+  {
+   "data": "2018-03-21",
+   "titulo": "Deslizamento na rua do Palácio Quitandinha",
+   "chuva_mm": 50,
+   "resumo": "50 mm em 24 h na Vila Felipe. Terra deslizou na R. Itaboraí. Alagamento nas ruas Montecaseros e 7 de Abril. Rio Quitandinha transbordou na Coronel Veiga.",
+   "pontos": [
+    "R. Itaboraí (Palácio Quitandinha)",
+    "R. Montecaseros / Av. Sete de Abril",
+    "Rio Quitandinha – R. Coronel Veiga (régua INEA Cel Veiga)"
+   ],
+   "fontes": [
+    "https://www.jb.com.br/rio/noticias/2018/03/21/amp/chuvas-atingem-petropolis-e-terra-desliza-na-rua-do-palacio-quitandinha.html"
+   ]
+  },
+  {
+   "data": "2022-02-15",
+   "titulo": "260 mm em 3h20: maior tragédia da cidade",
+   "chuva_mm": 260,
+   "resumo": "260 mm em 3h20 na estação São Sebastião GEO (Cemaden). Mais de 230 mortos. Morro da Oficina foi o ponto mais crítico. Quitandinha, Palatinado e Piabanha transbordaram. Dois ônibus caíram no Rio Quitandinha.",
+   "pontos": [
+    "Morro da Oficina",
+    "Servidão Alípio Gomes da Costa",
+    "R. Teresa (deslizamentos e lama)",
+    "Vila Felipe (fluxo de detritos de 250 m)",
+    "Estrada Velha (RJ-107), Meio da Serra",
+    "R. Linha Férrea, Pontilhão",
+    "R. E / R. Jamiro Guarizzi",
+    "R. Stephan Zweig",
+    "R. João Martins de Barros (antiga Rua F)",
+    "R. Uruguai",
+    "Valparaíso",
+    "Rio Quitandinha – R. Coronel Veiga (régua INEA Cel Veiga)",
+    "R. Washington Luiz (ônibus arrastados para o Rio Quitandinha)",
+    "Rio Piabanha – Bingen/Vila Militar (régua INEA Bingen)",
+    "Rio Palatinado – Alto da Serra (régua INEA Alto da Serra)",
+    "Rio Piabanha – Corrêas (régua INEA Corrêas Igreja)",
+    "Rio Piabanha – Nogueira (régua INEA Nogueira)"
+   ],
+   "fontes": [
+    "https://www.petropolis.rj.gov.br/pmp/phocadownload/defesa-civil/relatorios/2025/Relatrio%20-%20%20Eventos%20chuvosos%20de%2015%20de%20fevereiro%20de%202022.pdf",
+    "https://rigeo.sgb.gov.br/bitstream/doc/22668/1/Relatorio%20Tecnico%20Petropolis.pdf",
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-02/em-petropolis-prefeito-quer-ajuda-para-monitorar-morro-da-oficina",
+    "https://www.brasildefato.com.br/2022/03/04/mp-rj-vai-investigar-responsabilidades-em-onibus-arrastados-nas-chuvas-de-petropolis/"
+   ]
+  },
+  {
+   "data": "2022-03-20",
+   "titulo": "534 mm em 24 h, recorde do município",
+   "chuva_mm": 534.4,
+   "resumo": "534,4 mm em 24 h. 250 ocorrências de deslizamento em 19 localidades. 5 mortos e 3 desaparecidos.",
+   "pontos": [
+    "Quitandinha (bairro)",
+    "Independência (desabamento de prédio)",
+    "Chácara Flora",
+    "Castelânea",
+    "Duarte da Silveira",
+    "São Sebastião",
+    "Siméria",
+    "Valparaíso",
+    "Estrada da Saudade",
+    "Morin"
+   ],
+   "fontes": [
+    "https://agenciabrasil.ebc.com.br/geral/noticia/2022-03/petropolis-registrou-250-deslizamentos-em-24-horas-por-causa-da-chuva"
+   ]
+  },
+  {
+   "data": "2022-12-13",
+   "titulo": "70 mm em uma hora alaga o Centro",
+   "chuva_mm": 70,
+   "resumo": "70 mm em 1 h à tarde. Rio transbordou na R. do Imperador. Alagamentos na Coronel Veiga, R. Teresa, R. 24 de Maio e Av. Portugal. Sirenes na Independência às 13h20.",
+   "pontos": [
+    "R. do Imperador (Centro Histórico)",
+    "Rio Quitandinha – R. Coronel Veiga (régua INEA Cel Veiga)",
+    "R. Teresa (alagamento)",
+    "R. Vinte e Quatro de Maio",
+    "Av. Portugal"
+   ],
+   "fontes": [
+    "https://www.brasildefato.com.br/2022/12/13/municipio-de-petropolis-rj-e-atingido-por-forte-chuva-nesta-terca-feira-13/"
+   ]
+  },
+  {
+   "data": "2023-10-17",
+   "titulo": "Madrugada de chuva sem sirenes",
+   "chuva_mm": 81.4,
+   "resumo": "81,4 mm em 24 h em Bingen. Nove ocorrências, alagamento no Quissamã. Coronel Veiga fechada com cancelas. Sem vítimas.",
+   "pontos": [
+    "Quissamã",
+    "Rio Quitandinha – R. Coronel Veiga (régua INEA Cel Veiga)"
+   ],
+   "fontes": [
+    "https://www.correiodamanha.com.br/correio-petropolitano/regiao-serrana/2023/10/99587-despreparo-para-as-chuvas.html"
+   ]
+  },
+  {
+   "data": "2024-03-22",
+   "titulo": "Prédio desaba na Independência",
+   "chuva_mm": 196,
+   "resumo": "196 mm em 12 h (Cemaden). 75 deslizamentos. Prédio desabou na Independência com mortos. Quitandinha e Piabanha transbordaram na Coronel Veiga e R. do Imperador.",
+   "pontos": [
+    "Independência (desabamento de prédio)",
+    "Rio Quitandinha – R. Coronel Veiga (régua INEA Cel Veiga)",
+    "R. do Imperador (Centro Histórico)",
+    "Quitandinha (bairro)",
+    "Castelânea",
+    "Duarte da Silveira",
+    "São Sebastião",
+    "Valparaíso",
+    "Estrada da Saudade",
+    "Itaipava",
+    "Araras"
+   ],
+   "fontes": [
+    "https://www.diariodepernambuco.com.br/noticia/brasil/2024/03/desabamento-causa-tres-mortes-em-petropolis-no-rio-de-janeiro.html",
+    "https://brasildefato.com.br/2024/03/22/petropolis-rj-tem-ruas-interditadas-devido-a-inundacoes-causadas-pelo-transbordamento-do-rio-quitandinha"
+   ]
+  },
+  {
+   "data": "2025-04-05",
+   "titulo": "Mais de 300 mm em 24 h alagam o Centro Histórico",
+   "chuva_mm": 300,
+   "resumo": "Mais de 300 mm em 24 h em São Sebastião (Cemaden). Rio Quitandinha alagou o Centro Histórico. Alagamento na Av. Barão do Rio Branco. Segundo toque de sirene em 4 áreas. Sem vítimas.",
+   "pontos": [
+    "Av. Barão do Rio Branco"
+   ],
+   "fontes": [
+    "https://eixos.com.br/energia-eletrica/chuva-em-petropolis-destruicao-falta-de-luz-e-acumulado-de-agua-de-um-mes-e-meio-em-24-horas/"
+   ]
+  },
+  {
+   "data": "2025-12-17",
+   "titulo": "85 mm em 1 h e alerta extremo no celular",
+   "chuva_mm": 84.99,
+   "resumo": "84,99 mm em 1 h na Independência. Alerta extremo para inundação na R. do Imperador. Vias do Centro interditadas, incluindo a Washington Luiz. Dois carros arrastados no Centro. Deslizamento na Siméria.",
+   "pontos": [
+    "R. do Imperador (Centro Histórico)",
+    "R. Washington Luiz (ônibus arrastados para o Rio Quitandinha)",
+    "Av. Barão do Rio Branco",
+    "R. Visconde de Souza Franco (Túnel Extravasor, carros arrastados)",
+    "Siméria"
+   ],
+   "fontes": [
+    "https://www.folhape.com.br/noticias/temporal-petropolis-suspende-aulas-nas-escolas-do-municipio-angra/456574/",
+    "https://diariodepetropolis.com.br/integra/chuva-causa-alagamentos-deslizamentos-e-arrasta-carros-em-petropolis-36993",
+    "https://monitormercantil.com.br/temporal-faz-petropolis-emitir-alerta-extremo-e-fechar-escolas-e-lojas/"
+   ]
+  },
+  {
+   "data": "2026-01-20",
+   "titulo": "Até 184 mm em 24 h e pontos de apoio abertos",
+   "chuva_mm": 184,
+   "resumo": "De 127 a 184 mm em 24 h nas áreas mais atingidas. Seis pontos de apoio abertos às 22h30. Prefeitura diz que nenhum rio transbordou.",
+   "pontos": [],
+   "fontes": [
+    "https://www.correiodamanha.com.br/petropolitano/2026/01/252010-apesar-dos-esforcos-da-defesa-civil-mp-mantem-recomendacao.html"
+   ]
+  },
+  {
+   "data": "2026-05-20",
+   "titulo": "Quitandinha transborda na Coronel Veiga",
+   "chuva_mm": 53.8,
+   "resumo": "53,8 mm em 24 h na Vila Felipe. Coronel Veiga interditada por transbordamento do Rio Quitandinha. Alagamentos em várias ruas.",
+   "pontos": [
+    "Rio Quitandinha – R. Coronel Veiga (régua INEA Cel Veiga)"
+   ],
+   "fontes": [
+    "https://www.petropolisemcena.com.br/2026/05/boletim-defesa-civil-duas-ocorrencias-e.html"
+   ]
+  }
+ ],
+ "areas_risco": [
+  {
+   "nome": "Mapeamento de risco geológico do DRM-RJ (nov/2024): 1.755 setores de risco e 15.168 edificações expostas em todo o município",
+   "tipo": "deslizamento",
+   "fonte": "https://www.correiodamanha.com.br/correio-petropolitano/2024/11/amp/169429-governo-do-estado-finaliza-mapeamento-de-risco-geologico.html"
+  },
+  {
+   "nome": "Avaliação pós-desastre do SGB/CPRM (2022): 11 relatórios em Alto da Serra, Moinho Preto, Mosela, Sargento Boening, Serra Velha, Rua Teresa, Quitandinha, Valparaíso e Vila Felipe; cerca de 1.500 moradias em áreas de risco adjacentes",
+   "tipo": "deslizamento",
+   "fonte": "https://rigeo.sgb.gov.br/bitstream/doc/22668/1/Relatorio%20Tecnico%20Petropolis.pdf"
+  },
+  {
+   "nome": "Sistema de Alerta e Alarme (sirenes): mobilização ao atingir 45 mm/h (fev/2022); 18 locais com sirenes em 2022",
+   "tipo": "critério de alerta",
+   "fonte": "https://www.petropolis.rj.gov.br/pmp/phocadownload/defesa-civil/relatorios/2025/Relatrio%20-%20%20Eventos%20chuvosos%20de%2015%20de%20fevereiro%20de%202022.pdf"
+  },
+  {
+   "nome": "Plano de Contingência Verão 2025/2026: sirenes a 35 mm/h; pontos de apoio a 100 mm em 24 h",
+   "tipo": "critério de alerta",
+   "fonte": "https://www.correiodamanha.com.br/petropolitano/2026/01/252010-apesar-dos-esforcos-da-defesa-civil-mp-mantem-recomendacao.html"
+  },
+  {
+   "nome": "INEA Alerta de Cheias: estágios Vigilância, Atenção, Alerta, Alerta máximo e Transbordamento; cota de transbordamento 3,3 m em Cel Veiga (Rio Quitandinha) e 2 m na estação Centro",
+   "tipo": "inundação",
+   "fonte": "https://alertadecheias.inea.rj.gov.br/mapa.php"
+  }
+ ],
+ "estacoes": []
+}

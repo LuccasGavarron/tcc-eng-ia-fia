@@ -1,0 +1,19 @@
+[
+  {"id":"P1","c":"cemaden","n":"Rua Araruama, Quitandinha (330390617A)","ll":[-43.22,-22.52],"rain":1.05,"fonte":"https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/3318/24"},
+  {"id":"P2","c":"cemaden","n":"Alto da Serra (330390602A)","ll":[-43.171,-22.53],"rain":1.1,"fonte":"https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/3303/24"},
+  {"id":"P3","c":"cemaden","n":"Mosela (330390627A)","ll":[-43.219,-22.481],"rain":0.95,"fault":"entupido","fonte":"https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/3401/24"},
+  {"id":"P4","c":"cemaden","n":"Itaipava (330390611A)","ll":[-43.132,-22.388],"rain":0.85,"fonte":"https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/3312/24"},
+  {"id":"P5","c":"cemaden","n":"Pedro do Rio (330390623A)","ll":[-43.134,-22.335],"rain":0.8,"fonte":"https://mapservices.cemaden.gov.br/MapaInterativoWS/resources/horario/3324/24"},
+  {"id":"U1","c":"lora","n":"Encosta do Quitandinha (estação geotécnica Cemaden 330390601G)","ll":[-43.22392,-22.52491],"soil":1.04,"declive":15.4},
+  {"id":"U2","c":"lora","n":"Encosta da Chácara Flora (estação geotécnica Cemaden 330390602G)","ll":[-43.18607,-22.53027],"soil":1.02,"declive":14.7},
+  {"id":"U3","c":"lora","n":"Encosta do Bingen (estação geotécnica Cemaden 330390605G)","ll":[-43.20948,-22.51221],"soil":1.0,"fault":"sem sinal","declive":10.7},
+  {"id":"U4","c":"lora","n":"Encosta do Dr. Thouzet (estação geotécnica Cemaden 330390603G)","ll":[-43.20289,-22.52833],"soil":0.97,"fault":"bateria","declive":6.6},
+  {"id":"R1","c":"ana","n":"Rio Quitandinha, R. Coronel Veiga (INEA Cel Veiga)","ll":[-43.19378,-22.52631],"base":0,"gain":1,"lag":0,"alert":1.4,"over":2.28,"ref":"metros acima do nível sem chuva lido em 15/11/2026 (1,02 m); transbordamento oficial do INEA 3,3 m; alerta 1,4 m é estimativa (o INEA não publica cota de alerta)","fonte":"https://alertadecheias.inea.rj.gov.br/alertadecheias/224331720.html"},
+  {"id":"R2","c":"ana","n":"Rio Quitandinha, Centro (INEA Centro)","ll":[-43.18028,-22.51247],"base":0,"gain":0.65,"lag":1,"alert":0.9,"over":1.45,"ref":"metros acima do nível sem chuva lido em 15/11/2026 (0,55 m); transbordamento oficial do INEA 2 m; alerta 0,9 m é estimativa","fonte":"https://alertadecheias.inea.rj.gov.br/alertadecheias/224331320.html"},
+  {"id":"R3","c":"ana","n":"Rio Piabanha, Bingen (INEA Bingen)","ll":[-43.19569,-22.50928],"base":0,"gain":1.05,"lag":-1,"alert":1.5,"over":2.46,"ref":"metros acima do nível sem chuva lido em 15/11/2026 (0,89 m); transbordamento oficial do INEA 3,35 m; alerta 1,5 m é estimativa","fonte":"https://alertadecheias.inea.rj.gov.br/alertadecheias/224331620.html"},
+  {"id":"R4","c":"ana","n":"Rio Piabanha, Corrêas (INEA Corrêas Igreja)","ll":[-43.14145,-22.44339],"base":0,"gain":2.8,"lag":3,"alert":3.9,"over":6.42,"ref":"metros acima do nível sem chuva lido em 15/11/2026 (0,53 m); transbordamento oficial do INEA 6,95 m; alerta 3,9 m é estimativa","fonte":"https://alertadecheias.inea.rj.gov.br/alertadecheias/BE7052E820.html"},
+  {"id":"M1","c":"inmet","n":"Pico do Couto (A610), dentro do município","ll":[-43.29139,-22.46472],"fonte":"https://apitempo.inmet.gov.br/estacoes/T"},
+  {"id":"D1","c":"radar","n":"Célula sobre o Centro","ll":[-43.178,-22.509],"rain":1.0},
+  {"id":"T1","c":"transito","n":"R. Coronel Veiga, junto à régua do Rio Quitandinha","ll":[-43.19322,-22.52575],"free":40,"river":"R1"},
+  {"id":"T2","c":"transito","n":"R. do Imperador, Centro Histórico","ll":[-43.17808,-22.51142],"free":30,"river":"R2"}
+]

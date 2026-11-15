@@ -1,7 +1,7 @@
-# Confere os arquivos de public/campinas: JSON válido, formato e coordenadas dentro do limite.
-# Rodar: python3 dados/conferir_campinas.py
-import json, os
-P = 'public/campinas/'
+# Confere os arquivos de public/<cidade>: JSON válido, formato e coordenadas dentro do limite.
+# Rodar: python3 dados/conferir_campinas.py [campinas|petropolis]   (padrão: campinas)
+import json, os, sys
+P = f'public/{sys.argv[1] if len(sys.argv) > 1 else "campinas"}/'
 L = json.load(open(P + 'limite.json'))
 assert L['type'] == 'Polygon' and len(L['coordinates']) == 1
 LIM = L['coordinates'][0]

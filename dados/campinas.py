@@ -1,8 +1,12 @@
-# Gera public/campinas/{rios.geojson,escolas.json,bairros.json} a partir dos arquivos do
-# Overpass em dados/campinas/ (mesma lógica dos arquivos de Sorocaba). Rodar: python3 dados/campinas.py
-# A cobertura sai de: python3 dados/cobertura.py campinas
-import json, os
-D, P = 'dados/campinas/', 'public/campinas/'
+# Gera public/<cidade>/{rios.geojson,escolas.json,bairros.json} a partir dos arquivos do
+# Overpass em dados/<cidade>/ (mesma lógica dos arquivos de Sorocaba).
+# Rodar: python3 dados/campinas.py [campinas|petropolis]   (padrão: campinas)
+# A cobertura sai de: python3 dados/cobertura.py <cidade>
+import json, os, sys
+C = sys.argv[1] if len(sys.argv) > 1 else 'campinas'
+D, P = f'dados/{C}/', f'public/{C}/'
+# Petrópolis tem só 27 place=suburb no OSM; os distritos (Itaipava, Cascatinha, Posse...) são town/village/hamlet
+PLACES = {'petropolis': ('suburb', 'neighbourhood', 'quarter', 'town', 'village', 'hamlet')}.get(C, ('suburb', 'neighbourhood', 'quarter'))
 LIM = json.load(open(P + 'limite.json'))['coordinates'][0]
 
 def inside(x, y, P=LIM):
@@ -31,7 +35,7 @@ dump([x for x in esc if inside(x[1], x[2])], 'escolas.json')
 # (~100 contra 650 em Sorocaba), então completa com landuse=residential nomeado.
 # ponytail: o complemento entra só se o nome ainda não existe.
 seen, d = set(), []
-for f, ok in (('osm_place.json', lambda t: t.get('place') in ('suburb', 'neighbourhood', 'quarter')),
+for f, ok in (('osm_place.json', lambda t: t.get('place') in PLACES),
               ('osm_residential.json', lambda t: True)):
     if not os.path.exists(D + f): continue
     for e in els(f):

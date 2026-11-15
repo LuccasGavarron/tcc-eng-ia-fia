@@ -30,6 +30,11 @@ const CITY_DATA = {
     alertMm: 80, alertTxt: "nível de atenção do Plano de Contingência de Campinas (80 mm em 72 h)",
     gauge: { id: "R1", nome: "do Rio Capivari no Jardim Yeda", via: "" }, road: "Av. Norte-Sul", skip: ["Norte-Sul"],
     ctx: "Cortada pelos ribeirões Anhumas, Quilombo e Piçarrão, com avenidas de fundo de vale que alagam." },
+  petropolis: { n: "Petrópolis", uf: "RJ", c: [-43.17, -22.48], r: 11000, alt: [650, 1050], base: 600,
+    file: k => "/petropolis/" + k + "." + (k === "rios" ? "geojson" : "json"),
+    alertMm: 100, alertTxt: "nível de abertura dos pontos de apoio do Plano Verão de Petrópolis (100 mm em 24 h)",
+    gauge: { id: "R1", nome: "do Rio Quitandinha na R. Coronel Veiga", via: "a Coronel Veiga alaga" }, road: "R. Coronel Veiga", skip: ["Coronel Veiga"],
+    ctx: "Serra fluminense, com rios encaixados no centro histórico e encostas ocupadas." },
 };
 const CITY_KEY = CITY_DATA[new URLSearchParams(location.search).get("c")] ? new URLSearchParams(location.search).get("c") : "sorocaba";
 const CITY = CITY_DATA[CITY_KEY];
@@ -157,6 +162,12 @@ const histGeo = () => ({ type: "FeatureCollection", features: (hist?.pontos || [
 /* ---------- leitura do relevo ---------- */
 let sampleTmr = null, sampleReq = 0;
 function scheduleSample() { clearTimeout(sampleTmr); sampleTmr = setTimeout(sample, 350); }
+// dentro do município (fora dele não há malha nem dados)
+function insideCity(x, y) {
+  const r = LIMITE.coordinates[0]; let c = false;
+  for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [xi, yi] = r[i], [xj, yj] = r[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; }
+  return c;
+}
 function coverAt(lon, lat, key) {
   if (!cover) return NaN;
   const c = Math.floor((lon - cover.west) / cover.d), r = Math.floor((lat - cover.south) / cover.d);
@@ -172,12 +183,15 @@ async function sample() {
   const west = cen.lon - w, south = cen.lat - h, dx = (2 * w) / G, dy = (2 * h) / G;
   const elevAt = await loadElevation(west, south, cen.lon + w, cen.lat + h, (2 * half) / G);
   if (id !== sampleReq) return;
-  const el = new Float32Array(G * G).fill(NaN), veg = new Float32Array(G * G), built = new Float32Array(G * G);
+  const el = new Float32Array(G * G).fill(NaN), veg = new Float32Array(G * G), built = new Float32Array(G * G), occ = new Uint8Array(G * G).fill(cover ? 0 : 1), inCity = new Uint8Array(G * G);
   for (let r = 0; r < G; r++) for (let c = 0; c < G; c++) {
     const x = west + (c + 0.5) * dx, y = south + (r + 0.5) * dy, i = r * G + c;
     const v = elevAt(x, y);
     if (v != null) el[i] = v;
     veg[i] = coverAt(x, y, "veg"); built[i] = coverAt(x, y, "built");
+    // ocupado: algum prédio a até ~300 m (3×3 células da cobertura); deslizamento só conta onde há gente
+    if (cover) { let any = 0; for (let a = -1; a <= 1 && !any; a++) for (let b = -1; b <= 1; b++) if (coverAt(x + a * cover.d, y + b * cover.d, "built") > 0) { any = 1; break; } occ[i] = any; }
+    inCity[i] = insideCity(x, y) ? 1 : 0;
   }
   const mx = dx * 111320 * cos, my = dy * 110540, slope = new Float32Array(G * G);
   for (let r = 1; r < G - 1; r++) for (let c = 1; c < G - 1; c++) {
@@ -188,7 +202,7 @@ async function sample() {
   // drenagem: rios, canais e córregos com nome; nascentes sem nome ficam de fora
   const W = { r: 1, c: 0.5, s: 0.35 }, lines = rivers ? rivers.features.filter(f => f.properties.w !== "s" || f.properties.n)
     .map(f => ({ p: f.geometry.coordinates, w: W[f.properties.w] })) : [];
-  grid = vals.length < 100 ? null : { west, south, dx, dy, el, slope, veg, built, cx: cen.lon, cy: cen.lat,
+  grid = vals.length < 100 ? null : { west, south, dx, dy, el, slope, veg, built, occ, inCity, cx: cen.lon, cy: cen.lat,
     builtSorted: Array.from(built).filter(v => v > 0).sort((a, b) => b - a),
     base: vals[Math.floor(vals.length * 0.03)], hand: M.computeHAND(el, lines, west, south, dx, dy, elevAt) };
   pickShelters(); render();
@@ -236,7 +250,7 @@ function riskShapes() {
   };
   const fl = new Float64Array(G * G).fill(NO), at = new Float64Array(G * G).fill(NO), sl = new Float64Array(G * G).fill(NO);
   for (let i = 0; i < G * G; i++) {
-    const e = grid.el[i]; if (isNaN(e)) continue;
+    const e = grid.el[i]; if (isNaN(e) || !grid.inCity[i]) continue;
     if (S.mode === "chuva") {
       const w = grid.hand ? grid.hand.w[i] : 1, hv = grid.hand ? grid.hand.hand[i] : e - grid.base;
       const depth = st.rise * w - (grid.hand ? M.bankfull(w) : 0);
@@ -244,7 +258,7 @@ function riskShapes() {
         if (depth > 0) fl[i] = depth - hv;
         if (w >= 0.5 && st.rise * w > 1) at[i] = depth - hv + 1.5;
       }
-      sl[i] = grid.slope[i] - st.slopeThr;
+      if (grid.occ[i]) sl[i] = grid.slope[i] - st.slopeThr;
     } else fl[i] = cl.f[i] === 4 ? 1 : cl.f[i] === 5 ? 2 : 0;
   }
   if (S.mode === "chuva") {
@@ -299,7 +313,7 @@ function pickShelters() {
   if (!grid) return;
   const inGrid = ([, x, y]) => x > grid.west && y > grid.south && x < grid.west + G * grid.dx && y < grid.south + G * grid.dy;
   const local = (schools || []).filter(inGrid);
-  if (local.length) { shelters = local.map(([name, x, y]) => ({ name, c: [x, y] })); drawShelters(); return; }
+  if (local.length || schools) { shelters = local.map(([name, x, y]) => ({ name, c: [x, y] })); drawShelters(); return; }
   // fora das cidades com dados: escolas do OpenStreetMap via Overpass
   const id = ++searchReq, bb = [grid.south, grid.west, grid.south + G * grid.dy, grid.west + G * grid.dx].map(v => v.toFixed(3)).join(",");
   fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent('[out:json][timeout:20];nwr["amenity"="school"]["name"](' + bb + ');out center 40;'))
