@@ -120,7 +120,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     const e = floor ?? elevAt(ll[0], ll[1]) ?? 0;
     const base = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e), top = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e + STALK);
     ds.entities.add({ _pop: pop, polyline: { positions: [base, top], width: 2, arcType: Cesium.ArcType.NONE, material: Cesium.Color.WHITE.withAlpha(0.8) } });
-    ds.entities.add({ position: top, _pop: pop,
+    return ds.entities.add({ position: top, _pop: pop,
       billboard: { image: img, width: size, height: size, verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY,
         scaleByDistance: new Cesium.NearFarScalar(1500, 1.1, 40000, 0.4) },
       label: text ? { ...label(text, 12, 4), distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500) } : undefined });
@@ -134,10 +134,12 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
         f.geometry.coordinates.forEach(poly => {
           const n = poly[0].length, cx = poly[0].reduce((s, p) => s + p[0], 0) / n, cy = poly[0].reduce((s, p) => s + p[1], 0) / n;
           if (clipOn && !inside(cx, cy)) return; // fora do município não há malha 3D
-          const holes = poly.slice(1).map(h => new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(h.flat())));
+          // ponytail: superfície comum na cota do relevo (+2 m por faixa), não classificação sobre a malha 3D;
+          // classificação redesenhava a malha por mancha e derrubava de ~100 para 25 quadros por segundo
+          const up = 2 + (f.properties.b || 0) * 1.2, P = r => r.map(p => pt(p, up));
           ds.entities.add({ _pop: () => popup("risk", f.properties), _risk: true, polygon: {
-            hierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(poly[0].flat()), holes),
-            material: C(col).withAlpha(a), classificationType: Cesium.ClassificationType.BOTH } });
+            hierarchy: new Cesium.PolygonHierarchy(P(poly[0]), poly.slice(1).map(h => new Cesium.PolygonHierarchy(P(h)))),
+            perPositionHeight: true, material: C(col).withAlpha(a) } });
           if (big.has(poly) && RISK_ICON[k]) { const [g, c] = RISK_ICON[k]; marker(ds, [cx, cy], icon(g, c), () => popup("risk", f.properties), null, 36); }
         });
       }
@@ -159,9 +161,11 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
         f.properties.hit ? f.properties.nome : null, f.properties.hit ? 40 : 28);
     },
     sens(ds, fc) {
+      ds._byId = {}; ds._ids = fc.features.map(f => f.properties.id).join();
       for (const f of fc.features) {
         const [g, c] = SENSOR_ICON[f.properties.c] || ["radar", "#4E6068"];
-        marker(ds, f.geometry.coordinates, icon(g, c, f.properties.bad), () => popup("sens", f.properties), f.properties.label, 34);
+        const e = marker(ds, f.geometry.coordinates, icon(g, c, f.properties.bad), () => popup("sens", e._props), f.properties.id, 34);
+        e._props = f.properties; ds._byId[f.properties.id] = e;
       }
     },
     shel(ds, fc) {
@@ -179,14 +183,27 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
           translucencyByDistance: new Cesium.NearFarScalar(far[t] * 0.6, 1, far[t], 0) } });
     },
   };
+  const SIG = {};
   function setData(id, data) {
-    const ds = layer(id); DRAWN[id] = data;
+    const ds = layer(id), sig = data ? JSON.stringify(data) : "";
+    if (SIG[id] === sig) return; // nada mudou: não reconstrói
+    SIG[id] = sig;
+    // sensores: mesmos pontos de antes, só troca ícone e texto (recriar 34 entidades por hora travava o play)
+    if (id === "sens" && data && ds._ids === data.features.map(f => f.properties.id).join()) {
+      DRAWN[id] = data;
+      for (const f of data.features) { const e = ds._byId[f.properties.id]; if (!e) continue;
+        // só troca o ícone quando a leitura passa a ser reprovada ou volta; texto fixo (redesenhar rótulo a cada hora custava ~250 ms por quadro)
+        if (e._props.bad !== f.properties.bad) { const [g, c] = SENSOR_ICON[f.properties.c] || ["radar", "#4E6068"]; e.billboard.image = icon(g, c, f.properties.bad); }
+        e._props = f.properties; }
+      sc.requestRender(); return;
+    }
+    DRAWN[id] = data;
     ds.entities.suspendEvents(); ds.entities.removeAll();
     if (data) draw[id](ds, data);
     ds.entities.resumeEvents(); sc.requestRender();
   }
   const DRAWN = {};
-  const setElevation = fn => { elevAt = fn; for (const id of ["hist", "sens", "shel", "bairros", "risk", "rios"]) if (DRAWN[id]) setData(id, DRAWN[id]); };
+  const setElevation = fn => { elevAt = fn; for (const id of ["hist", "sens", "shel", "bairros", "risk", "rios"]) if (DRAWN[id]) { SIG[id] = null; layer(id)._ids = null; setData(id, DRAWN[id]); } };
   const show = (id, on) => { if (id === "predios") { predOn = on; if (osm) osm.show = on && cam.positionCartographic.height < 9000; } else layer(id).show = on; sc.requestRender(); };
 
   // popup próprio, preso ao ponto clicado
@@ -202,14 +219,17 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
   // passar o mouse sobre uma área de perigo mostra o que é e o dado da hora
   const tip = document.createElement("div"); tip.className = "pop tip"; tip.hidden = true; container.appendChild(tip);
-  let lastPick = 0;
+  // ponytail: scene.pick redesenha a cena num buffer de seleção; só roda com o mouse parado 120 ms e sem arrasto
+  let hoverT = null;
   h.setInputAction(e => {
-    const now = performance.now(); if (now - lastPick < 60) return; lastPick = now; // ponytail: pick é caro, 16 por segundo basta
-    const p = sc.pick(e.endPosition), ent = p && p.id;
-    sc.canvas.style.cursor = ent && ent._pop ? "pointer" : "";
-    if (ent && ent._risk && pop.hidden) {
-      tip.innerHTML = ent._pop(); tip.style.left = e.endPosition.x + "px"; tip.style.top = e.endPosition.y + "px"; tip.hidden = false;
-    } else tip.hidden = true;
+    clearTimeout(hoverT); tip.hidden = true;
+    if (drag) return;
+    const pos = Cesium.Cartesian2.clone(e.endPosition);
+    hoverT = setTimeout(() => {
+      const p = sc.pick(pos), ent = p && p.id;
+      sc.canvas.style.cursor = ent && ent._pop ? "pointer" : "";
+      if (ent && ent._risk && pop.hidden) { tip.innerHTML = ent._pop(); tip.style.left = pos.x + "px"; tip.style.top = pos.y + "px"; tip.hidden = false; }
+    }, 120);
   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
   v.camera.moveStart.addEventListener(close);
   v.camera.moveEnd.addEventListener(() => onMoveEnd && onMoveEnd());
@@ -300,7 +320,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   }
   function focusCity(on) {
     borda.show = on; plano.show = on; clipOn = on;
-    if (DRAWN.rios) setData("rios", DRAWN.rios);
+    if (DRAWN.rios) { SIG.rios = null; setData("rios", DRAWN.rios); }
     const c = on ? clip() : undefined;
     if (tiles) tiles.clippingPolygons = c; else sc.globe.clippingPolygons = c;
     if (osm) osm.clippingPolygons = on ? clip() : undefined;

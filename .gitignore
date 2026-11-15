@@ -5,3 +5,4 @@ dist
 .vercel
 dados/osm_*.json
 public/cesium
+dados/campinas/

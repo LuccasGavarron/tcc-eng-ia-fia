@@ -38,7 +38,7 @@ for f, ok in (('osm_place.json', lambda t: t.get('place') in ('suburb', 'neighbo
         t = e.get('tags', {}); n = t.get('name', '').strip()
         if not n or not ok(t) or n.upper() in seen or 'PROPOSTO' in n.upper(): continue
         x, y = ll(e)
-        if inside(x, y): seen.add(n.upper()); d.append([n, x, y])
+        if inside(x, y): seen.add(n.upper()); d.append([n, x, y, f != 'osm_place.json'])
 # níveis: 0 = um nome por célula de 2,6 km, 1 = por célula de 900 m, 2 = o resto (igual a Sorocaba)
 out, used = [], set()
 for tier, km in ((0, 2.6), (1, 0.9)):
@@ -46,9 +46,10 @@ for tier, km in ((0, 2.6), (1, 0.9)):
     for x in d:
         if x[0] in used: continue
         s = km / 111; k = (int(x[1] // s), int(x[2] // s))
-        dist = (x[1] - (k[0] + .5) * s) ** 2 + (x[2] - (k[1] + .5) * s) ** 2
+        # bairro do OSM (place) ganha do loteamento (residential) na mesma célula
+        dist = (x[3], (x[1] - (k[0] + .5) * s) ** 2 + (x[2] - (k[1] + .5) * s) ** 2)
         if k not in cells or dist < cells[k][0]: cells[k] = (dist, x)
-    for _, x in cells.values(): used.add(x[0]); out.append([*x, tier])
-out += [[*x, 2] for x in d if x[0] not in used]
+    for _, x in cells.values(): used.add(x[0]); out.append([*x[:3], tier])
+out += [[*x[:3], 2] for x in d if x[0] not in used]
 dump(out, 'bairros.json')
 print('rios', len(feats), 'escolas', len(esc), 'bairros', len(out), [sum(o[3] == t for o in out) for t in (0, 1, 2)])
