@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Véspera</title>
 <meta name="description" content="Previsão de enchentes, deslizamentos, incêndios e ondas de calor para a Defesa Civil.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231B2A31'/><path d='M5 22c5-6 9 2 14-4s6-5 8-4' fill='none' stroke='%237FC4F0' stroke-width='3' stroke-linecap='round'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230D1318'/><g fill='none' stroke-width='2' stroke-linecap='round'><path d='M3 24c4.3-5 8.7-5 13 0s8.7 5 13 0' stroke='%233E7FAE'/><path d='M6.5 18.5c3.2-3.8 6.3-3.8 9.5 0s6.3 3.8 9.5 0' stroke='%235FA3CF'/><path d='M10 13c2-2.6 4-2.6 6 0s4 2.6 6 0' stroke='%239FD6F7'/></g><circle cx='23.5' cy='6.5' r='2.4' fill='%23F2C14E'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Public+Sans:wght@400;500;600;700&display=swap">
 </head>
 <body>
 <nav class="rail" aria-label="Seções">
-  <div class="mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 21c5-6 9 2 14-4s6-5 8-4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div>
+  <div class="mark"><svg viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke-width="2" stroke-linecap="round"><path d="M3 24c4.3-5 8.7-5 13 0s8.7 5 13 0" stroke="#3E7FAE"/><path d="M6.5 18.5c3.2-3.8 6.3-3.8 9.5 0s6.3 3.8 9.5 0" stroke="#5FA3CF"/><path d="M10 13c2-2.6 4-2.6 6 0s4 2.6 6 0" stroke="#9FD6F7"/></g><circle cx="23.5" cy="6.5" r="2.4" fill="#F2C14E"/></svg></div>
   <div class="tabs" role="tablist" aria-orientation="vertical">
     <button type="button" role="tab" id="t-cen" aria-selected="true" aria-controls="p-cen"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 4-7 5 9"/><path d="M3 21h18"/></svg><span>Cenário</span></button>
     <button type="button" role="tab" id="t-sen" aria-selected="false" aria-controls="p-sen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg><span>Sensores</span></button>
@@ -72,8 +72,17 @@
 
 <section class="panel" id="panel" aria-label="Painel do Véspera">
   <header class="head">
-    <h1 class="brand">Véspera</h1>
-    <p class="city" id="cityName">Sorocaba, SP</p>
+    <h1 class="brand">véspera</h1>
+    <div class="citysel">
+      <button type="button" id="cityBtn" aria-expanded="false" aria-controls="cityMenu"><span id="cityName">Sorocaba, SP</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
+      <div class="citymenu" id="cityMenu" hidden>
+        <div class="chips" id="cities"></div>
+        <div class="search">
+          <input id="q" type="search" placeholder="Buscar outra cidade" autocomplete="off" aria-label="Buscar cidade">
+          <ul id="sugg" hidden></ul>
+        </div>
+      </div>
+    </div>
   </header>
 
   <!-- ===== CENÁRIO ===== -->
@@ -81,15 +90,6 @@
     <div class="field">
       <h2 class="h">Riscos previstos</h2>
       <ul class="hazards" id="hazards"></ul>
-    </div>
-
-    <div class="field">
-      <h2 class="h">Cidade</h2>
-      <div class="chips" id="cities"></div>
-      <div class="search">
-        <input id="q" type="search" placeholder="Buscar outra cidade" autocomplete="off" aria-label="Buscar cidade">
-        <ul id="sugg" hidden></ul>
-      </div>
     </div>
 
     <div class="field">

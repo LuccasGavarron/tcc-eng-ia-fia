@@ -5,7 +5,7 @@ import { CONNECTORS, STATIONS, simulateSensors, lastValid, gaugeCross } from "./
 import LIMITE from "./limite-sorocaba.json";
 import { createGlobe } from "./globo.js";
 import { loadElevation } from "./relevo.js";
-import { icon, SENSOR_ICON } from "./icones.js";
+import { icon, SENSOR_ICON, RISK_ICON } from "./icones.js";
 
 const $ = id => document.getElementById(id);
 const G = M.G, H = M.H;
@@ -359,7 +359,7 @@ function drawHazards() {
   $("hazards").innerHTML = HAZ.map(h => {
     const p = F.prob[h.k], e = F.eta[h.k];
     const when = e == null ? "" : e === 0 ? "limiar já ultrapassado" : "em " + e + " h, " + hourLabel(e);
-    return '<li><div class="hz-top"><b>' + h.n + "</b><span>" + pct(p) + '</span></div><div class="bar"><i style="width:' + Math.max(1, p * 100) + "%;background:" + h.color + '"></i></div>' +
+    return '<li><img class="hz-ico" src="' + icon(...RISK_ICON[h.k]) + '" alt=""><div class="hz-top"><b>' + h.n + "</b><span>" + pct(p) + '</span></div><div class="bar"><i style="width:' + Math.max(1, p * 100) + "%;background:" + h.color + '"></i></div>' +
       (when ? '<p class="hz-eta">' + when + "</p>" : "") + "</li>";
   }).join("");
 }
@@ -553,6 +553,7 @@ $("hour").oninput = e => { stop(); setHour(+e.target.value); };
 function goTo(city, btn) {
   document.querySelectorAll("#cities button").forEach(x => x.setAttribute("aria-pressed", x === btn));
   $("cityName").textContent = city.n ? city.n : (city.ctx || "").split(",")[0];
+  $("cityMenu").hidden = true; $("cityBtn").setAttribute("aria-expanded", false);
   if (!globe) return;
   globe.focusCity(city.n === "Sorocaba");
   globe.flyTo(city.c[0], city.c[1], city.r || 5000);
@@ -658,6 +659,9 @@ $("tlTrack").addEventListener("pointermove", e => {
 $("tlTrack").addEventListener("pointerleave", () => ($("tlTip").hidden = true));
 let speed = 1;
 $("speed").onclick = () => { speed = speed === 4 ? 1 : speed * 2; $("speed").textContent = speed + "×"; if (timer) { stop(); $("play").click(); } };
+
+$("cityBtn").onclick = () => { const o = $("cityMenu").hidden; $("cityMenu").hidden = !o; $("cityBtn").setAttribute("aria-expanded", o); if (o) $("q").focus(); };
+document.addEventListener("click", e => { if (!e.target.closest(".citysel")) $("cityMenu").hidden = true; });
 
 /* busca no mapa: dados locais primeiro, depois ruas e lugares do Photon dentro de Sorocaba */
 const norm = t => String(t).normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();

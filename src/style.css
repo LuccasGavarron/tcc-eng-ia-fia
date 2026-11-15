@@ -20,8 +20,8 @@ svg{display:block}
 
 /* ---------- trilho de seções ---------- */
 .rail{position:absolute;inset:0 auto 0 0;width:var(--rail);background:var(--s1);border-right:1px solid var(--line);z-index:4;display:flex;flex-direction:column;align-items:center;padding:12px 0}
-.mark{width:34px;height:34px;border-radius:6px;background:var(--s3);color:var(--acc);display:grid;place-items:center;margin-bottom:18px}
-.mark svg{width:22px;height:22px}
+.mark{width:38px;height:38px;border-radius:9px;background:var(--s2);border:1px solid var(--line);display:grid;place-items:center;margin-bottom:18px}
+.mark svg{width:26px;height:26px}
 .rail .tabs{display:flex;flex-direction:column;gap:4px;width:100%;padding:0 6px}
 .rail .tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;padding:8px 0 6px;border:0;border-radius:6px;background:none;color:var(--tx3);cursor:pointer;font:600 10px var(--body);letter-spacing:.01em}
 .rail .tabs svg,.collapse svg,.legend summary svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -35,8 +35,8 @@ body.closed .collapse svg{transform:rotate(180deg)}
 body.closed .panel{transform:translateX(calc(-100% - var(--rail)))}
 .head{padding:16px 20px 14px;border-bottom:1px solid var(--line);flex:none}
 .head-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.brand{margin:0;font:800 22px/1 var(--display);font-variation-settings:"wdth" 118;letter-spacing:-.005em}
-.city{margin:4px 0 0;color:var(--tx2);font-size:13px}
+.brand{margin:0;font:700 23px/1 var(--display);font-variation-settings:"wdth" 112;letter-spacing:-.02em}
+
 .badge{display:inline-block;font:700 12px var(--display);padding:4px 9px;border-radius:4px;color:#fff;white-space:nowrap}
 .scroll{overflow-y:auto;padding:18px 20px 24px;display:flex;flex-direction:column;gap:22px;flex:1;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
 
@@ -182,11 +182,8 @@ th{font:600 12.5px var(--body);color:var(--tx)}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 10px 30px rgba(0,0,0,.55);transition:left .22s ease,right .22s ease}
 body.closed .timeline{left:calc(var(--rail) + 16px)}
 body.ev-open .timeline{right:calc(340px + 16px)}
-/* botão de play gel, azul aqua com brilho no topo */
-.timeline > #play{position:relative;flex:none;width:46px;height:46px;border-radius:50%;border:1px solid #0A3F91;cursor:pointer;display:grid;place-items:center;
-  background:radial-gradient(circle at 50% 120%,#7CC3FF 0%,#2F86E8 45%,#1457C2 100%);box-shadow:0 2px 6px rgba(0,0,0,.5),inset 0 -2px 6px rgba(255,255,255,.25)}
-.timeline > #play::before{content:"";position:absolute;left:7px;right:7px;top:3px;height:45%;border-radius:50% 50% 45% 45%;background:linear-gradient(rgba(255,255,255,.75),rgba(255,255,255,.08))}
-.timeline > #play svg{position:relative;width:15px;height:15px;fill:#fff;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
+.timeline > #play{flex:none;width:40px;height:40px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;background:#E3E9EE}
+.timeline > #play svg{width:14px;height:14px;fill:#0D1318}
 /* visor de LCD, como o do iTunes */
 .tl-now{flex:none;min-width:178px;padding:6px 14px 7px;border-radius:12px;color:#1E2A1E;
   background:linear-gradient(180deg,#EEF2E4 0%,#D6DEC6 100%);box-shadow:inset 0 1px 3px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.1)}
@@ -237,7 +234,7 @@ body.ev-open .toolbar{right:352px}
 .pop{position:absolute;z-index:3;transform:translate(-50%,calc(-100% - 14px));max-width:280px;background:var(--s2);border:1px solid var(--line-2);border-radius:5px;padding:10px 28px 10px 12px;font:13.5px var(--body);color:var(--tx);box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .pop button{position:absolute;top:3px;right:5px;border:0;background:none;font-size:17px;cursor:pointer;color:var(--tx2)}
 .pop small{color:var(--tx2)}
-.pop.tip{pointer-events:none;padding:8px 12px}
+.pop.tip{pointer-events:none;padding:8px 12px;transform:translate(14px,calc(-100% - 10px))}
 .cesium-viewer-bottom{left:auto;right:12px;bottom:4px}
 .cesium-widget-credits{font-size:10px;opacity:.8}
 
@@ -281,3 +278,23 @@ body.closed .find{left:calc(var(--rail) + var(--gap))}
 .find li small{font-size:11.5px;color:var(--tx3)}
 @media (max-width:760px){.find{width:calc(100vw - var(--rail) - 24px);top:58px}}
 
+
+/* seletor de cidade no cabeçalho */
+.head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.citysel{position:relative}
+#cityBtn{display:flex;align-items:center;gap:4px;font:500 13px var(--body);color:var(--tx2);background:none;border:1px solid var(--line);border-radius:999px;padding:5px 8px 5px 12px;cursor:pointer}
+#cityBtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.citymenu{position:absolute;right:0;top:calc(100% + 6px);width:300px;z-index:6;background:var(--s2);border:1px solid var(--line-2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+/* riscos: linha com ícone, sem caixa */
+.hazards li{display:grid;grid-template-columns:28px 1fr;gap:0 10px;align-items:center}
+.hz-ico{width:28px;height:28px;grid-row:span 3}
+/* sistemas como lista de opções */
+.systems{grid-template-columns:1fr;gap:0;border-top:1px solid var(--line)}
+.systems button{position:relative;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;padding:9px 4px 9px 26px}
+.systems button::before{content:"";position:absolute;left:4px;top:13px;width:12px;height:12px;border-radius:50%;border:1.5px solid var(--line-2)}
+.systems button[aria-pressed="true"]{background:none;border-color:var(--line)}
+.systems button[aria-pressed="true"]::before{border-color:var(--acc);background:radial-gradient(circle,var(--acc) 0 3px,transparent 3.5px)}
+/* números sem caixa: só régua em cima e embaixo */
+.facts{background:none;border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0}
+.facts div{padding:9px 10px 9px 0}
+.facts div + div{padding-left:12px}

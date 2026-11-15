@@ -7,7 +7,7 @@ import { icon, SENSOR_ICON, RISK_ICON } from "./icones.js";
 window.CESIUM_BASE_URL = "/cesium/";
 const C = Cesium.Color.fromCssColorString;
 const rad = Cesium.Math.toRadians;
-const RISK = { f: ["#2F7BFF", 0.42], a: ["#E0A93A", 0.22], s: ["#D0503F", 0.24], x: ["#E0612B", 0.5], h: ["#C04A9A", 0.42] };
+const RISK = { f: ["#2F7BFF", 0.5], a: ["#F0B43C", 0.3], s: ["#E0503F", 0.32], x: ["#E0612B", 0.5], h: ["#C04A9A", 0.42] };
 
 export async function createGlobe(container, { token, limite, onMoveEnd, popup }) {
   if (token) Cesium.Ion.defaultAccessToken = token;
@@ -140,6 +140,10 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
           ds.entities.add({ _pop: () => popup("risk", f.properties), _risk: true, polygon: {
             hierarchy: new Cesium.PolygonHierarchy(P(poly[0]), poly.slice(1).map(h => new Cesium.PolygonHierarchy(P(h)))),
             perPositionHeight: true, material: C(col).withAlpha(a) } });
+          // contorno da faixa externa: aparece mesmo quando a superfície fica atrás da malha 3D
+          if (!f.properties.b) { const edge = C(col).withAlpha(0.95);
+            ds.entities.add({ _pop: () => popup("risk", f.properties), _risk: true, polyline: { positions: P(poly[0].concat([poly[0][0]])), width: 2.5, arcType: Cesium.ArcType.NONE,
+              material: edge, depthFailMaterial: edge.withAlpha(0.7) } }); }
           if (big.has(poly) && RISK_ICON[k]) { const [g, c] = RISK_ICON[k]; marker(ds, [cx, cy], icon(g, c), () => popup("risk", f.properties), null, 36); }
         });
       }
@@ -220,16 +224,22 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   // passar o mouse sobre uma área de perigo mostra o que é e o dado da hora
   const tip = document.createElement("div"); tip.className = "pop tip"; tip.hidden = true; container.appendChild(tip);
   // ponytail: scene.pick redesenha a cena num buffer de seleção; só roda com o mouse parado 120 ms e sem arrasto
-  let hoverT = null;
+  let hoverT = null, hoverEnt = null;
   h.setInputAction(e => {
-    clearTimeout(hoverT); tip.hidden = true;
-    if (drag) return;
+    if (drag) { clearTimeout(hoverT); tip.hidden = true; hoverEnt = null; return; }
     const pos = Cesium.Cartesian2.clone(e.endPosition);
+    // a dica acompanha o mouse na hora; a seleção (cara) roda 40 ms depois do último movimento
+    if (!tip.hidden) { tip.style.left = pos.x + "px"; tip.style.top = pos.y + "px"; }
+    clearTimeout(hoverT);
     hoverT = setTimeout(() => {
       const p = sc.pick(pos), ent = p && p.id;
       sc.canvas.style.cursor = ent && ent._pop ? "pointer" : "";
-      if (ent && ent._risk && pop.hidden) { tip.innerHTML = ent._pop(); tip.style.left = pos.x + "px"; tip.style.top = pos.y + "px"; tip.hidden = false; }
-    }, 120);
+      if (ent && ent._risk && pop.hidden) {
+        if (ent !== hoverEnt) tip.innerHTML = ent._pop();
+        tip.style.left = pos.x + "px"; tip.style.top = pos.y + "px"; tip.hidden = false;
+      } else tip.hidden = true;
+      hoverEnt = ent || null;
+    }, 40);
   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
   v.camera.moveStart.addEventListener(close);
   v.camera.moveEnd.addEventListener(() => onMoveEnd && onMoveEnd());
