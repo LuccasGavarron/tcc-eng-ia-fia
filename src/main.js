@@ -11,7 +11,10 @@ const $ = id => document.getElementById(id);
 const G = M.G, H = M.H;
 const fmt = (v, d = 0) => v.toFixed(d).replace(".", ",");
 const pct = p => (p > 0.99 ? "> 99%" : p < 0.01 ? "< 1%" : Math.round(p * 100) + "%");
-const hourLabel = t => "dia " + (Math.floor(t / 24) + 1) + ", " + String(t % 24).padStart(2, "0") + "h";
+// a previsão começa à meia-noite de hoje; rótulos com o dia real da semana
+const T0 = new Date(); T0.setHours(0, 0, 0, 0);
+const dayName = t => { const d = new Date(T0.getTime() + Math.floor(t / 24) * 864e5); return d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "") + " " + d.getDate(); };
+const hourLabel = t => dayName(t) + ", " + String(t % 24).padStart(2, "0") + "h";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 const CITIES = [
@@ -124,7 +127,7 @@ $("vFoto").onclick = () => setStyle(false); $("vCien").onclick = () => setStyle(
 /* ---------- dados locais ---------- */
 const getJSON = u => fetch(u).then(r => (r.ok ? r.json() : null)).catch(() => null);
 getJSON("/rios-sorocaba.geojson").then(j => { rivers = j; if (j) setData("rios", j); scheduleSample(); });
-getJSON("/bairros-sorocaba.json").then(j => j && setData("bairros", j));
+getJSON("/bairros-sorocaba.json").then(j => { bairros = j; if (j) setData("bairros", j); });
 getJSON("/cobertura-sorocaba.json").then(j => { cover = j; scheduleSample(); });
 getJSON("/escolas-sorocaba.json").then(j => { schools = j; pickShelters(); });
 getJSON("/historico-sorocaba.json").then(j => { hist = j; if (j) { setData("hist", histGeo()); drawHistory(); plan(); } });
@@ -295,8 +298,8 @@ function spark(st) {
   const x = (S.t / (H - 1)) * W;
   return '<svg viewBox="0 0 ' + W + " " + Hh + '" class="spark" aria-hidden="true">' +
     lims.map((l, i) => '<line x1="0" x2="' + W + '" y1="' + y(l) + '" y2="' + y(l) + '" stroke="' + (i ? "#AE3A2C" : "#C4841C") + '" stroke-dasharray="3 3"/>').join("") +
-    '<path d="' + d + '" fill="none" stroke="#1B2A31" stroke-width="1.4"/>' +
-    '<line x1="' + x + '" x2="' + x + '" y1="0" y2="' + Hh + '" stroke="#2C6CB0" stroke-width="1.5"/></svg>';
+    '<path d="' + d + '" fill="none" stroke="#E3E9EE" stroke-width="1.4"/>' +
+    '<line x1="' + x + '" x2="' + x + '" y1="0" y2="' + Hh + '" stroke="#5FA3CF" stroke-width="1.5"/></svg>';
 }
 function drawSensorsTab() {
   const t = S.t; let online = 0, bad = 0;
@@ -426,19 +429,30 @@ $("ask").onclick = async () => {
 
 /* ---------- hietograma ---------- */
 function drawHyeto() {
-  const W = 356, Hh = 128, L = 30, B = 22, T = 8, cw = (W - L - 4) / H, maxV = Math.max(5, Math.ceil(F.peak / 5) * 5), y = v => Hh - B - (v / maxV) * (Hh - B - T);
+  // linha do tempo: barras de chuva (mm/h) e curva do rio (m acima do normal) nas 72 h
+  const W = 1000, Hh = 46, cw = W / H, maxV = Math.max(5, F.peak), y = v => Hh - 2 - (v / maxV) * (Hh - 6);
   let s = "";
-  for (let k = 0; k <= 2; k++) { const v = (maxV * k) / 2, yy = y(v); s += `<line x1="${L}" x2="${W - 4}" y1="${yy}" y2="${yy}" stroke="#A9B8B1" stroke-width="${k ? 0.6 : 1}"/><text x="${L - 5}" y="${yy + 3.5}" text-anchor="end" font-size="10" fill="#4E6068" font-family="Archivo">${Math.round(v)}</text>`; }
-  for (let d = 1; d < 3; d++) { const x = L + d * 24 * cw; s += `<line x1="${x}" x2="${x}" y1="${T}" y2="${Hh - B}" stroke="#A9B8B1" stroke-dasharray="2 3"/>`; }
-  ["Dia 1", "Dia 2", "Dia 3"].forEach((t, d) => (s += `<text x="${L + (d * 24 + 12) * cw}" y="${Hh - 6}" text-anchor="middle" font-size="10.5" fill="#4E6068" font-family="Archivo">${t}</text>`));
-  F.hours.forEach((v, t) => { const c = v > 60 ? "#AE3A2C" : v > 30 ? "#C55A1F" : v >= 20 ? "#C4841C" : "#2C6CB0"; s += `<rect x="${L + t * cw + 0.4}" y="${y(v)}" width="${Math.max(0.8, cw - 0.8)}" height="${Math.max(0, Hh - B - y(v))}" fill="${c}"/>`; });
-  let acc = 0; const pts = F.hours.map((v, t) => { acc += v; return [L + (t + 1) * cw, Hh - B - (acc / Math.max(S.rain, 1)) * (Hh - B - T)]; });
-  if (S.rain > 0) s += `<polyline points="${pts.map(p => p.map(n => n.toFixed(1)).join(",")).join(" ")}" fill="none" stroke="#1B2A31" stroke-width="1.4"/>`;
-  const xt = L + (S.t + 0.5) * cw; s += `<line x1="${xt}" x2="${xt}" y1="${T}" y2="${Hh - B}" stroke="#1B2A31" stroke-width="1.5"/>`;
-  s += `<text x="${L}" y="${T + 2}" font-size="10" fill="#4E6068" font-family="Archivo">mm/h</text>`;
-  $("hyeto").innerHTML = s;
+  for (let d = 1; d < 3; d++) s += `<line x1="${d * 24 * cw}" x2="${d * 24 * cw}" y1="0" y2="${Hh}" stroke="#2C3C4D" vector-effect="non-scaling-stroke"/>`;
+  for (let k = 6; k < H; k += 6) if (k % 24) s += `<line x1="${k * cw}" x2="${k * cw}" y1="${Hh - 4}" y2="${Hh}" stroke="#2C3C4D" vector-effect="non-scaling-stroke"/>`;
+  if (S.mode === "chuva") {
+    F.hours.forEach((v, t) => { if (v <= 0) return; const c = v > 60 ? "#C2473A" : v > 30 ? "#D2692A" : v >= 20 ? "#C9902A" : "#3B82D6";
+      s += `<rect x="${t * cw + 1}" y="${y(v)}" width="${cw - 2}" height="${Hh - 2 - y(v)}" fill="${c}" opacity="${t === S.t ? 1 : 0.75}"/>`; });
+    const rmax = Math.max(2.2, F.riseMax), ry = v => Hh - 2 - (v / rmax) * (Hh - 8);
+    s += `<polyline points="${F.sim.rise.map((v, t) => ((t + 0.5) * cw).toFixed(1) + "," + ry(v).toFixed(1)).join(" ")}" fill="none" stroke="#9FD6F7" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`;
+    s += `<line x1="0" x2="${W}" y1="${ry(2)}" y2="${ry(2)}" stroke="#C2473A" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>`;
+  } else {
+    const his = Array.from({ length: H }, (_, t) => F.hiAt(t)), hmax = Math.max(40, ...his), hy = v => Hh - 2 - ((v - 15) / (hmax - 15)) * (Hh - 8);
+    s += `<polyline points="${his.map((v, t) => ((t + 0.5) * cw).toFixed(1) + "," + hy(v).toFixed(1)).join(" ")}" fill="none" stroke="#E0612B" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`;
+  }
+  const xt = (S.t + 0.5) * cw;
+  s += `<line x1="${xt}" x2="${xt}" y1="0" y2="${Hh}" stroke="#E3E9EE" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+  $("tlChart").innerHTML = s;
+  $("tlDays").innerHTML = [0, 1, 2].map(d => '<span style="left:' + ((d * 24 + 12) / H) * 100 + '%">' + dayName(d * 24) + "</span>").join("");
+  $("tlVals").innerHTML = S.mode === "chuva"
+    ? "<span>Chuva <b>" + fmt(F.hours[S.t], 1) + "</b> mm/h</span><span>Rio <b>" + fmt(F.sim.rise[S.t], 1) + "</b> m</span>"
+    : "<span>Calor <b>" + fmt(F.hiAt(S.t), 0) + "</b> °C</span>";
   $("fPeak").textContent = fmt(F.peak, F.peak < 10 ? 1 : 0);
-  $("fWhen").textContent = S.rain ? "D" + (Math.floor(F.peakT / 24) + 1) + " " + String(F.peakT % 24).padStart(2, "0") + "h" : "";
+  $("fWhen").textContent = S.rain ? hourLabel(F.peakT) : "";
   $("fDay").textContent = Math.round(F.dayMax);
   const iv = [["Sem aviso do INMET pelos critérios de chuva", "var(--green)"], ["Equivale a aviso amarelo do INMET (perigo potencial)", "var(--ochre)"],
     ["Equivale a aviso laranja do INMET (perigo)", "var(--orange)"], ["Equivale a aviso vermelho do INMET (grande perigo)", "var(--brick)"]][F.inmet.level];
@@ -466,9 +480,9 @@ function update(resetHour) {
   $("g-chuva").hidden = S.mode !== "chuva"; $("g-seco").hidden = S.mode !== "seco";
   drawHazards(); drawHyeto(); drawDry(); drawHour();
 }
-function drawHour() { render(); drawSensorsTab(); plan(); if (S.mode === "chuva") drawHyeto(); }
+function drawHour() { render(); drawSensorsTab(); plan(); drawHyeto(); }
 function setHour(t, quiet) {
-  S.t = Math.max(0, Math.min(H - 1, t)); $("hour").value = S.t; $("hourOut").textContent = hourLabel(S.t).replace("dia", "Dia");
+  S.t = Math.max(0, Math.min(H - 1, t)); $("hour").value = S.t; $("hourOut").textContent = hourLabel(S.t);
   if (!quiet) drawHour();
 }
 
@@ -508,6 +522,7 @@ $("hour").oninput = e => { stop(); setHour(+e.target.value); };
 function goTo(city, btn) {
   document.querySelectorAll("#cities button").forEach(x => x.setAttribute("aria-pressed", x === btn));
   $("context").textContent = city.ctx || "";
+  $("cityName").textContent = city.n ? city.n : (city.ctx || "").split(",")[0];
   if (!globe) return;
   globe.focusCity(city.n === "Sorocaba");
   globe.flyTo(city.c[0], city.c[1], city.r || 5000);
@@ -534,8 +549,51 @@ $("q").addEventListener("input", e => {
 });
 
 /* abas */
-const TABS = ["cen", "sen", "pla", "met"];
-TABS.forEach(k => ($("t-" + k).onclick = () => TABS.forEach(o => { $("t-" + o).setAttribute("aria-selected", o === k); $("p-" + o).hidden = o !== k; })));
+const TABS = ["cen", "sen", "pla", "dad", "met"];
+function setOpen(open) {
+  document.body.classList.toggle("closed", !open);
+  $("collapse").setAttribute("aria-expanded", open); $("collapse").setAttribute("aria-label", open ? "Recolher painel" : "Abrir painel");
+  // o mapa muda de largura durante a transição: redesenha no fim
+  setTimeout(() => { if (globe) { globe.viewer.resize(); globe.viewer.scene.requestRender(); } }, 240);
+}
+TABS.forEach(k => ($("t-" + k).onclick = () => {
+  const closed = document.body.classList.contains("closed");
+  if (!closed && $("t-" + k).getAttribute("aria-selected") === "true") return setOpen(false); // clicar na aba aberta recolhe
+  TABS.forEach(o => { $("t-" + o).setAttribute("aria-selected", o === k); $("p-" + o).hidden = o !== k; });
+  if (closed) setOpen(true);
+}));
+$("collapse").onclick = () => setOpen(document.body.classList.contains("closed"));
+
+/* banco de dados: tudo que o Véspera usa, com origem e registros */
+let bairros = null;
+function drawDB() {
+  const q = $("dbq").value.trim().toLowerCase();
+  const sets = [
+    { n: "Ocorrências de alagamento", src: "Reportagens 2017 a 2026", cols: ["Local", "Tipo", "Bairro", "Datas"],
+      rows: (hist?.pontos || []).map(p => [p.nome, p.tipo, p.bairro || "", (p.datas || []).join(", ")]) },
+    { n: "Episódios de chuva", src: "Reportagens e Defesa Civil", cols: ["Data", "Episódio", "Chuva (mm)"],
+      rows: (hist?.episodios || []).map(e => [e.data ? e.data.split("-").reverse().join("/") : "", e.titulo, e.chuva_mm ?? ""]) },
+    { n: "Estações e sensores", src: "Cemaden, ANA, INMET, IPMet (leituras simuladas)", cols: ["ID", "Nome", "Rede", "Leitura agora"],
+      rows: STATIONS.map(st => [st.id, st.n, conOf(st.c).org, F.sensors ? sensorValue(st, S.t) : ""]) },
+    { n: "Escolas (abrigos possíveis)", src: "OpenStreetMap", cols: ["Nome", "Lon", "Lat"], rows: (schools || []).map(([n, x, y]) => [n, x.toFixed(4), y.toFixed(4)]) },
+    { n: "Bairros", src: "OpenStreetMap", cols: ["Nome", "Lon", "Lat"], rows: (bairros || []).map(([n, x, y]) => [n, x, y]) },
+    { n: "Rios e córregos", src: "OpenStreetMap", cols: ["Nome", "Tipo"], rows: (rivers?.features || []).map(f => [f.properties.n || "sem nome", { r: "rio", c: "canal", s: "córrego" }[f.properties.w]]) },
+    { n: "Cobertura do solo", src: "OpenStreetMap, grade de 200 m", info: cover ? cover.nx + " × " + cover.ny + " células" : "" },
+    { n: "Limite municipal", src: "IBGE, malha 2022", info: LIMITE.coordinates[0].length + " vértices" },
+    { n: "Relevo", src: "Terrain Tiles (AWS Open Data)", info: "Terrarium, lido sob demanda" },
+    { n: "Malha 3D da cidade", src: "Google Photorealistic 3D Tiles via Cesium ion", info: "transmitida por blocos" },
+  ];
+  const open = new Set([...$("db").querySelectorAll("details[open]")].map(d => d.dataset.n));
+  $("db").innerHTML = sets.map(d => {
+    const rows = d.rows ? d.rows.filter(r => !q || r.join(" ").toLowerCase().includes(q)) : null;
+    const count = rows ? (q ? rows.length + " de " + d.rows.length : d.rows.length) : d.info;
+    const body = rows ? (rows.length ? '<div class="tbl"><table><thead><tr>' + d.cols.map(c => "<th>" + c + "</th>").join("") + "</tr></thead><tbody>" +
+      rows.slice(0, 400).map(r => "<tr>" + r.map(v => '<td title="' + esc(v) + '">' + esc(v) + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>" : '<p class="empty">Nenhum registro com esse filtro.</p>') : "";
+    return '<details data-n="' + d.n + '"' + (open.has(d.n) || (q && rows && rows.length) ? " open" : "") + "><summary><b>" + d.n + "</b><em>" + count + "</em><small>" + d.src + "</small></summary>" + body + "</details>";
+  }).join("");
+}
+$("dbq").oninput = drawDB;
+$("t-dad").addEventListener("click", drawDB);
 
 /* aprendizado e histórico */
 $("mlTxt").textContent = "Uma regressão logística por ameaça, treinada com " + (models.f.n + models.x.n) +
@@ -550,4 +608,3 @@ function drawHistory() {
 }
 
 update(true);
-if (import.meta.env.DEV) window.vespera = { map, S, get grid() { return grid; }, sample };

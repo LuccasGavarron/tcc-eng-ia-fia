@@ -212,7 +212,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
       drag.x = e.endPosition.x; drag.y = e.endPosition.y;
       // invertido: arrastar move a cena junto com o mouse
       cam.look(Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(cam.positionWC, new Cesium.Cartesian3()), -dx * k); // gira em torno da vertical
-      if (is3D) cam.lookUp(dy * k);
+      if (is3D) cam.lookUp(dy * k); // vertical: arrastar para cima olha para baixo (preferência do usuário)
     }
     sc.requestRender();
   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);

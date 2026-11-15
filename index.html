@@ -10,52 +10,58 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Public+Sans:wght@400;500;600;700&display=swap">
 </head>
 <body>
-<div id="map" aria-label="Mapa por satélite com relevo"></div>
-<div class="viewtoggle" role="group" aria-label="Modo de visualização">
-  <button type="button" id="v3" aria-pressed="true">3D</button>
-  <button type="button" id="v2" aria-pressed="false">2D</button>
-</div>
-<div class="viewtoggle modo" role="group" aria-label="Estilo do mapa">
-  <button type="button" id="vFoto" aria-pressed="true">Foto</button>
-  <button type="button" id="vCien" aria-pressed="false">Científico</button>
+<nav class="rail" aria-label="Seções">
+  <div class="mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 21c5-6 9 2 14-4s6-5 8-4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div>
+  <div class="tabs" role="tablist" aria-orientation="vertical">
+    <button type="button" role="tab" id="t-cen" aria-selected="true" aria-controls="p-cen"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 4-7 5 9"/><path d="M3 21h18"/></svg><span>Cenário</span></button>
+    <button type="button" role="tab" id="t-sen" aria-selected="false" aria-controls="p-sen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg><span>Sensores</span></button>
+    <button type="button" role="tab" id="t-pla" aria-selected="false" aria-controls="p-pla"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg><span>Plano</span></button>
+    <button type="button" role="tab" id="t-dad" aria-selected="false" aria-controls="p-dad"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5.5M4.5 12v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V12"/></svg><span>Dados</span></button>
+    <button type="button" role="tab" id="t-met" aria-selected="false" aria-controls="p-met"><svg viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg><span>Método</span></button>
+  </div>
+  <button type="button" class="collapse" id="collapse" aria-label="Recolher painel" aria-expanded="true"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+</nav>
+
+<div id="map" aria-label="Mapa 3D da cidade"></div>
+
+<div class="toolbar">
+  <div class="seg-sm" role="group" aria-label="Modo de visualização">
+    <button type="button" id="v3" aria-pressed="true">3D</button>
+    <button type="button" id="v2" aria-pressed="false">2D</button>
+  </div>
+  <div class="seg-sm" role="group" aria-label="Estilo do mapa">
+    <button type="button" id="vFoto" aria-pressed="true">Foto</button>
+    <button type="button" id="vCien" aria-pressed="false">Científico</button>
+  </div>
+  <details class="legend" id="legendBox"><summary><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>Camadas</summary><div id="legend" role="group" aria-label="Filtro do mapa"></div></details>
 </div>
 <div class="spin" id="busy" role="status" aria-label="Lendo o relevo" hidden></div>
-<details class="legend" id="legendBox"><summary>Camadas</summary><div id="legend" role="group" aria-label="Filtro do mapa"></div></details>
 
 <div class="timeline" aria-label="Linha do tempo da previsão">
   <button type="button" id="play" aria-label="Reproduzir as 72 horas">
     <svg viewBox="0 0 16 16" aria-hidden="true"><path id="playIcon" d="M4 2l10 6-10 6z"/></svg>
   </button>
-  <div class="tl-track">
-    <input type="range" id="hour" min="0" max="71" value="0" aria-label="Hora da previsão">
-    <div class="tl-days"><span>Dia 1</span><span>Dia 2</span><span>Dia 3</span></div>
+  <div class="tl-now">
+    <output id="hourOut"></output>
+    <div class="tl-vals" id="tlVals"></div>
   </div>
-  <output id="hourOut">Dia 1, 00h</output>
+  <div class="tl-track">
+    <svg id="tlChart" viewBox="0 0 1000 64" preserveAspectRatio="none" aria-hidden="true"></svg>
+    <input type="range" id="hour" min="0" max="71" value="0" aria-label="Hora da previsão">
+    <div class="tl-days" id="tlDays"></div>
+  </div>
 </div>
 
-<section class="panel" aria-label="Painel do Véspera">
+<section class="panel" id="panel" aria-label="Painel do Véspera">
   <header class="head">
-    <svg viewBox="0 0 400 160" preserveAspectRatio="none" aria-hidden="true">
-      <g fill="none" stroke="#E6ECE8" stroke-width="1">
-        <path d="M-10 130 C60 100 120 140 190 110 S320 70 410 100"/><path d="M-10 110 C70 80 120 120 200 90 S320 50 410 80"/>
-        <path d="M-10 90 C80 60 130 100 210 70 S330 30 410 60"/><path d="M-10 70 C90 40 140 80 220 50 S340 10 410 40"/>
-        <path d="M-10 50 C100 20 150 60 230 30 S350 -10 410 20"/><path d="M250 160 C270 135 300 132 320 145 S360 160 380 140"/>
-      </g>
-    </svg>
-    <h1 class="brand">Véspera</h1>
-    <p class="tagline">Previsão de catástrofes para agir antes do desastre.</p>
-    <div class="tabs" role="tablist">
-      <button type="button" role="tab" id="t-cen" aria-selected="true" aria-controls="p-cen">Cenário</button>
-      <button type="button" role="tab" id="t-sen" aria-selected="false" aria-controls="p-sen">Sensores</button>
-      <button type="button" role="tab" id="t-pla" aria-selected="false" aria-controls="p-pla">Plano</button>
-      <button type="button" role="tab" id="t-met" aria-selected="false" aria-controls="p-met">Como funciona</button>
-    </div>
+    <div class="head-top"><h1 class="brand">Véspera</h1><span class="badge" id="level">Observação</span></div>
+    <p class="city" id="cityName">Sorocaba, SP</p>
   </header>
 
   <!-- ===== CENÁRIO ===== -->
   <div class="scroll" id="p-cen" role="tabpanel" aria-labelledby="t-cen">
     <div class="field">
-      <div class="row"><h2 class="h">Riscos previstos</h2><span class="badge" id="level">Observação</span></div>
+      <h2 class="h">Riscos previstos</h2>
       <ul class="hazards" id="hazards"></ul>
     </div>
 
@@ -110,8 +116,7 @@
       </div>
 
       <div class="field">
-        <h2 class="h">Hietograma previsto</h2>
-        <svg class="hyeto" id="hyeto" viewBox="0 0 356 128" role="img" aria-label="Chuva prevista hora a hora nas próximas 72 horas"></svg>
+        <h2 class="h">Chuva prevista</h2>
         <div class="facts">
           <div><b id="fPeak"></b><span>Pico (mm/h)</span></div>
           <div><b id="fWhen"></b><span>Hora do pico</span></div>
@@ -157,7 +162,7 @@
       <p class="sub" id="riseTxt"></p>
     </div>
 
-    <p class="note">Protótipo acadêmico. Relevo, satélite, rios e cobertura do solo são dados reais (Sentinel-2, Terrarium e OpenStreetMap). O evento é um cenário que você define; sensores e histórico de treino são simulados.</p>
+    <p class="note">Protótipo acadêmico. Malha 3D, relevo, rios e cobertura do solo são dados reais (Google 3D Tiles, Terrarium e OpenStreetMap). O evento é um cenário que você define; sensores e histórico de treino são simulados.</p>
   </div>
 
   <!-- ===== SENSORES ===== -->
@@ -186,6 +191,15 @@
       <button type="button" class="secondary" id="ask">Pedir análise</button>
       <div class="ai" id="ai" hidden></div>
     </div>
+  </div>
+
+  <!-- ===== BANCO DE DADOS ===== -->
+  <div class="scroll" id="p-dad" role="tabpanel" aria-labelledby="t-dad" hidden>
+    <div class="field">
+      <h2 class="h">Banco de dados</h2>
+      <div class="search"><input id="dbq" type="search" placeholder="Filtrar registros" autocomplete="off" aria-label="Filtrar registros"></div>
+    </div>
+    <div class="db" id="db"></div>
   </div>
 
   <!-- ===== COMO FUNCIONA ===== -->
