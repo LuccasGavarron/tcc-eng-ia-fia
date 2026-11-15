@@ -88,7 +88,7 @@ const DEM = { type: "raster-dem", tiles: ["https://s3.amazonaws.com/elevation-ti
   attribution: '<a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a>' };
 const STYLE = { version: 8, glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
   sources: {
-    sat: { type: "raster", tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"], tileSize: 256, maxzoom: 19,
+    sat: { type: "raster", tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"], tileSize: 256, maxzoom: 18,
       attribution: "Imagens Esri, Maxar, Earthstar Geographics" },
     omt: { type: "vector", url: "https://tiles.openfreemap.org/planet",
       attribution: '<a href="https://openfreemap.org">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' },
@@ -101,7 +101,7 @@ const WORLD = [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]];
 const MASK = { type: "Feature", geometry: { type: "Polygon", coordinates: [WORLD, LIMITE.coordinates[0]] } };
 const BAIRRO = ["any", ["in", ["get", "class"], ["literal", ["suburb", "town", "city"]]], [">=", ["zoom"], 14]];
 const IN_CITY = ["within", { type: "Feature", geometry: LIMITE }];
-const map = new maplibregl.Map({ container: "map", style: STYLE, attributionControl: { compact: true }, center: CITIES[0].c, zoom: CITIES[0].z, pitch: 62, bearing: -18, maxPitch: 75, maxZoom: 18.5 });
+const map = new maplibregl.Map({ container: "map", style: STYLE, attributionControl: { compact: true }, center: CITIES[0].c, zoom: CITIES[0].z, pitch: 62, bearing: -18, maxPitch: 75, maxZoom: 18.5 }); // ponytail: z19 da Esri em Sorocaba é placeholder, o z18 é esticado
 // painel lateral cobre a esquerda: centraliza a cidade na área livre
 if (innerWidth > 900) map.setPadding({ left: 440, top: 80 });
 map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "bottom-right");
