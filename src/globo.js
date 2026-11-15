@@ -9,6 +9,8 @@ window.CESIUM_BASE_URL = "/cesium/";
 Cesium.RequestScheduler.maximumRequestsPerServer = 48;
 const C = Cesium.Color.fromCssColorString;
 const rad = Cesium.Math.toRadians;
+// desaceleração estilo Apple: sai rápido e chega quase parando
+const EASE = Cesium.EasingFunction.EXPONENTIAL_OUT;
 const RISK = { f: ["#2F7BFF", 0.5], a: ["#F0B43C", 0.3], s: ["#E0503F", 0.32], x: ["#E0612B", 0.5], h: ["#C04A9A", 0.42] };
 
 export async function createGlobe(container, { token, limite, origin = [-47.437, -23.47], alt = [530, 730], base = 515, onMoveEnd, popup }) {
@@ -123,7 +125,7 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   function marker(ds, ll, img, pop, text, size, floor) {
     const e = floor ?? elevAt(ll[0], ll[1]) ?? 0;
     const base = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e), top = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e + STALK);
-    ds.entities.add({ _pop: pop, polyline: { positions: [base, top], width: 2, arcType: Cesium.ArcType.NONE, material: Cesium.Color.WHITE.withAlpha(0.8) } });
+    ds.entities.add({ _pop: pop, _stalk: true, polyline: { positions: [base, top], width: 2, arcType: Cesium.ArcType.NONE, material: Cesium.Color.WHITE.withAlpha(0.8) } });
     return ds.entities.add({ position: top, _pop: pop, _at: { ll, r: 260, top },
       billboard: { image: img, width: size, height: size, verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY,
         scaleByDistance: new Cesium.NearFarScalar(1500, 1.1, 40000, 0.4) },
@@ -210,6 +212,7 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
     DRAWN[id] = data;
     ds.entities.suspendEvents(); ds.entities.removeAll();
     if (data) draw[id](ds, data);
+    if (dimOn && id !== "foco") dimDs(ds);
     ds.entities.resumeEvents(); sc.requestRender();
   }
   const DRAWN = {};
@@ -233,7 +236,7 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
     stopOrbit();
     const { ll, r, top } = ent._at;
     cam.flyToBoundingSphere(new Cesium.BoundingSphere(Cesium.Cartesian3.fromDegrees(ll[0], ll[1], (elevAt(ll[0], ll[1]) ?? 0) + 20), r), {
-      duration: 1.8, easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
+      duration: 2.6, easingFunction: EASE,
       offset: new Cesium.HeadingPitchRange(cam.heading, rad(-38), r * 2.6),
       complete: () => { const xy = sc.cartesianToCanvasCoordinates(top); if (!xy) return;
         pop.innerHTML = '<button type="button" aria-label="Fechar">×</button>' + ent._pop(); pop.firstChild.onclick = close;
@@ -244,26 +247,37 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   let orbit = null, pulse = false;
   function stopOrbit() { if (!orbit) return; sc.preUpdate.removeEventListener(orbit); orbit = null; cam.lookAtTransform(Cesium.Matrix4.IDENTITY); }
   sc.canvas.addEventListener("pointerdown", stopOrbit); sc.canvas.addEventListener("wheel", stopOrbit, { passive: true });
+  // com destaque ligado, os outros pontos ficam apagados
+  let dimOn = false;
+  const DIM = Cesium.Color.WHITE.withAlpha(0.28);
+  const dimDs = ds => { for (const e of ds.entities.values) { if (e.billboard) e.billboard.color = dimOn ? DIM : Cesium.Color.WHITE; if (e._stalk) e.polyline.show = !dimOn; } };
+  function dim(on) { if (dimOn === on) return; dimOn = on; for (const id of ["hist", "sens", "shel", "risk", "busca"]) if (layers[id]) dimDs(layers[id]); }
   function spotlight(items, glyph, color, fly = true) {
     foco.entities.removeAll();
-    if (!items || !items.length) { stopOrbit(); pulse = false; sc.requestRenderMode = true; sc.requestRender(); return; }
+    if (!items || !items.length) { stopOrbit(); pulse = false; dim(false); sc.requestRenderMode = true; sc.requestRender(); return; }
     const t0 = performance.now(), pts = [];
     items.forEach((it, i) => {
-      const e = marker(foco, it.ll, icon(glyph, color, true), it.pop, null, 54); e._at.r = it.r || 260;
-      const ph = i * 0.7, s = () => ((performance.now() - t0) / 1600 + ph) % 1;
-      e.billboard.scale = new Cesium.CallbackProperty(() => 1 + 0.08 * Math.sin(s() * 6.283), false);
+      // o ponto sobe do chão até bem acima dos outros, saindo rápido e parando devagar
+      const g = elevAt(it.ll[0], it.ll[1]) ?? 0, ph = i * 0.7, s = () => ((performance.now() - t0) / 1600 + ph) % 1;
+      const h = () => { const k = Math.min(1, (performance.now() - t0 - i * 40) / 900); return g + 60 + 240 * (k <= 0 ? 0 : 1 - Math.pow(2, -10 * k)); };
+      const base = Cesium.Cartesian3.fromDegrees(it.ll[0], it.ll[1], g), top = new Cesium.CallbackPositionProperty(() => Cesium.Cartesian3.fromDegrees(it.ll[0], it.ll[1], h()), false);
+      const at = { ll: it.ll, r: it.r || 260, get top() { return top.getValue(); } };
+      foco.entities.add({ _pop: it.pop, _at: at, polyline: { positions: new Cesium.CallbackProperty(() => [base, top.getValue()], false), width: 2.5, arcType: Cesium.ArcType.NONE, material: C(color) } });
+      const bb = { verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY, scaleByDistance: new Cesium.NearFarScalar(1500, 1.1, 40000, 0.45) };
+      foco.entities.add({ position: top, _pop: it.pop, _at: at, billboard: { ...bb, image: icon(glyph, color, true), width: 56, height: 56,
+        scale: new Cesium.CallbackProperty(() => 1 + 0.06 * Math.sin(s() * 6.283), false) } });
       // onda de radar saindo do ponto
-      foco.entities.add({ position: e.position.getValue(), billboard: { image: wave, width: 54, height: 54, verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        disableDepthTestDistance: Number.POSITIVE_INFINITY, scaleByDistance: new Cesium.NearFarScalar(1500, 1.1, 40000, 0.4),
+      foco.entities.add({ position: top, billboard: { ...bb, image: wave, width: 56, height: 56,
         scale: new Cesium.CallbackProperty(() => 1 + s() * 1.4, false), color: new Cesium.CallbackProperty(() => C(color).withAlpha(1 - s()), false) } });
-      pts.push(Cesium.Cartesian3.fromDegrees(it.ll[0], it.ll[1], elevAt(it.ll[0], it.ll[1]) ?? 0));
+      pts.push(base);
     });
+    dim(true);
     pulse = true; sc.requestRenderMode = false; // a pulsação precisa de quadro contínuo
     if (!fly) return;
     stopOrbit();
     const sph = Cesium.BoundingSphere.fromPoints(pts), range = Math.max(1600, sph.radius * 2.6), pitch = rad(-40);
     let hd = cam.heading;
-    cam.flyToBoundingSphere(sph, { duration: 2.4, easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
+    cam.flyToBoundingSphere(sph, { duration: 3, easingFunction: EASE,
       offset: new Cesium.HeadingPitchRange(hd, pitch, range),
       complete: () => { orbit = () => { hd += rad(0.08); cam.lookAt(sph.center, new Cesium.HeadingPitchRange(hd, pitch, range)); }; sc.preUpdate.addEventListener(orbit); } });
   }
@@ -293,6 +307,7 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   // câmera
   const ctrl = sc.screenSpaceCameraController;
   ctrl.zoomFactor = 14; // padrão 5 é lento no trackpad
+  ctrl.inertiaZoom = 0.9; ctrl.inertiaTranslate = 0.9; // o zoom continua deslizando e para devagar
   // navegação: esquerdo arrasta o mapa, direito gira a visão em primeira pessoa, roda dá zoom, Ctrl+esquerdo ou meio inclina
   const E = Cesium.CameraEventType;
   ctrl.rotateEventTypes = []; ctrl.lookEventTypes = []; ctrl.translateEventTypes = [];
@@ -335,7 +350,7 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   let is3D = true;
   function flyTo(lon, lat, radius, duration = 2.6) {
     const sphere = new Cesium.BoundingSphere(Cesium.Cartesian3.fromDegrees(lon, lat, 600), radius);
-    cam.flyToBoundingSphere(sphere, { duration, offset: new Cesium.HeadingPitchRange(is3D ? rad(-18) : 0, is3D ? rad(-48) : rad(-90), radius * (is3D ? 2.3 : 2.6)) });
+    cam.flyToBoundingSphere(sphere, { duration, easingFunction: EASE, offset: new Cesium.HeadingPitchRange(is3D ? rad(-18) : 0, is3D ? rad(-48) : rad(-90), radius * (is3D ? 2.3 : 2.6)) });
   }
   function setView(three) {
     is3D = three; ctrl.enableTilt = three; ctrl.enableLook = three;
@@ -351,7 +366,7 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
     const g = Cesium.Cartographic.fromCartesian(p);
     return { lon: Cesium.Math.toDegrees(g.longitude), lat: Cesium.Math.toDegrees(g.latitude), dist: Cesium.Cartesian3.distance(cam.positionWC, p) };
   }
-  // modo científico: cidade em cinza com rampa hipsométrica e curvas de nível a cada 10 m (fortes a cada 50 m)
+  // modo científico: cidade em cinza com rampa hipsométrica (cor pela altitude)
   const P0 = Cesium.Cartesian3.fromDegrees(origin[0], origin[1], 0), up0 = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(P0, new Cesium.Cartesian3());
   const RN = 6381000; // raio de curvatura local; o erro fica abaixo de 1 m em 20 km
   const sci = new Cesium.CustomShader({ lightingModel: Cesium.LightingModel.UNLIT,
@@ -363,12 +378,6 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
       vec3 ramp = mix(mix(vec3(0.06, 0.16, 0.40), vec3(0.09, 0.58, 0.60), smoothstep(0.0, 0.5, t)), vec3(0.97, 0.84, 0.33), smoothstep(0.5, 1.0, t));
       float g = dot(material.diffuse, vec3(0.299, 0.587, 0.114));
       vec3 col = mix(vec3(g) * 0.55, ramp, 0.5);
-      float w = max(fwidth(h), 0.01);
-      float d5 = abs(fract(h / 10.0 + 0.5) - 0.5) * 10.0, d25 = abs(fract(h / 50.0 + 0.5) - 0.5) * 50.0;
-      float l5 = 1.0 - smoothstep(0.0, w, d5), l25 = 1.0 - smoothstep(0.0, w * 1.8, d25);
-      // de longe a malha é grosseira e as curvas viram zigue-zague: somem quando 1 pixel cobre mais de ~1,5 m de altura
-      float fade = 1.0 - smoothstep(0.5, 1.5, w);
-      col = mix(col, vec3(0.90, 0.97, 1.0), max(l5 * 0.18, l25 * 0.75) * fade);
       material.diffuse = col;
     }` });
   function setScience(on) {
