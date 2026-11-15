@@ -5,6 +5,7 @@ import { CONNECTORS, STATIONS, simulateSensors, lastValid, gaugeCross } from "./
 import LIMITE from "./limite-sorocaba.json";
 import { createGlobe } from "./globo.js";
 import { loadElevation } from "./relevo.js";
+import { icon } from "./icones.js";
 
 const $ = id => document.getElementById(id);
 const G = M.G, H = M.H;
@@ -90,6 +91,8 @@ const setData = (id, d) => { DATA[id] = d; if (globe) globe.setData(id, d); };
 const POPS = {
   shel: p => "<b>Abrigo sugerido</b><br>" + esc(p.name) + "<br><small>Escola fora das áreas de risco. Exemplo, não é abrigo oficial.</small>",
   sens: p => sensorPopup(p.id),
+  risk: p => "<b>" + { f: "Inundação prevista", s: "Encosta instável", x: "Perigo de incêndio", h: "Ilha de calor" }[p.k] + "</b><br>" + hourLabel(S.t) +
+    (p.k === "f" ? "<br>Rio " + fmt(p.d || 0, 1) + " m acima do normal" : ""),
   hist: p => "<b>" + esc(p.nome) + "</b><br>" + esc(p.tipo) + (p.datas ? "<br><small>" + esc(p.datas) + "</small>" : "") +
     (p.fonte ? '<br><a href="' + esc(p.fonte) + '" target="_blank" rel="noopener">Fonte</a>' : ""),
 };
@@ -182,7 +185,7 @@ function riskShapes() {
     const [mp] = contour(v);
     const area = r => Math.abs(r.reduce((a, p, i) => { const q = r[(i + 1) % r.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
     const polys = mp.coordinates.filter(poly => area(poly[0]) >= 3); // ponytail: manchas menores que 3 células viram ruído e custam um polígono cada
-    if (polys.length) feats.push({ type: "Feature", properties: { k: M.KIND[k] },
+    if (polys.length) feats.push({ type: "Feature", properties: { k: M.KIND[k], d: S.mode === "chuva" ? F.sim.rise[S.t] : 0 },
       geometry: { type: "MultiPolygon", coordinates: polys.map(poly => poly.map(ring => ring.map(toLL))) } });
   }
   return { type: "FeatureCollection", features: feats };
@@ -210,9 +213,9 @@ function drawLegend() {
     : [["#E0612B", "Vegetação com perigo de incêndio"], ["#B0368A", "Ilha de calor"]];
   it.push(["#7FC4F0", "Rio ou córrego", true]);
   $("legend").innerHTML = it.map(([c, l, line]) => '<span><i class="sw' + (line ? " line" : "") + '" style="background:' + c + '"></i>' + l + "</span>").join("") +
-    '<span><i class="sw dot" style="background:#E6ECE8;border-color:#3F7D55"></i>Abrigo sugerido</span>' +
-    '<span><i class="sw dot" style="background:#fff;border-color:#1B2A31"></i>Sensor</span>' +
-    (hist ? '<span><i class="sw dot" style="background:#1B2A31;border-color:#F2C14E"></i>Ocorrência registrada</span>' : "");
+    [["casa", "#3F7D55", "Abrigo sugerido"], ["chuva", "#2C6CB0", "Pluviômetro"], ["solo", "#5E8C3A", "Umidade do solo"], ["regua", "#1F7A8C", "Régua do rio"],
+      ["radar", "#6B4FA0", "Radar e estação"], ["carro", "#4E6068", "Trânsito"]].concat(hist ? [["alerta", "#C98A12", "Ocorrência registrada"]] : [])
+      .map(([g, c, l]) => '<span><img class="ico" src="' + icon(g, c) + '" alt="">' + l + "</span>").join("");
 }
 
 /* ---------- abrigos ---------- */
@@ -262,7 +265,7 @@ function sensorPopup(id) {
 function drawSensorsOnMap() {
   const on = $("lS").checked;
   setData("sens", { type: "FeatureCollection", features: on ? STATIONS.map(st => ({ type: "Feature",
-    properties: { id: st.id, bad: !!F.sensors[st.id].flag[S.t], label: st.id + " " + sensorValue(st, S.t) },
+    properties: { id: st.id, c: st.c, bad: !!F.sensors[st.id].flag[S.t], label: st.id + " " + sensorValue(st, S.t) },
     geometry: { type: "Point", coordinates: st.ll } })) : [] });
 }
 function spark(st) {

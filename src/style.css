@@ -189,3 +189,4 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--water);outline-
 @media (max-width:1100px){.timeline{left:440px;right:16px;top:64px}}
 @media (max-width:760px){.timeline{position:relative;left:auto;right:auto;top:auto;border-radius:0;box-shadow:none}}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2s}.bar i{transition:none}}
+.legend .ico{width:16px;height:16px}

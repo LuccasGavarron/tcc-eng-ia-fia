@@ -2,6 +2,7 @@
 // sem token, cai para satélite Esri sobre o globo liso. O resto do app só fala com esta interface.
 import * as Cesium from "cesium";
 import "cesium/Build/Cesium/Widgets/widgets.css";
+import { icon, SENSOR_ICON, RISK_ICON } from "./icones.js";
 
 window.CESIUM_BASE_URL = "/cesium/";
 const C = Cesium.Color.fromCssColorString;
@@ -76,14 +77,42 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     outlineColor: C("#1B2A31"), outlineWidth: 3, style: Cesium.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new Cesium.Cartesian2(0, offY),
     verticalOrigin: Cesium.VerticalOrigin.TOP, ...ground });
 
+  // marcador 3D: haste branca saindo do chão e selo com ícone no topo, sempre virado para a câmera
+  const STALK = 60;
+  function marker(ds, ll, img, pop, text, size, floor) {
+    const e = floor ?? elevAt(ll[0], ll[1]) ?? 0;
+    const base = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e), top = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e + STALK);
+    ds.entities.add({ _pop: pop, polyline: { positions: [base, top], width: 2, arcType: Cesium.ArcType.NONE, material: Cesium.Color.WHITE.withAlpha(0.8) } });
+    ds.entities.add({ position: top, _pop: pop,
+      billboard: { image: img, width: size, height: size, verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        scaleByDistance: new Cesium.NearFarScalar(1500, 1.1, 40000, 0.4) },
+      label: text ? { ...label(text, 12, 4), distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500) } : undefined });
+  }
   const draw = {
     risk(ds, fc) {
       for (const f of fc.features) {
-        const [col, a] = RISK[f.properties.k] || ["#000", 0];
-        for (const poly of f.geometry.coordinates) ds.entities.add({ polygon: {
-          hierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(poly[0].flat()),
-            poly.slice(1).map(h => new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(h.flat())))),
-          material: C(col).withAlpha(a), classificationType: Cesium.ClassificationType.BOTH } });
+        const k = f.properties.k, [col, a] = RISK[k] || ["#000", 0];
+        // ícone só nas 3 maiores manchas de cada tipo, para não poluir
+        const big = new Set([...f.geometry.coordinates].sort((p, q) => q[0].length - p[0].length).slice(0, 3));
+        f.geometry.coordinates.forEach(poly => {
+          const outer = Cesium.Cartesian3.fromDegreesArray(poly[0].flat());
+          const holes = poly.slice(1).map(h => new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(h.flat())));
+          // pegada exata no chão
+          ds.entities.add({ polygon: { hierarchy: new Cesium.PolygonHierarchy(outer, holes), material: C(col).withAlpha(a * 0.8), classificationType: Cesium.ClassificationType.BOTH } });
+          if (k !== "f" && k !== "s") return;
+          // volume 3D: enchente vira lâmina d'água até a cota prevista; encosta vira casca vermelha
+          const es = poly[0].filter((_, i) => i % 3 === 0).map(p => elevAt(p[0], p[1])).filter(e => e != null);
+          if (es.length < 3) return;
+          const lo = Math.min(...es), hi = Math.max(...es);
+          const top = k === "f" ? lo + Math.max(1.5, f.properties.d || 0) * 2 : hi + 12; // ponytail: lâmina exagerada 2× para aparecer na vista da cidade
+          ds.entities.add({ _pop: () => popup("risk", f.properties), polygon: { hierarchy: new Cesium.PolygonHierarchy(outer, holes), height: lo - 3, extrudedHeight: top,
+            material: C(col).withAlpha(k === "f" ? 0.38 : 0.22), outline: false } });
+          if (big.has(poly)) {
+            const n = poly[0].length, cx = poly[0].reduce((s, p) => s + p[0], 0) / n, cy = poly[0].reduce((s, p) => s + p[1], 0) / n;
+            const [g, c] = RISK_ICON[k];
+            marker(ds, [cx, cy], icon(g, c), () => popup("risk", f.properties), null, 38, top);
+          }
+        });
       }
     },
     rios(ds, fc) {
@@ -91,17 +120,16 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
         width: f.properties.w === "r" ? 4 : f.properties.w === "c" ? 2.2 : 1.5, clampToGround: true, material: C("#7FC4F0").withAlpha(0.9) } });
     },
     hist(ds, fc) {
-      for (const f of fc.features) ds.entities.add({ position: pt(f.geometry.coordinates), _pop: () => popup("hist", f.properties),
-        point: { pixelSize: 9, color: C("#1B2A31"), outlineColor: C("#F2C14E"), outlineWidth: 2.5, ...ground, ...shrink } });
+      for (const f of fc.features) marker(ds, f.geometry.coordinates, icon("alerta", "#C98A12"), () => popup("hist", f.properties), null, 28);
     },
     sens(ds, fc) {
-      for (const f of fc.features) ds.entities.add({ position: pt(f.geometry.coordinates), _pop: () => popup("sens", f.properties),
-        point: { pixelSize: 11, color: f.properties.bad ? C("#AE3A2C") : Cesium.Color.WHITE, outlineColor: C("#1B2A31"), outlineWidth: 3, ...ground, ...shrink },
-        label: { ...label(f.properties.label, 12, 10), distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 9000) } });
+      for (const f of fc.features) {
+        const [g, c] = SENSOR_ICON[f.properties.c] || ["radar", "#4E6068"];
+        marker(ds, f.geometry.coordinates, icon(g, c, f.properties.bad), () => popup("sens", f.properties), f.properties.label, 34);
+      }
     },
     shel(ds, fc) {
-      for (const f of fc.features) ds.entities.add({ position: pt(f.geometry.coordinates), _pop: () => popup("shel", f.properties),
-        point: { pixelSize: 14, color: C("#E6ECE8"), outlineColor: C("#3F7D55"), outlineWidth: 3.5, ...ground }, label: label(f.properties.name, 13, 12) });
+      for (const f of fc.features) marker(ds, f.geometry.coordinates, icon("casa", "#3F7D55"), () => popup("shel", f.properties), f.properties.name, 40);
     },
     // nível 0: um nome a cada 2,6 km; nível 1: a cada 900 m; nível 2: o resto, só bem de perto
     bairros(ds, list) {
@@ -119,7 +147,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     ds.entities.resumeEvents(); sc.requestRender();
   }
   const DRAWN = {};
-  const setElevation = fn => { elevAt = fn; for (const id of ["hist", "sens", "shel", "bairros"]) if (DRAWN[id]) setData(id, DRAWN[id]); };
+  const setElevation = fn => { elevAt = fn; for (const id of ["hist", "sens", "shel", "bairros", "risk"]) if (DRAWN[id]) setData(id, DRAWN[id]); };
   const show = (id, on) => { layer(id).show = on; sc.requestRender(); };
 
   // popup próprio, preso ao ponto clicado
