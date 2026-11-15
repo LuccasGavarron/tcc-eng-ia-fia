@@ -11,6 +11,7 @@
 html,body{height:100%;margin:0}
 body{background:var(--ink);color:var(--ink);font:15px/1.5 var(--body);overflow:hidden}
 #map{position:absolute;inset:0}
+@media (min-width:761px){#map{left:420px}} /* painel fixo à esquerda: a cidade centraliza no espaço livre */
 
 .panel{position:absolute;top:16px;left:16px;bottom:16px;width:404px;background:var(--paper);border-radius:6px;
   box-shadow:0 18px 50px rgba(10,20,25,.45);display:flex;flex-direction:column;overflow:hidden;z-index:2}
@@ -104,8 +105,10 @@ th{font:700 13px var(--display)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .legend{position:absolute;right:16px;bottom:34px;z-index:2;background:rgba(230,236,232,.94);border-radius:4px;padding:8px 10px;font-size:12.5px;display:flex;flex-direction:column;gap:4px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 .legend span{display:flex;gap:6px;align-items:center}
-.maplibregl-popup-content{font:14px var(--body);color:var(--ink);border-radius:4px}
-.maplibregl-ctrl-bottom-right{bottom:150px}
+.pop{position:absolute;z-index:3;transform:translate(-50%,calc(-100% - 14px));max-width:280px;background:#fff;border-radius:4px;padding:10px 26px 10px 12px;font:14px var(--body);color:var(--ink);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.pop button{position:absolute;top:2px;right:4px;border:0;background:none;font-size:18px;cursor:pointer;color:var(--ink)}
+.cesium-viewer-bottom{left:auto;right:16px;bottom:4px}
+.cesium-widget-credits{font-size:10px}
 
 @media (max-width:760px){
   body{overflow:auto}
@@ -113,7 +116,6 @@ th{font:700 13px var(--display)}
   .panel{position:relative;inset:auto;width:auto;border-radius:0;box-shadow:none}
   .scroll{overflow:visible}
   .legend{top:12px;bottom:auto;left:12px;right:auto;font-size:11.5px}
-  .maplibregl-ctrl-bottom-right{bottom:0}
 }
 @media (prefers-reduced-motion:reduce){.tube .fill{transition:none}}
 button:focus-visible,input:focus-visible{outline:3px solid var(--water);outline-offset:2px}
@@ -178,7 +180,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--water);outline-
 /* histórico */
 .hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:13.5px}
 .hist p{margin:2px 0;color:var(--ink-soft);font-size:13px}
-.hist a,.maplibregl-popup-content a{color:var(--water);font-weight:600}
+.hist a,.pop a{color:var(--water);font-weight:600}
 
 /* legenda */
 .sw.line{height:3px;border-radius:2px}

@@ -4,3 +4,4 @@ dist
 !.env.example
 .vercel
 dados/osm_*.json
+public/cesium

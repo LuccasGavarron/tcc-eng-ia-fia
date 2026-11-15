@@ -1,10 +1,10 @@
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
 import "./style.css";
 import { contours } from "d3-contour";
 import * as M from "./model.js";
 import { CONNECTORS, STATIONS, simulateSensors, lastValid, gaugeCross } from "./sensores.js";
 import LIMITE from "./limite-sorocaba.json";
+import { createGlobe } from "./globo.js";
+import { loadElevation } from "./relevo.js";
 
 const $ = id => document.getElementById(id);
 const G = M.G, H = M.H;
@@ -14,11 +14,11 @@ const hourLabel = t => "dia " + (Math.floor(t / 24) + 1) + ", " + String(t % 24)
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 const CITIES = [
-  { n: "Sorocaba", c: [-47.44, -23.47], z: 11.1, ctx: "Cortada pelo Rio Sorocaba, com avenidas marginais e bairros baixos junto ao leito." },
-  { n: "Petrópolis", c: [-43.178, -22.505], z: 13, ctx: "Serra fluminense. Em 2022, chuvas extremas causaram deslizamentos com centenas de mortes." },
-  { n: "São Sebastião", c: [-45.68, -23.79], z: 12.4, ctx: "Litoral norte de SP. Em 2023, deslizamentos atingiram a Vila Sahy após chuva recorde." },
-  { n: "Porto Alegre", c: [-51.215, -30.03], z: 12, ctx: "Às margens do Guaíba. Em 2024, a cidade viveu a maior enchente de sua história." },
-  { n: "Blumenau", c: [-49.066, -26.919], z: 12.8, ctx: "Vale do Itajaí, com histórico de cheias e a tragédia de 2008." },
+  { n: "Sorocaba", c: [-47.437, -23.47], r: 15000, ctx: "Cortada pelo Rio Sorocaba, com avenidas marginais e bairros baixos junto ao leito." },
+  { n: "Petrópolis", c: [-43.178, -22.505], r: 5000, ctx: "Serra fluminense. Em 2022, chuvas extremas causaram deslizamentos com centenas de mortes." },
+  { n: "São Sebastião", c: [-45.68, -23.79], r: 6000, ctx: "Litoral norte de SP. Em 2023, deslizamentos atingiram a Vila Sahy após chuva recorde." },
+  { n: "Porto Alegre", c: [-51.215, -30.03], r: 8000, ctx: "Às margens do Guaíba. Em 2024, a cidade viveu a maior enchente de sua história." },
+  { n: "Blumenau", c: [-49.066, -26.919], r: 5000, ctx: "Vale do Itajaí, com histórico de cheias e a tragédia de 2008." },
 ];
 const HAZ = [
   { k: "f", n: "Enchente", color: "#2C6CB0" },
@@ -83,101 +83,35 @@ function hourState(t) {
 }
 
 /* ---------- mapa ---------- */
-// Fontes abertas, sem chave: satélite Sentinel-2 (EOX), relevo Terrarium (AWS Open Data), rótulos OSM (CARTO).
-const DEM = { type: "raster-dem", tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"], encoding: "terrarium", tileSize: 256, maxzoom: 15,
-  attribution: '<a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a>' };
-const STYLE = { version: 8, glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-  sources: {
-    sat: { type: "raster", tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"], tileSize: 256, maxzoom: 18,
-      attribution: "Imagens Esri, Maxar, Earthstar Geographics" },
-    omt: { type: "vector", url: "https://tiles.openfreemap.org/planet",
-      attribution: '<a href="https://openfreemap.org">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' },
-    dem: DEM, hs: { ...DEM },
-  },
-  layers: [{ id: "fundo", type: "background", paint: { "background-color": "#000" } },
-    { id: "sat", type: "raster", source: "sat", paint: { "raster-saturation": -0.1, "raster-contrast": 0.05 } }] };
-// Sorocaba solta no espaço: tudo fora do limite municipal (IBGE) fica preto
-const WORLD = [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]];
-const MASK = { type: "Feature", geometry: { type: "Polygon", coordinates: [WORLD, LIMITE.coordinates[0]] } };
-const BAIRRO = ["any", ["in", ["get", "class"], ["literal", ["suburb", "town", "city"]]], [">=", ["zoom"], 14]];
-const IN_CITY = ["within", { type: "Feature", geometry: LIMITE }];
-const map = new maplibregl.Map({ container: "map", style: STYLE, attributionControl: { compact: true }, center: CITIES[0].c, zoom: CITIES[0].z, pitch: 62, bearing: -18, maxPitch: 75, maxZoom: 18.5 }); // ponytail: z19 da Esri em Sorocaba é placeholder, o z18 é esticado
-// painel lateral cobre a esquerda: centraliza a cidade na área livre
-if (innerWidth > 900) map.setPadding({ left: 440, top: 80 });
-map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "bottom-right");
-map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-left");
-const FONT = ["Noto Sans Bold"];
-const EMPTY = { type: "FeatureCollection", features: [] };
-const setData = (id, d) => { const s = map.getSource(id); if (s) s.setData(d); };
-
-// créditos começam recolhidos no botão (i)
-map.once("load", () => document.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show"));
-map.on("style.load", () => {
-  map.setTerrain({ source: "dem", exaggeration: S.is3D ? 1.6 : 1 });
-  try { map.setSky({ "sky-color": "#000", "horizon-color": "#000", "fog-color": "#000", "sky-horizon-blend": 0, "horizon-fog-blend": 0, "fog-ground-blend": 1, "atmosphere-blend": 0 }); } catch (e) {}
-  map.addLayer({ id: "hillshade", type: "hillshade", source: "hs", layout: { visibility: S.is3D ? "none" : "visible" },
-    paint: { "hillshade-exaggeration": 0.55, "hillshade-shadow-color": "#1B2A31" } });
-  map.addSource("risk", { type: "geojson", data: EMPTY });
-  map.addLayer({ id: "risk-fill", type: "fill", source: "risk", paint: {
-    "fill-color": ["match", ["get", "k"], "f", "#2F80E0", "a", "#C4841C", "s", "#AE3A2C", "x", "#E0612B", "h", "#B0368A", "#000"],
-    "fill-opacity": ["match", ["get", "k"], "f", 0.6, "a", 0.4, "s", 0.55, "x", 0.55, "h", 0.42, 0], "fill-antialias": false } });
-  map.addSource("rios", { type: "geojson", data: rivers || EMPTY });
-  map.addLayer({ id: "rios", type: "line", source: "rios", paint: { "line-color": "#7FC4F0",
-    "line-width": ["match", ["get", "w"], "r", 3, "c", 1.6, 1.1], "line-opacity": 0.9 } });
-  map.addSource("limite", { type: "geojson", data: MASK });
-  map.addLayer({ id: "fora", type: "fill", source: "limite", paint: { "fill-color": "#000", "fill-antialias": false } });
-  map.addLayer({ id: "borda-luz", type: "line", source: "limite", paint: { "line-color": "#7FC4F0", "line-width": 9, "line-blur": 8, "line-opacity": 0.45 } });
-  map.addLayer({ id: "borda", type: "line", source: "limite", paint: { "line-color": "#CFE9FA", "line-width": 1.4 } });
-  map.addSource("predios", { type: "geojson", data: EMPTY });
-  map.addLayer({ id: "predios", type: "fill-extrusion", source: "predios", minzoom: 13, paint: {
-    "fill-extrusion-color": "#E3E6E1", "fill-extrusion-height": ["get", "h"], "fill-extrusion-opacity": 0.85 } });
-  const halo = { "text-color": "#fff", "text-halo-color": "rgba(27,42,49,.9)", "text-halo-width": 1.4 };
-  map.addLayer({ id: "ruas", type: "symbol", source: "omt", "source-layer": "transportation_name", minzoom: 14,
-    layout: { "text-field": ["get", "name"], "text-font": ["Noto Sans Regular"], "text-size": 11, "symbol-placement": "line" }, filter: IN_CITY, paint: halo });
-  map.addLayer({ id: "bairros", type: "symbol", source: "omt", "source-layer": "place", minzoom: 11,
-    filter: ["all", IN_CITY, BAIRRO],
-    layout: { "text-field": ["get", "name"], "text-font": FONT, "text-size": ["match", ["get", "class"], "city", 15, "town", 13, 11.5],
-      "text-transform": "uppercase", "text-letter-spacing": 0.06 }, paint: halo });
-  getJSON("/predios-sorocaba.geojson").then(j => j && setData("predios", j));
-  map.addSource("hist", { type: "geojson", data: EMPTY });
-  map.addLayer({ id: "hist", type: "circle", source: "hist", paint: { "circle-radius": 5, "circle-color": "#1B2A31",
-    "circle-stroke-color": "#F2C14E", "circle-stroke-width": 2, "circle-pitch-alignment": "map" } });
-  map.addSource("sens", { type: "geojson", data: EMPTY });
-  map.addLayer({ id: "sens", type: "circle", source: "sens", paint: { "circle-radius": 6,
-    "circle-color": ["case", ["get", "bad"], "#AE3A2C", "#FFFFFF"], "circle-stroke-color": "#1B2A31", "circle-stroke-width": 2.5 } });
-  map.addLayer({ id: "sens-t", type: "symbol", source: "sens", minzoom: 12, layout: { "text-field": ["get", "label"], "text-size": 11, "text-font": FONT,
-    "text-offset": [0, 1.2], "text-anchor": "top" }, paint: { "text-color": "#fff", "text-halo-color": "#1B2A31", "text-halo-width": 1.4 } });
-  map.addSource("shel", { type: "geojson", data: EMPTY });
-  map.addLayer({ id: "shel-c", type: "circle", source: "shel", paint: { "circle-radius": 8, "circle-color": "#E6ECE8",
-    "circle-stroke-color": "#3F7D55", "circle-stroke-width": 3, "circle-pitch-alignment": "map" } });
-  map.addLayer({ id: "shel-t", type: "symbol", source: "shel", layout: { "text-field": ["get", "name"], "text-size": 12, "text-font": FONT, "text-offset": [0, 1.3], "text-anchor": "top" },
-    paint: { "text-color": "#fff", "text-halo-color": "#1B2A31", "text-halo-width": 1.6 } });
-
-  const popup = (layer, html) => {
-    map.on("click", layer, e => new maplibregl.Popup({ maxWidth: "280px" }).setLngLat(e.lngLat).setHTML(html(e.features[0].properties)).addTo(map));
-    map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
-    map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
-  };
-  popup("shel-c", p => "<b>Abrigo sugerido</b><br>" + esc(p.name) + "<br><small>Escola fora das áreas de risco. Exemplo, não é abrigo oficial.</small>");
-  popup("sens", p => sensorPopup(p.id));
-  popup("hist", p => "<b>" + esc(p.nome) + "</b><br>" + esc(p.tipo) + (p.datas ? "<br><small>" + esc(p.datas) + "</small>" : "") +
-    (p.fonte ? '<br><a href="' + esc(p.fonte) + '" target="_blank" rel="noopener">Fonte</a>' : ""));
-  if (hist) setData("hist", histGeo());
-  scheduleSample();
+// globo 3D (src/globo.js); os dados chegam antes dele ficar pronto e são reaplicados depois
+let globe = null;
+const DATA = {};
+const setData = (id, d) => { DATA[id] = d; if (globe) globe.setData(id, d); };
+const POPS = {
+  shel: p => "<b>Abrigo sugerido</b><br>" + esc(p.name) + "<br><small>Escola fora das áreas de risco. Exemplo, não é abrigo oficial.</small>",
+  sens: p => sensorPopup(p.id),
+  hist: p => "<b>" + esc(p.nome) + "</b><br>" + esc(p.tipo) + (p.datas ? "<br><small>" + esc(p.datas) + "</small>" : "") +
+    (p.fonte ? '<br><a href="' + esc(p.fonte) + '" target="_blank" rel="noopener">Fonte</a>' : ""),
+};
+createGlobe($("map"), { token: import.meta.env.VITE_CESIUM_TOKEN, limite: LIMITE, onMoveEnd: scheduleSample, popup: (k, p) => POPS[k](p) }).then(g => {
+  globe = g;
+  for (const id in DATA) g.setData(id, DATA[id]);
+  if (!$("lO").checked) g.show("hist", false);
+  const c = CITIES[0]; g.flyTo(c.c[0], c.c[1], c.r, 0);
+  if (import.meta.env.DEV) window.vespera = { globe, S, get grid() { return grid; } };
 });
 
 /* 2D / 3D */
 function setView(three) {
   S.is3D = three; $("v3").setAttribute("aria-pressed", three); $("v2").setAttribute("aria-pressed", !three);
-  if (map.getSource("dem")) { map.setTerrain({ source: "dem", exaggeration: three ? 1.6 : 1 }); map.setLayoutProperty("hillshade", "visibility", three ? "none" : "visible"); }
-  if (three) { map.dragRotate.enable(); map.touchZoomRotate.enableRotation(); map.easeTo({ pitch: 62, bearing: -18, duration: 1200 }); }
-  else { map.dragRotate.disable(); map.touchZoomRotate.disableRotation(); map.easeTo({ pitch: 0, bearing: 0, duration: 1200 }); }
+  globe && globe.setView(three);
 }
 $("v3").onclick = () => setView(true); $("v2").onclick = () => setView(false);
 
 /* ---------- dados locais ---------- */
 const getJSON = u => fetch(u).then(r => (r.ok ? r.json() : null)).catch(() => null);
 getJSON("/rios-sorocaba.geojson").then(j => { rivers = j; if (j) setData("rios", j); scheduleSample(); });
+getJSON("/bairros-sorocaba.json").then(j => j && setData("bairros", j));
 getJSON("/cobertura-sorocaba.json").then(j => { cover = j; scheduleSample(); });
 getJSON("/escolas-sorocaba.json").then(j => { schools = j; pickShelters(); });
 getJSON("/historico-sorocaba.json").then(j => { hist = j; if (j) { setData("hist", histGeo()); drawHistory(); plan(); } });
@@ -186,31 +120,31 @@ const histGeo = () => ({ type: "FeatureCollection", features: (hist?.pontos || [
   geometry: { type: "Point", coordinates: [p.lon, p.lat] } })) });
 
 /* ---------- leitura do relevo ---------- */
-let pending = false;
-function scheduleSample() {
-  if (pending || !map.getTerrain()) return;
-  pending = true; $("busy").hidden = false;
-  map.once("idle", () => { pending = false; sample(); });
-}
-map.on("moveend", scheduleSample);
+let sampleTmr = null, sampleReq = 0;
+function scheduleSample() { clearTimeout(sampleTmr); sampleTmr = setTimeout(sample, 350); }
 function coverAt(lon, lat, key) {
   if (!cover) return NaN;
   const c = Math.floor((lon - cover.west) / cover.d), r = Math.floor((lat - cover.south) / cover.d);
   return c < 0 || r < 0 || c >= cover.nx || r >= cover.ny ? NaN : cover[key][r * cover.nx + c];
 }
-function sample() {
-  const b = map.getBounds(), cen = map.getCenter(), f = S.is3D ? 0.42 : 0.48;
-  const w = (b.getEast() - b.getWest()) * f, h = (b.getNorth() - b.getSouth()) * f;
-  const west = cen.lng - w, south = cen.lat - h, dx = (2 * w) / G, dy = (2 * h) / G;
-  const ex = map.getTerrain()?.exaggeration || 1;
+// grade G×G centrada no meio da tela, do tamanho do que a câmera enxerga
+async function sample() {
+  const cen = globe && globe.center();
+  if (!cen) return;
+  const id = ++sampleReq; $("busy").hidden = false;
+  const half = Math.min(16000, Math.max(1500, cen.dist * 0.45)), cos = Math.cos((cen.lat * Math.PI) / 180);
+  const w = half / (111320 * cos), h = half / 110540;
+  const west = cen.lon - w, south = cen.lat - h, dx = (2 * w) / G, dy = (2 * h) / G;
+  const elevAt = await loadElevation(west, south, cen.lon + w, cen.lat + h, (2 * half) / G);
+  if (id !== sampleReq) return;
   const el = new Float32Array(G * G).fill(NaN), veg = new Float32Array(G * G), built = new Float32Array(G * G);
   for (let r = 0; r < G; r++) for (let c = 0; c < G; c++) {
     const x = west + (c + 0.5) * dx, y = south + (r + 0.5) * dy, i = r * G + c;
-    const v = map.queryTerrainElevation([x, y]);
-    if (v != null) el[i] = v / ex;
+    const v = elevAt(x, y);
+    if (v != null) el[i] = v;
     veg[i] = coverAt(x, y, "veg"); built[i] = coverAt(x, y, "built");
   }
-  const mx = dx * 111320 * Math.cos((cen.lat * Math.PI) / 180), my = dy * 110540, slope = new Float32Array(G * G);
+  const mx = dx * 111320 * cos, my = dy * 110540, slope = new Float32Array(G * G);
   for (let r = 1; r < G - 1; r++) for (let c = 1; c < G - 1; c++) {
     const i = r * G + c; slope[i] = Math.hypot((el[i + 1] - el[i - 1]) / (2 * mx), (el[i + G] - el[i - G]) / (2 * my)) * 100;
   }
@@ -219,9 +153,9 @@ function sample() {
   // drenagem: rios, canais e córregos com nome; nascentes sem nome ficam de fora
   const W = { r: 1, c: 0.5, s: 0.35 }, lines = rivers ? rivers.features.filter(f => f.properties.w !== "s" || f.properties.n)
     .map(f => ({ p: f.geometry.coordinates, w: W[f.properties.w] })) : [];
-  grid = vals.length < 100 ? null : { west, south, dx, dy, el, slope, veg, built,
+  grid = vals.length < 100 ? null : { west, south, dx, dy, el, slope, veg, built, cx: cen.lon, cy: cen.lat,
     builtSorted: Array.from(built).filter(v => v > 0).sort((a, b) => b - a),
-    base: vals[Math.floor(vals.length * 0.03)], hand: M.computeHAND(el, lines, west, south, dx, dy, (x, y) => { const v = map.queryTerrainElevation([x, y]); return v == null ? null : v / ex; }) };
+    base: vals[Math.floor(vals.length * 0.03)], hand: M.computeHAND(el, lines, west, south, dx, dy, elevAt) };
   pickShelters(); render();
 }
 
@@ -229,7 +163,7 @@ function sample() {
 function render() {
   const st = hourState(S.t);
   cl = M.classify(grid, st);
-  setData("risk", grid && $("lR").checked ? riskShapes() : EMPTY);
+  setData("risk", grid && $("lR").checked ? riskShapes() : null);
   drawSensorsOnMap(); drawShelters(); areaFacts(st); drawLegend();
 }
 
@@ -262,7 +196,7 @@ function areaFacts(st) {
   $("riseTxt").textContent = S.mode === "chuva"
     ? "Em " + hourLabel(S.t) + ", rio " + fmt(st.rise, 1) + " m acima do normal" + (grid.hand ? "." : ". Sem rios mapeados aqui: comparado às cotas mais baixas da tela.") +
       (pts.length ? " " + hit + " de " + pts.length + " pontos com alagamento registrado ficam dentro da mancha." : "")
-    : (!isNaN(coverAt(map.getCenter().lng, map.getCenter().lat, "veg")) ? "Em " + hourLabel(S.t) + ", perigo de incêndio " + M.FMA_CLASSES[st.fireClass].toLowerCase() + " e índice de calor " + fmt(F.hiAt(S.t), 0) + " °C."
+    : (!isNaN(coverAt(grid.cx, grid.cy, "veg")) ? "Em " + hourLabel(S.t) + ", perigo de incêndio " + M.FMA_CLASSES[st.fireClass].toLowerCase() + " e índice de calor " + fmt(F.hiAt(S.t), 0) + " °C."
       : "Cobertura do solo disponível só para Sorocaba.");
 }
 
@@ -285,7 +219,7 @@ function pickShelters() {
   const local = (schools || []).filter(inGrid);
   if (local.length) { shelters = local.map(([name, x, y]) => ({ name, c: [x, y] })); drawShelters(); return; }
   // fora de Sorocaba: escolas do OpenStreetMap via Overpass
-  const id = ++searchReq, b = map.getBounds(), bb = [b.getSouth(), b.getWest(), b.getNorth(), b.getEast()].map(v => v.toFixed(3)).join(",");
+  const id = ++searchReq, bb = [grid.south, grid.west, grid.south + G * grid.dy, grid.west + G * grid.dx].map(v => v.toFixed(3)).join(",");
   fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent('[out:json][timeout:20];nwr["amenity"="school"]["name"](' + bb + ');out center 40;'))
     .then(r => r.json()).then(j => { if (id !== searchReq) return;
       shelters = (j.elements || []).map(e => ({ name: e.tags.name, c: [e.lon ?? e.center.lon, e.lat ?? e.center.lat] })); drawShelters(); })
@@ -525,7 +459,7 @@ document.querySelectorAll(".presets button").forEach(b => (b.onclick = () => set
 $("ante").oninput = e => { S.ante = +e.target.value; update(true); };
 for (const id of ["anom", "heatDays", "rhMin", "dryDays", "wind"]) { $(id).value = S[id]; $(id).oninput = e => { S[id] = +e.target.value; update(true); }; }
 ["lR", "lS", "lH"].forEach(id => ($(id).onchange = render));
-$("lO").onchange = () => map.getLayer("hist") && map.setLayoutProperty("hist", "visibility", $("lO").checked ? "visible" : "none");
+$("lO").onchange = () => globe && globe.show("hist", $("lO").checked);
 
 M.SYSTEMS.forEach((s, i) => {
   const b = document.createElement("button"); b.type = "button"; b.innerHTML = "<b>" + s.n + "</b>" + s.d; b.setAttribute("aria-pressed", i === 0);
@@ -548,18 +482,12 @@ $("play").onclick = () => {
 $("hour").oninput = e => { stop(); setHour(+e.target.value); };
 
 /* cidades e busca */
-// máscara e corte dos rótulos só existem para Sorocaba; nas outras cidades o mapa fica inteiro
-function focusCity(on) {
-  if (!map.getLayer("fora")) return;
-  for (const id of ["fora", "borda-luz", "borda"]) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
-  map.setFilter("ruas", on ? IN_CITY : null);
-  map.setFilter("bairros", on ? ["all", IN_CITY, BAIRRO] : BAIRRO);
-}
 function goTo(city, btn) {
   document.querySelectorAll("#cities button").forEach(x => x.setAttribute("aria-pressed", x === btn));
   $("context").textContent = city.ctx || "";
-  focusCity(city.n === "Sorocaba");
-  map.flyTo({ center: city.c, zoom: city.z || 12.5, pitch: S.is3D ? 62 : 0, bearing: S.is3D ? -18 : 0, duration: 2600, essential: true });
+  if (!globe) return;
+  globe.focusCity(city.n === "Sorocaba");
+  globe.flyTo(city.c[0], city.c[1], city.r || 5000);
 }
 CITIES.forEach((c, i) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c.n; b.setAttribute("aria-pressed", i === 0); b.onclick = () => goTo(c, b); $("cities").appendChild(b); });
 $("context").textContent = CITIES[0].ctx;
@@ -574,7 +502,7 @@ $("q").addEventListener("input", e => {
           const li = document.createElement("li"), b = document.createElement("button");
           const pr = f.properties, where = [pr.state, pr.country].filter(Boolean).join(", ");
           b.innerHTML = esc(pr.name) + " <small>" + esc(where) + "</small>";
-          b.onclick = () => { ul.hidden = true; $("q").value = ""; goTo({ c: f.geometry.coordinates, z: 12.5, ctx: pr.name + (where ? ", " + where : "") }, null); };
+          b.onclick = () => { ul.hidden = true; $("q").value = ""; goTo({ c: f.geometry.coordinates, r: 5000, ctx: pr.name + (where ? ", " + where : "") }, null); };
           li.appendChild(b); ul.appendChild(li);
         });
         ul.hidden = !ul.children.length;
