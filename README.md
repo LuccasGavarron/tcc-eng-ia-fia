@@ -68,7 +68,7 @@ npm run build
 
 Crie um `.env.local` com `VITE_CESIUM_TOKEN` (token gratuito do Cesium ion) para ter a malha 3D do Google. Sem ele, o mapa usa imagem de satélite sobre o globo.
 
-A análise por IA usa a função `api/analise.js` e a variável `XAI_API_KEY`. Qualquer API compatível com OpenAI funciona com `AI_BASE_URL` e `AI_MODEL`.
+A análise por IA usa a função `api/analise.js` com o Groq (`openai/gpt-oss-120b`) e a variável `AI_API_KEY`. Qualquer API compatível com OpenAI funciona com `AI_BASE_URL` e `AI_MODEL`.
 
 ## Estrutura
 
