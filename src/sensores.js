@@ -13,7 +13,7 @@ export const CONNECTORS = [
 ];
 
 // fault: defeito simulado. rain: fator espacial da chuva. Réguas: cota de alerta e de transbordamento.
-export const STATIONS = [
+export let STATIONS = [
   // pluviômetros reais do Cemaden em Sorocaba (código e coordenada); as leituras são simuladas
   { id: "P1", c: "cemaden", n: "Cerrado (355220503A)", ll: [-47.486, -23.508], rain: 1.05 },
   { id: "P2", c: "cemaden", n: "Retiro São João (355220508A)", ll: [-47.4428, -23.4553], rain: 1.0 },
@@ -34,6 +34,9 @@ export const STATIONS = [
   { id: "T1", c: "transito", n: "Av. Dom Aguirre, marginal", ll: [-47.4535, -23.4960], free: 60, river: "R1" },
   { id: "T2", c: "transito", n: "Marginal do Pirajibu", ll: [-47.4395, -23.4190], free: 50, river: "R3" },
 ];
+
+// troca a rede quando a cidade muda (live binding: quem importou STATIONS vê a lista nova)
+export const setStations = list => { STATIONS = list; };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const at = (arr, t) => arr[clamp(t, 0, arr.length - 1)];

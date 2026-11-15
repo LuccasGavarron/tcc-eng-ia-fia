@@ -306,9 +306,14 @@ body.closed .find{left:calc(var(--rail) + var(--gap))}
 .sp-logo{width:84px;height:84px;border-radius:20px;background:var(--s2);border:1px solid var(--line);display:grid;place-items:center}
 .sp-logo svg{width:58px;height:58px}
 .splash h1{margin:0;font:700 44px/1 var(--display);font-variation-settings:"wdth" 112;letter-spacing:-.03em}
-.sp-cities{display:flex;gap:10px;margin-top:10px}
-.sp-cities button{font:600 15px var(--body);color:var(--tx);background:var(--s2);border:1px solid var(--line-2);border-radius:999px;padding:11px 22px;cursor:pointer}
-.sp-cities button:disabled{opacity:.4;cursor:default}
+.sp-cities{display:flex;gap:56px;margin-top:22px}
+.sp-cities button{display:flex;flex-direction:column;align-items:center;gap:12px;background:none;border:0;padding:0;cursor:pointer;color:var(--tx)}
+.sp-cities svg{width:150px;height:150px}
+.sp-cities path{fill:rgba(95,163,207,.08);stroke:#9FD6F7;stroke-width:1.1;stroke-linejoin:round}
+.sp-cities b{font:600 17px var(--body);letter-spacing:-.01em}
+.sp-name{margin:6px 0 0;font:500 15px var(--body);color:var(--tx2)}
+.sp-name:empty{display:none}
+.chip-link{font:500 13px var(--body);color:var(--acc);text-decoration:none;border:1px solid var(--acc-2);border-radius:4px;padding:5px 10px}
 .sp-bar{width:260px;height:4px;border-radius:2px;background:var(--s3);overflow:hidden;margin-top:14px}
 .sp-bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s ease}
 body.intro .rail,body.intro .panel,body.intro .timeline,body.intro .toolbar,body.intro .find{visibility:hidden}

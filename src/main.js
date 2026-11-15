@@ -1,8 +1,8 @@
 import "./style.css";
 import { contours } from "d3-contour";
 import * as M from "./model.js";
-import { CONNECTORS, STATIONS, simulateSensors, lastValid, gaugeCross } from "./sensores.js";
-import LIMITE from "./limite-sorocaba.json";
+import { CONNECTORS, STATIONS, setStations, simulateSensors, lastValid, gaugeCross } from "./sensores.js";
+import LIMITE_SOROCABA from "./limite-sorocaba.json";
 import { createGlobe } from "./globo.js";
 import { loadElevation } from "./relevo.js";
 import { icon, SENSOR_ICON, RISK_ICON } from "./icones.js";
@@ -18,8 +18,26 @@ const dayName = t => { const d = new Date(T0.getTime() + Math.floor(t / 24) * 86
 const hourLabel = t => dayName(t) + ", " + String(t % 24).padStart(2, "0") + "h";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
+/* cidades com dados completos; a escolhida vem de ?c= na URL */
+const CITY_DATA = {
+  sorocaba: { n: "Sorocaba", uf: "SP", c: [-47.437, -23.47], r: 15000, alt: [530, 730], base: 515,
+    file: k => "/" + k + "-sorocaba." + (k === "rios" ? "geojson" : "json"),
+    alertMm: 60, alertTxt: "critério de alerta do Plano Verão da Defesa Civil de Sorocaba (60 mm em 3 dias)",
+    gauge: { id: "R1", nome: "da Praça Lions", via: "a Dom Aguirre alaga" }, road: "Av. Dom Aguirre", skip: ["Dom Aguirre", "Praça Lions"],
+    ctx: "Cortada pelo Rio Sorocaba, com avenidas marginais e bairros baixos junto ao leito." },
+  campinas: { n: "Campinas", uf: "SP", c: [-47.06, -22.88], r: 17000, alt: [580, 800], base: 560,
+    file: k => "/campinas/" + k + "." + (k === "rios" ? "geojson" : "json"),
+    alertMm: 80, alertTxt: "nível de atenção do Plano de Contingência de Campinas (80 mm em 72 h)",
+    gauge: { id: "R1", nome: "do Rio Capivari no Jardim Yeda", via: "" }, road: "Av. Norte-Sul", skip: ["Norte-Sul"],
+    ctx: "Cortada pelos ribeirões Anhumas, Quilombo e Piçarrão, com avenidas de fundo de vale que alagam." },
+};
+const CITY_KEY = CITY_DATA[new URLSearchParams(location.search).get("c")] ? new URLSearchParams(location.search).get("c") : "sorocaba";
+const CITY = CITY_DATA[CITY_KEY];
+let LIMITE = LIMITE_SOROCABA;
+const getJSON = u => fetch(u).then(r => (r.ok ? r.json() : null)).catch(() => null);
+
 const CITIES = [
-  { n: "Sorocaba", c: [-47.437, -23.47], r: 15000, ctx: "Cortada pelo Rio Sorocaba, com avenidas marginais e bairros baixos junto ao leito." },
+  { n: CITY.n, c: CITY.c, r: CITY.r, ctx: CITY.ctx },
   { n: "Petrópolis", c: [-43.178, -22.505], r: 5000, ctx: "Serra fluminense. Em 2022, chuvas extremas causaram deslizamentos com centenas de mortes." },
   { n: "São Sebastião", c: [-45.68, -23.79], r: 6000, ctx: "Litoral norte de SP. Em 2023, deslizamentos atingiram a Vila Sahy após chuva recorde." },
   { n: "Porto Alegre", c: [-51.215, -30.03], r: 8000, ctx: "Às margens do Guaíba. Em 2024, a cidade viveu a maior enchente de sua história." },
@@ -102,11 +120,14 @@ const POPS = {
   hist: p => "<b>" + esc(p.nome) + "</b><br>" + esc(p.tipo) + (p.datas ? "<br><small>" + esc(p.datas) + "</small>" : "") +
     (p.fonte ? '<br><a href="' + esc(p.fonte) + '" target="_blank" rel="noopener">Fonte</a>' : ""),
 };
-createGlobe($("map"), { token: import.meta.env.VITE_CESIUM_TOKEN, limite: LIMITE, onMoveEnd: scheduleSample, popup: (k, p) => POPS[k](p) }).then(g => {
+(CITY_KEY === "sorocaba" ? Promise.resolve(LIMITE) : getJSON(CITY.file("limite")))
+  .then(l => { LIMITE = l; return createGlobe($("map"), { token: import.meta.env.VITE_CESIUM_TOKEN, limite: l, origin: CITY.c, alt: CITY.alt, base: CITY.base,
+    onMoveEnd: scheduleSample, popup: (k, p) => POPS[k](p) }); }).then(g => {
   globe = g;
   for (const id in DATA) g.setData(id, DATA[id]);
-  // relevo de Sorocaba uma vez, para pousar pontos e rótulos sem prender ao 3D Tiles
-  loadElevation(-47.58, -23.6, -47.29, -23.34, 300).then(fn => g.setElevation(fn));
+  // relevo da cidade uma vez, para pousar pontos e rótulos sem prender ao 3D Tiles
+  const bb = bounds(LIMITE.coordinates[0]);
+  loadElevation(bb[0] - 0.01, bb[1] - 0.01, bb[2] + 0.01, bb[3] + 0.01, 300).then(fn => g.setElevation(fn));
   applyFilter();
   const c = CITIES[0]; g.flyTo(c.c[0], c.c[1], c.r, 0);
   globeReady();
@@ -127,12 +148,13 @@ function setStyle(sci) {
 $("vFoto").onclick = () => setStyle(false); $("vCien").onclick = () => setStyle(true);
 
 /* ---------- dados locais ---------- */
-const getJSON = u => fetch(u).then(r => (r.ok ? r.json() : null)).catch(() => null);
-getJSON("/rios-sorocaba.geojson").then(j => { rivers = j; if (j) setData("rios", j); scheduleSample(); });
-getJSON("/bairros-sorocaba.json").then(j => { bairros = j; if (j) setData("bairros", j); });
-getJSON("/cobertura-sorocaba.json").then(j => { cover = j; scheduleSample(); });
-getJSON("/escolas-sorocaba.json").then(j => { schools = j; pickShelters(); });
-getJSON("/historico-sorocaba.json").then(j => { hist = j; if (j) { setData("hist", histGeo()); drawHistory(); plan(); } });
+const bounds = r => [Math.min(...r.map(p => p[0])), Math.min(...r.map(p => p[1])), Math.max(...r.map(p => p[0])), Math.max(...r.map(p => p[1]))];
+if (CITY_KEY !== "sorocaba") getJSON(CITY.file("estacoes")).then(l => { if (l) { setStations(l); update(false); } });
+getJSON(CITY.file("rios")).then(j => { rivers = j; if (j) setData("rios", j); scheduleSample(); });
+getJSON(CITY.file("bairros")).then(j => { bairros = j; if (j) setData("bairros", j); });
+getJSON(CITY.file("cobertura")).then(j => { cover = j; scheduleSample(); });
+getJSON(CITY.file("escolas")).then(j => { schools = j; pickShelters(); });
+getJSON(CITY.file("historico")).then(j => { hist = j; if (j) { setData("hist", histGeo()); drawHistory(); plan(); } });
 const isHit = p => !!replay && ((p.datas || []).includes(replay.data) || (replay.pontos || []).some(n => p.nome.includes(n) || n.includes(p.nome)));
 const histGeo = () => ({ type: "FeatureCollection", features: (hist?.pontos || []).filter(p => p.lat && p.lon).map(p => ({ type: "Feature",
   properties: { nome: p.nome, tipo: p.tipo + (p.bairro ? ", " + p.bairro : ""), datas: (p.datas || []).join(", "), fonte: (p.fontes || [])[0] || "", hit: isHit(p) },
@@ -284,7 +306,7 @@ function pickShelters() {
   const inGrid = ([, x, y]) => x > grid.west && y > grid.south && x < grid.west + G * grid.dx && y < grid.south + G * grid.dy;
   const local = (schools || []).filter(inGrid);
   if (local.length) { shelters = local.map(([name, x, y]) => ({ name, c: [x, y] })); drawShelters(); return; }
-  // fora de Sorocaba: escolas do OpenStreetMap via Overpass
+  // fora das cidades com dados: escolas do OpenStreetMap via Overpass
   const id = ++searchReq, bb = [grid.south, grid.west, grid.south + G * grid.dy, grid.west + G * grid.dx].map(v => v.toFixed(3)).join(",");
   fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent('[out:json][timeout:20];nwr["amenity"="school"]["name"](' + bb + ');out center 40;'))
     .then(r => r.json()).then(j => { if (id !== searchReq) return;
@@ -375,13 +397,13 @@ function planItems() {
   const add = (id, hz, txt, ok) => items.push({ id, hz, txt, ok });
   if (S.mode === "chuva") {
     if (P.f >= 0.15 || P.s >= 0.15) add("now", "f", "Acompanhar radar e réguas em nowcasting a partir de " + hourLabel(Math.max(0, F.peakT - 6)) + ".", false);
-    const R1 = STATIONS.find(s => s.id === "R1"), ga = gaugeCross(F.sensors.R1, R1, "alert"), go = gaugeCross(F.sensors.R1, R1, "over");
-    if (S.rain >= 60) add("pv", "f", "Plano Verão: " + S.rain + " mm previstos em 72 h passam do critério de alerta da Defesa Civil de Sorocaba (60 mm em 3 dias).", false);
-    if (ga != null) add("r1", "f", "Prontidão: a régua da Praça Lions passa de " + fmt(R1.alert, 1) + " m acima do normal em " + hourLabel(ga) +
-      (go != null ? " e chega a " + fmt(R1.over, 1) + " m, nível em que a Dom Aguirre alaga, em " + hourLabel(go) : "") + ".", false);
+    const gid = CITY.gauge.id, R1 = STATIONS.find(s => s.id === gid), ga = R1 && gaugeCross(F.sensors[gid], R1, "alert"), go = R1 && gaugeCross(F.sensors[gid], R1, "over");
+    if (S.rain >= CITY.alertMm) add("pv", "f", S.rain + " mm previstos em 72 h passam do " + CITY.alertTxt + ".", false);
+    if (ga != null) add("r1", "f", "Prontidão: a régua " + CITY.gauge.nome + " passa de " + fmt(R1.alert, 1) + " m acima do normal em " + hourLabel(ga) +
+      (go != null ? " e chega a " + fmt(R1.over, 1) + " m" + (CITY.gauge.via ? ", nível em que " + CITY.gauge.via : ", cota de transbordamento") + ", em " + hourLabel(go) : "") + ".", false);
     if (P.f >= 0.15 && E.f != null) {
-      const named = [...new Set(histNames("").filter(n => !n.includes("Dom Aguirre") && !n.includes("Praça Lions")))].slice(0, 3);
-      add("int", "f", "Interditar a Av. Dom Aguirre" + (named.length ? ", " + named.join(", ") : "") + " e travessias nas áreas em azul até " + hourLabel(Math.max(0, E.f - 2)) + ".", true);
+      const named = [...new Set(histNames("").filter(n => !CITY.skip.some(k => n.includes(k))))].slice(0, 3);
+      add("int", "f", "Interditar a " + CITY.road + (named.length ? ", " + named.join(", ") : "") + " e travessias nas áreas em azul até " + hourLabel(Math.max(0, E.f - 2)) + ".", true);
       add("sms", "f", "Avisar moradores das áreas em azul e amarelo, com rota para terreno alto.", true);
     }
     if (P.s >= 0.15) add("enc", "s", "Vistoriar as encostas em vermelho e retirar moradores das casas mais próximas. Solo " +
@@ -421,7 +443,7 @@ function alertMessage() {
   const hz = [...new Set(items.map(i => i.hz))], E = F.eta;
   const what = { f: "alagamento e transbordamento de rios", s: "deslizamento de terra", x: "incêndio em vegetação", h: "calor extremo" };
   const first = Math.min(...hz.map(h => E[h] ?? 99));
-  let m = "Defesa Civil: risco de " + hz.map(h => what[h]).join(" e ") + " em Sorocaba" + (first < 99 ? " a partir de " + hourLabel(first) : "") + ". ";
+  let m = "Defesa Civil: risco de " + hz.map(h => what[h]).join(" e ") + " em " + CITY.n + (first < 99 ? " a partir de " + hourLabel(first) : "") + ". ";
   if (hz.includes("f")) m += "Evite as marginais e não atravesse ruas alagadas. ";
   if (hz.includes("s")) m += "Se notar rachaduras ou estalos na casa, saia e procure local seguro. ";
   if (hz.includes("x")) m += "Não queime lixo nem mato. ";
@@ -445,7 +467,7 @@ $("send").onclick = () => {
 $("ask").onclick = async () => {
   const box = $("ai"); box.hidden = false; box.innerHTML = '<div class="spin inline" role="status" aria-label="Analisando"></div>'; $("ask").disabled = true;
   const body = {
-    cidade: "Sorocaba", hora: hourLabel(S.t), modo: S.mode,
+    cidade: CITY.n, hora: hourLabel(S.t), modo: S.mode,
     cenario: S.mode === "chuva" ? { sistema: S.sys.n, chuva_72h_mm: S.rain, antecedente_5d_mm: S.ante } : { anomalia_tmax_c: S.anom, dias_calor: S.heatDays, ur_min: S.rhMin, dias_sem_chuva: S.dryDays, vento_kmh: S.wind },
     previsao: { pico_mm_h: +F.peak.toFixed(1), subida_max_m: +F.riseMax.toFixed(2), cn: +F.sim.cn.toFixed(0), escoamento_mm: +F.sim.runoff.toFixed(0), fma: +F.fma.toFixed(1), indice_calor_max: +F.hiMax.toFixed(1), aviso_inmet_chuva: F.inmet.level, aviso_inmet_calor: F.heatLevel },
     probabilidades: Object.fromEntries(HAZ.map(h => [h.n, +F.prob[h.k].toFixed(2)])),
@@ -557,7 +579,7 @@ function goTo(city, btn) {
   $("cityName").textContent = city.n ? city.n : (city.ctx || "").split(",")[0];
   $("cityMenu").hidden = true; $("cityBtn").setAttribute("aria-expanded", false);
   if (!globe) return;
-  globe.focusCity(city.n === "Sorocaba");
+  globe.focusCity(city.n === CITY.n);
   globe.flyTo(city.c[0], city.c[1], city.r || 5000);
 }
 CITIES.forEach((c, i) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c.n; b.setAttribute("aria-pressed", i === 0); b.onclick = () => goTo(c, b); $("cities").appendChild(b); });
@@ -665,26 +687,47 @@ $("speed").onclick = () => { speed = speed === 4 ? 1 : speed * 2; $("speed").tex
 $("cityBtn").onclick = () => { const o = $("cityMenu").hidden; $("cityMenu").hidden = !o; $("cityBtn").setAttribute("aria-expanded", o); if (o) $("q").focus(); };
 document.addEventListener("click", e => { if (!e.target.closest(".citysel")) $("cityMenu").hidden = true; });
 
-/* tela de início: a cidade é escolhida aqui; depois a câmera percorre a cidade para encher o cache da malha 3D */
-// vista geral, 9 vistas médias sobre a área urbana e 5 vistas de perto nos pontos que mais alagam
-const PRELOAD = { Sorocaba: [[-47.437, -23.47, 15000, -18, -48],
-  ...[-23.44, -23.48, -23.52].flatMap(lat => [-47.50, -47.45, -47.40].map(lon => [lon, lat, 2600, -18, -45])),
-  [-47.4515, -23.4977, 700, -18, -40], [-47.4473, -23.4702, 700, 60, -40], [-47.4580, -23.5005, 700, 160, -40], [-47.4952, -23.4898, 700, -18, -40], [-47.4380, -23.4176, 700, -18, -40]] };
-let globeReady, picked = null;
+/* tela de início: escolhe a cidade; depois a câmera percorre a cidade para encher o cache da malha 3D */
+// vista geral, 9 vistas médias em volta do centro e 5 vistas de perto nos pontos com mais registros
+function preloadViews() {
+  const [x, y] = CITY.c, v = [[x, y, CITY.r, -18, -48]];
+  for (const dy of [0.03, 0, -0.03]) for (const dx of [-0.05, 0, 0.05]) v.push([x + dx, y + dy, 2600, -18, -45]);
+  (hist?.pontos || []).slice().sort((a, b) => (b.datas || []).length - (a.datas || []).length).slice(0, 5).forEach((p, i) => v.push([p.lon, p.lat, 700, -18 + i * 70, -40]));
+  return v;
+}
+let globeReady, started = false;
 const globeOk = new Promise(r => (globeReady = r));
-$("spCities").innerHTML = ["Sorocaba"].map(n => '<button type="button" data-n="' + n + '">' + n + "</button>").join("");
-$("spCities").onclick = async e => {
-  const b = e.target.closest("button[data-n]"); if (!b || picked) return;
-  picked = b.dataset.n; $("spCities").hidden = true; $("spBar").hidden = false;
-  await globeOk;
-  await globe.preload(PRELOAD[picked] || [], p => ($("spFill").style.width = Math.round(p * 100) + "%"));
-  const c = CITIES.find(x => x.n === picked) || CITIES[0];
-  globe.flyTo(c.c[0], c.c[1], c.r, 0);
+// contorno do município em SVG para a tela de início
+const outline = ring => { const [w, s2, e, n] = bounds(ring), k = 100 / Math.max(e - w, (n - s2) * 1.08);
+  return '<svg viewBox="-4 -4 108 108" aria-hidden="true"><path d="' + ring.map((p, i) => (i ? "L" : "M") + ((p[0] - w) * k).toFixed(1) + " " + ((n - p[1]) * k * 1.08).toFixed(1)).join("") + 'Z"/></svg>'; };
+async function drawSplash() {
+  const rings = { sorocaba: LIMITE_SOROCABA.coordinates[0], campinas: (await getJSON(CITY_DATA.campinas.file("limite")))?.coordinates[0] };
+  $("spCities").innerHTML = Object.entries(CITY_DATA).filter(([k]) => rings[k]).map(([k, c]) =>
+    '<button type="button" data-k="' + k + '">' + outline(rings[k]) + "<b>" + c.n + "</b></button>").join("");
+}
+async function startCity() {
+  if (started) return; started = true;
+  $("spCities").hidden = true; $("spBar").hidden = false; $("spName").textContent = CITY.n;
+  await globeOk; await new Promise(r => { const w = () => (hist ? r() : setTimeout(w, 100)); w(); });
+  await globe.preload(preloadViews(), p => ($("spFill").style.width = Math.round(p * 100) + "%"));
+  globe.flyTo(CITY.c[0], CITY.c[1], CITY.r, 0);
   document.body.classList.remove("intro"); $("splash").classList.add("out");
   setTimeout(() => $("splash").remove(), 700);
+}
+$("spCities").onclick = e => {
+  const b = e.target.closest("button[data-k]"); if (!b) return;
+  if (b.dataset.k === CITY_KEY) startCity(); else location.search = "?c=" + b.dataset.k + "&go=1";
 };
+if (new URLSearchParams(location.search).get("go")) startCity(); else drawSplash();
+$("cityName").textContent = CITY.n + ", " + CITY.uf;
+["sl0", "sl1", "sl2"].forEach((id, i) => ($(id).textContent = Math.round(CITY.alt[0] + (i * (CITY.alt[1] - CITY.alt[0])) / 2) + " m"));
+// troca de cidade com dados pelo menu do cabeçalho
+$("cities").insertAdjacentHTML("afterbegin", Object.entries(CITY_DATA).filter(([k]) => k !== CITY_KEY).map(([k, c]) => '<a class="chip-link" href="?c=' + k + '&go=1">' + c.n + "</a>").join(""));
 
-/* busca no mapa: dados locais primeiro, depois ruas e lugares do Photon dentro de Sorocaba */
+$("cityBtn").onclick = () => { const o = $("cityMenu").hidden; $("cityMenu").hidden = !o; $("cityBtn").setAttribute("aria-expanded", o); if (o) $("q").focus(); };
+document.addEventListener("click", e => { if (!e.target.closest(".citysel")) $("cityMenu").hidden = true; });
+
+/* busca no mapa: dados locais primeiro, depois ruas e lugares do Photon dentro da cidade */
 const norm = t => String(t).normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 function localHits(q) {
   const src = [
@@ -715,7 +758,7 @@ $("find").addEventListener("input", e => {
   if (q.length < 2) { showHits([]); if (!q) setData("busca", null); return; }
   const local = localHits(q); showHits(local);
   if (q.length < 3) return;
-  findTmr = setTimeout(() => fetch("https://photon.komoot.io/api/?limit=6&bbox=-47.58,-23.6,-47.29,-23.34&q=" + encodeURIComponent(e.target.value.trim()))
+  findTmr = setTimeout(() => fetch("https://photon.komoot.io/api/?limit=6&bbox=" + bounds(LIMITE.coordinates[0]).map(v => v.toFixed(3)).join(",") + "&q=" + encodeURIComponent(e.target.value.trim()))
     .then(r => r.json()).then(j => {
       if (norm($("find").value.trim()) !== q) return;
       const kinds = { street: "Rua", house: "Endereço", city: "Cidade", district: "Bairro", locality: "Localidade" };
@@ -765,7 +808,7 @@ $("t-dad").addEventListener("click", drawDB);
 
 /* aprendizado e histórico */
 $("mlTxt").textContent = "Uma regressão logística por ameaça, treinada com " + (models.f.n + models.x.n) +
-  " episódios de um histórico simulado de 30 anos de Sorocaba, gerado pelo próprio modelo físico com ruído de registro. Na validação, com os 25% mais recentes, a AUC ficou em " +
+  " episódios de um histórico simulado de 30 anos, gerado pelo próprio modelo físico com ruído de registro. Na validação, com os 25% mais recentes, a AUC ficou em " +
   HAZ.map(h => h.n.toLowerCase() + " " + fmt(models[h.k].auc, 2)).join(", ") + ". Num produto real, o treino usaria o S2iD, os registros da Defesa Civil e as séries do Cemaden.";
 function drawHistory() {
   const eps = hist?.episodios || []; if (!eps.length) return;

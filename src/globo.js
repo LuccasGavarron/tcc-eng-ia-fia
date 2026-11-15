@@ -9,7 +9,7 @@ const C = Cesium.Color.fromCssColorString;
 const rad = Cesium.Math.toRadians;
 const RISK = { f: ["#2F7BFF", 0.5], a: ["#F0B43C", 0.3], s: ["#E0503F", 0.32], x: ["#E0612B", 0.5], h: ["#C04A9A", 0.42] };
 
-export async function createGlobe(container, { token, limite, onMoveEnd, popup }) {
+export async function createGlobe(container, { token, limite, origin = [-47.437, -23.47], alt = [530, 730], base = 515, onMoveEnd, popup }) {
   if (token) Cesium.Ion.defaultAccessToken = token;
   const v = new Cesium.Viewer(container, {
     animation: false, timeline: false, baseLayerPicker: false, geocoder: false, homeButton: false, sceneModePicker: false,
@@ -82,7 +82,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   // plano cartesiano escuro sob a cidade: malha de 1 km, linhas fortes a cada 5 km, eixos x e y pelo centro
   const plano = new Cesium.CustomDataSource("plano"); v.dataSources.add(plano);
   {
-    const [lon0, lat0] = [-47.437, -23.47], H0 = 515, N = 35, km = 1000;
+    const [lon0, lat0] = origin, H0 = base, N = 35, km = 1000;
     const kx = 1 / (111320 * Math.cos(rad(lat0))), ky = 1 / 110540;
     const P = (x, y) => Cesium.Cartesian3.fromDegrees(lon0 + x * km * kx, lat0 + y * km * ky, H0);
     const line = (a, b, width, color) => plano.entities.add({ polyline: { positions: [a, b], width, material: color, arcType: Cesium.ArcType.NONE } });
@@ -309,14 +309,14 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     return { lon: Cesium.Math.toDegrees(g.longitude), lat: Cesium.Math.toDegrees(g.latitude), dist: Cesium.Cartesian3.distance(cam.positionWC, p) };
   }
   // modo científico: cidade em cinza com rampa hipsométrica e curvas de nível a cada 10 m (fortes a cada 50 m)
-  const P0 = Cesium.Cartesian3.fromDegrees(-47.437, -23.47, 0), up0 = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(P0, new Cesium.Cartesian3());
+  const P0 = Cesium.Cartesian3.fromDegrees(origin[0], origin[1], 0), up0 = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(P0, new Cesium.Cartesian3());
   const RN = 6381000; // raio de curvatura local; o erro fica abaixo de 1 m em 20 km
   const sci = new Cesium.CustomShader({ lightingModel: Cesium.LightingModel.UNLIT,
     uniforms: { u_c: { type: Cesium.UniformType.VEC3, value: Cesium.Cartesian3.subtract(P0, Cesium.Cartesian3.multiplyByScalar(up0, RN, new Cesium.Cartesian3()), new Cesium.Cartesian3()) },
       u_rn: { type: Cesium.UniformType.FLOAT, value: RN } },
     fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
       float h = length(fsInput.attributes.positionWC - u_c) - u_rn;
-      float t = clamp((h - 530.0) / 200.0, 0.0, 1.0);
+      float t = clamp((h - ${alt[0].toFixed(1)}) / ${(alt[1] - alt[0]).toFixed(1)}, 0.0, 1.0);
       vec3 ramp = mix(mix(vec3(0.06, 0.16, 0.40), vec3(0.09, 0.58, 0.60), smoothstep(0.0, 0.5, t)), vec3(0.97, 0.84, 0.33), smoothstep(0.5, 1.0, t));
       float g = dot(material.diffuse, vec3(0.299, 0.587, 0.114));
       vec3 col = mix(vec3(g) * 0.55, ramp, 0.5);
