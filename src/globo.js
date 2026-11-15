@@ -25,13 +25,29 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   sc.backgroundColor = C("#05080C"); sc.skyBox.show = false; sc.sun.show = false; sc.moon.show = false;
   sc.skyAtmosphere.show = false; sc.fog.enabled = false; sc.globe.showGroundAtmosphere = false; sc.globe.baseColor = Cesium.Color.BLACK;
   sc.globe.depthTestAgainstTerrain = true;
+  // luz fixa de meio-dia em Sorocaba: o relógio real deixaria os prédios no escuro à noite
+  v.clock.currentTime = Cesium.JulianDate.fromIso8601("2026-01-15T15:00:00Z"); v.clock.shouldAnimate = false;
 
   const ring = limite.coordinates[0];
   let clipOn = true;
   const inside = (x, y) => { let c = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const [xi, yi] = ring[i], [xj, yj] = ring[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; };
+  // recorte com o contorno simplificado (Douglas-Peucker, ~60 m): cada vértice custa no shader de todo pixel
+  const simp = (pts, eps) => {
+    if (pts.length < 3) return pts;
+    let dmax = 0, k = 0; const [a, b] = [pts[0], pts[pts.length - 1]];
+    for (let i = 1; i < pts.length - 1; i++) {
+      const p = pts[i], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1e-12;
+      const d = Math.abs(dy * p[0] - dx * p[1] + b[0] * a[1] - b[1] * a[0]) / L;
+      if (d > dmax) { dmax = d; k = i; }
+    }
+    return dmax > eps ? simp(pts.slice(0, k + 1), eps).slice(0, -1).concat(simp(pts.slice(k), eps)) : [a, b];
+  };
+  // anel fechado (primeiro = último): simplifica cada metade, senão a reta de referência tem comprimento zero
+  const half = Math.floor(ring.length / 2);
+  const clipRing = simp(ring.slice(0, half + 1), 0.0006).slice(0, -1).concat(simp(ring.slice(half), 0.0006)).slice(0, -1);
   const clip = () => new Cesium.ClippingPolygonCollection({ inverse: true,
-    polygons: [new Cesium.ClippingPolygon({ positions: Cesium.Cartesian3.fromDegreesArray(ring.flat()) })] });
+    polygons: [new Cesium.ClippingPolygon({ positions: Cesium.Cartesian3.fromDegreesArray(clipRing.flat()) })] });
   let tiles = null;
   if (token) {
     try {
@@ -42,6 +58,22 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     } catch (e) { console.warn("3D Tiles indisponíveis", e); }
   }
   if (!tiles) sc.globe.clippingPolygons = clip();
+  // Sorocaba não tem malha fotogramétrica do Google: os prédios 3D vêm do OpenStreetMap (Cesium OSM Buildings)
+  const FOTO = new Cesium.Cesium3DTileStyle({ color: "color('#E4E6E3', 1.0)" });
+  const CIEN = new Cesium.Cesium3DTileStyle({ color: { conditions: [
+    ["${feature['cesium#estimatedHeight']} >= 40", "color('#F2D35B')"], ["${feature['cesium#estimatedHeight']} >= 20", "color('#7FC9B8')"],
+    ["${feature['cesium#estimatedHeight']} >= 9", "color('#3E8FB0')"], ["true", "color('#2A5878')"]] } });
+  let osm = null, predOn = true;
+  const cam = v.camera;
+  if (token) {
+    try {
+      osm = await Cesium.createOsmBuildingsAsync({ style: FOTO, maximumScreenSpaceError: 28 }); osm.clippingPolygons = clip(); sc.primitives.add(osm);
+      // ponytail: prédios só abaixo de 9 km de altura da câmera; na vista da cidade inteira eles somem e não pesam
+      cam.changed.addEventListener(() => { osm.show = predOn && cam.positionCartographic.height < 9000; });
+      cam.percentageChanged = 0.1;
+    }
+    catch (e) { console.warn("OSM Buildings indisponível", e); }
+  }
 
   // borda da cidade com brilho
   const borda = v.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArray(ring.flat()), width: 3, clampToGround: true,
@@ -159,7 +191,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   }
   const DRAWN = {};
   const setElevation = fn => { elevAt = fn; for (const id of ["hist", "sens", "shel", "bairros", "risk"]) if (DRAWN[id]) setData(id, DRAWN[id]); };
-  const show = (id, on) => { layer(id).show = on; sc.requestRender(); };
+  const show = (id, on) => { if (id === "predios") { predOn = on; if (osm) osm.show = on && cam.positionCartographic.height < 9000; } else layer(id).show = on; sc.requestRender(); };
 
   // popup próprio, preso ao ponto clicado
   const pop = document.createElement("div"); pop.className = "pop"; pop.hidden = true; container.appendChild(pop);
@@ -187,7 +219,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   v.camera.moveEnd.addEventListener(() => onMoveEnd && onMoveEnd());
 
   // câmera
-  const cam = v.camera, ctrl = sc.screenSpaceCameraController;
+  const ctrl = sc.screenSpaceCameraController;
   ctrl.zoomFactor = 14; // padrão 5 é lento no trackpad
   // navegação: esquerdo arrasta o mapa, direito gira a visão em primeira pessoa, roda dá zoom, Ctrl+esquerdo ou meio inclina
   const E = Cesium.CameraEventType;
@@ -265,11 +297,16 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
       col = mix(col, vec3(0.90, 0.97, 1.0), max(l5 * 0.18, l25 * 0.75));
       material.diffuse = col;
     }` });
-  function setScience(on) { if (tiles) { tiles.customShader = on ? sci : undefined; sc.requestRender(); } }
+  function setScience(on) {
+    if (tiles) tiles.customShader = on ? sci : undefined;
+    if (osm) osm.style = on ? CIEN : FOTO;
+    sc.requestRender();
+  }
   function focusCity(on) {
     borda.show = on; plano.show = on; clipOn = on;
     const c = on ? clip() : undefined;
     if (tiles) tiles.clippingPolygons = c; else sc.globe.clippingPolygons = c;
+    if (osm) osm.clippingPolygons = on ? clip() : undefined;
     if (layers.bairros) layers.bairros.show = on;
     sc.requestRender();
   }

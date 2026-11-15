@@ -228,7 +228,7 @@ function drawLegend() {
     .concat([["rios", sw("#7FC4F0", true), "Rio ou córrego"], ["shel", ico("casa", "#3F7D55"), "Abrigo sugerido"],
       ["cemaden", ico("chuva", "#2C6CB0"), "Pluviômetro"], ["lora", ico("solo", "#5E8C3A"), "Umidade do solo"], ["ana", ico("regua", "#1F7A8C"), "Régua do rio"],
       ["clima", ico("radar", "#6B4FA0"), "Radar e estação"], ["transito", ico("carro", "#4E6068"), "Trânsito"]])
-    .concat(hist ? [["hist", ico("alerta", "#C98A12"), "Ocorrência registrada"]] : []).concat([["bairros", sw("#fff"), "Nome dos bairros"]]);
+    .concat(hist ? [["hist", ico("alerta", "#C98A12"), "Ocorrência registrada"]] : []).concat([["predios", sw("#E4E6E3"), "Prédios 3D"], ["bairros", sw("#fff"), "Nome dos bairros"]]);
   $("legend").innerHTML = it.map(([k, s, l]) => '<button type="button" data-k="' + k + '" aria-pressed="' + !OFF.has(k) + '">' + s + "<span>" + l + "</span></button>").join("");
 }
 $("legend").onclick = e => {
@@ -236,7 +236,7 @@ $("legend").onclick = e => {
   const k = b.dataset.k; OFF.has(k) ? OFF.delete(k) : OFF.add(k);
   applyFilter(); render();
 };
-function applyFilter() { if (globe) for (const id of ["rios", "hist", "bairros"]) globe.show(id, !OFF.has(id)); }
+function applyFilter() { if (globe) for (const id of ["rios", "hist", "bairros", "predios"]) globe.show(id, !OFF.has(id)); }
 
 /* ---------- abrigos ---------- */
 let searchReq = 0;
