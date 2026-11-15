@@ -7,7 +7,7 @@ import { icon, SENSOR_ICON, RISK_ICON } from "./icones.js";
 window.CESIUM_BASE_URL = "/cesium/";
 const C = Cesium.Color.fromCssColorString;
 const rad = Cesium.Math.toRadians;
-const RISK = { f: ["#2F80E0", 0.6], a: ["#C4841C", 0.42], s: ["#AE3A2C", 0.55], x: ["#E0612B", 0.55], h: ["#B0368A", 0.45] };
+const RISK = { f: ["#2F7BFF", 0.42], a: ["#E0A93A", 0.22], s: ["#D0503F", 0.24], x: ["#E0612B", 0.5], h: ["#C04A9A", 0.42] };
 
 export async function createGlobe(container, { token, limite, onMoveEnd, popup }) {
   if (token) Cesium.Ion.defaultAccessToken = token;
@@ -126,38 +126,29 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
       label: text ? { ...label(text, 12, 4), distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500) } : undefined });
   }
   const draw = {
+    // faixas empilhadas: cada faixa mais funda soma cor sobre a anterior, o miolo fica mais escuro
     risk(ds, fc) {
       for (const f of fc.features) {
         const k = f.properties.k, [col, a] = RISK[k] || ["#000", 0];
-        // ícone só nas 3 maiores manchas de cada tipo, para não poluir
-        const big = new Set([...f.geometry.coordinates].sort((p, q) => q[0].length - p[0].length).slice(0, 3));
+        const big = f.properties.b === 0 ? new Set([...f.geometry.coordinates].sort((p, q) => q[0].length - p[0].length).slice(0, 3)) : new Set();
         f.geometry.coordinates.forEach(poly => {
-          // fora do município não há malha 3D: a mancha ficaria solta no preto
-          if (clipOn) { const n = poly[0].length, cx = poly[0].reduce((a, p) => a + p[0], 0) / n, cy = poly[0].reduce((a, p) => a + p[1], 0) / n; if (!inside(cx, cy)) return; }
-          const outer = Cesium.Cartesian3.fromDegreesArray(poly[0].flat());
+          const n = poly[0].length, cx = poly[0].reduce((s, p) => s + p[0], 0) / n, cy = poly[0].reduce((s, p) => s + p[1], 0) / n;
+          if (clipOn && !inside(cx, cy)) return; // fora do município não há malha 3D
           const holes = poly.slice(1).map(h => new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(h.flat())));
-          // pegada exata no chão
-          ds.entities.add({ _pop: () => popup("risk", f.properties), _risk: true, polygon: { hierarchy: new Cesium.PolygonHierarchy(outer, holes), material: C(col).withAlpha(a * 0.8), classificationType: Cesium.ClassificationType.BOTH } });
-          if (k !== "f" && k !== "s") return;
-          if (clipOn && poly[0].some(p => !inside(p[0], p[1]))) return; // volume só para mancha inteira dentro do município
-          // volume 3D: enchente vira lâmina d'água até a cota prevista; encosta vira casca vermelha
-          const es = poly[0].filter((_, i) => i % 3 === 0).map(p => elevAt(p[0], p[1])).filter(e => e != null);
-          if (es.length < 3) return;
-          const lo = Math.min(...es), hi = Math.max(...es);
-          const top = k === "f" ? lo + Math.max(1.5, f.properties.d || 0) * 2 : hi + 12; // ponytail: lâmina exagerada 2× para aparecer na vista da cidade
-          ds.entities.add({ _pop: () => popup("risk", f.properties), _risk: true, polygon: { hierarchy: new Cesium.PolygonHierarchy(outer, holes), height: lo - 3, extrudedHeight: top,
-            material: C(col).withAlpha(k === "f" ? 0.38 : 0.22), outline: false } });
-          if (big.has(poly)) {
-            const n = poly[0].length, cx = poly[0].reduce((s, p) => s + p[0], 0) / n, cy = poly[0].reduce((s, p) => s + p[1], 0) / n;
-            const [g, c] = RISK_ICON[k];
-            marker(ds, [cx, cy], icon(g, c), () => popup("risk", f.properties), null, 38, top);
-          }
+          ds.entities.add({ _pop: () => popup("risk", f.properties), _risk: true, polygon: {
+            hierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(poly[0].flat()), holes),
+            material: C(col).withAlpha(a), classificationType: Cesium.ClassificationType.BOTH } });
+          if (big.has(poly) && RISK_ICON[k]) { const [g, c] = RISK_ICON[k]; marker(ds, [cx, cy], icon(g, c), () => popup("risk", f.properties), null, 36); }
         });
       }
     },
     rios(ds, fc) {
-      for (const f of fc.features) if (f.properties.w !== "s" || f.properties.n) ds.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArray(f.geometry.coordinates.flat()),
-        width: f.properties.w === "r" ? 4 : f.properties.w === "c" ? 2.2 : 1.5, clampToGround: true, material: C("#7FC4F0").withAlpha(0.9) } });
+      // ponytail: linha na altura do relevo (+4 m) em vez de presa à malha 3D; polyline no chão é a camada mais cara do Cesium
+      for (const f of fc.features) if (f.properties.w !== "s" || f.properties.n) {
+        const col = C("#7FC4F0").withAlpha(0.9);
+        ds.entities.add({ polyline: { positions: f.geometry.coordinates.map(p => pt(p, 4)), arcType: Cesium.ArcType.NONE,
+          width: f.properties.w === "r" ? 3.5 : f.properties.w === "c" ? 2 : 1.4, material: col, depthFailMaterial: col.withAlpha(0.45) } });
+      }
     },
     hist(ds, fc) {
       // no replay de um evento, os pontos que alagaram naquela data ficam vermelhos, maiores e com nome
@@ -192,7 +183,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     ds.entities.resumeEvents(); sc.requestRender();
   }
   const DRAWN = {};
-  const setElevation = fn => { elevAt = fn; for (const id of ["hist", "sens", "shel", "bairros", "risk"]) if (DRAWN[id]) setData(id, DRAWN[id]); };
+  const setElevation = fn => { elevAt = fn; for (const id of ["hist", "sens", "shel", "bairros", "risk", "rios"]) if (DRAWN[id]) setData(id, DRAWN[id]); };
   const show = (id, on) => { if (id === "predios") { predOn = on; if (osm) osm.show = on && cam.positionCartographic.height < 9000; } else layer(id).show = on; sc.requestRender(); };
 
   // popup próprio, preso ao ponto clicado

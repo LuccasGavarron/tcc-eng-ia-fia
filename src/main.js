@@ -94,7 +94,7 @@ const setData = (id, d) => { DATA[id] = d; if (globe) globe.setData(id, d); };
 const POPS = {
   shel: p => "<b>Abrigo sugerido</b><br>" + esc(p.name) + "<br><small>Escola fora das áreas de risco. Exemplo, não é abrigo oficial.</small>",
   sens: p => sensorPopup(p.id),
-  risk: p => "<b>" + { f: "Inundação prevista", a: "Faixa de atenção", s: "Encosta instável", x: "Perigo de incêndio", h: "Ilha de calor" }[p.k] + "</b><br>" + hourLabel(S.t) +
+  risk: p => "<b>" + (p.k === "f" ? ["Inundação, lâmina até 1 m", "Inundação, lâmina de 1 a 2,5 m", "Inundação, lâmina acima de 2,5 m"][p.b] || "Inundação prevista" : "") + { f: "", a: "Faixa de atenção", s: "Encosta instável", x: "Perigo de incêndio", h: "Ilha de calor" }[p.k] + "</b><br>" + hourLabel(S.t) +
     (p.k === "f" || p.k === "a" ? "<br>Rio " + fmt(p.d || 0, 1) + " m acima do normal" : "") +
     (p.k === "s" ? "<br>Declividade acima de " + fmt(M.slopeThreshold(F.slideAt(S.t)), 0) + "% com solo " + ["seco", "úmido", "muito úmido", "saturado"][Math.min(3, Math.floor(F.sat0 * 4))] : "") +
     (p.k === "x" ? "<br>FMA+ " + M.FMA_CLASSES[M.fmaClass(F.fmaAt(S.t))].toLowerCase() : "") +
@@ -180,25 +180,60 @@ async function sample() {
 function render() {
   const st = hourState(S.t);
   cl = M.classify(grid, st);
-  setData("risk", grid ? riskShapes() : null);
+  if (!timer || S.t % 2 === 0 || S.t === H - 1) setData("risk", grid ? riskShapes() : null); // no play, a mancha muda devagar: refaz a cada 2 h
   drawSensorsOnMap(); drawShelters(); areaFacts(st); drawLegend();
 }
 
-/* Contornos suaves (marching squares) de cada classe, em vez de quadrados da grade.
-   Ordem de desenho: atenção por baixo, inundação por cima. */
-const contour = contours().size([G, G]).thresholds([0.5]).smooth(true);
+/* Manchas a partir de campos contínuos, não da grade de classes: a borda segue a profundidade estimada.
+   Enchente: lâmina = subida do rio acima da calha − altura sobre a drenagem (HAND). Faixas em 0, 1 e 2,5 m.
+   Atenção: até 1,5 m abaixo da cota de transbordamento. Encosta: declividade acima do limiar, faixas em 0 e 6 pontos. */
+const G2 = G * 2;
+const contour2 = contours().size([G2, G2]).smooth(true);
+// dobra a resolução com interpolação bilinear e suaviza 3×3: tira o degrau da grade
+function upsample(f) {
+  const o = new Float64Array(G2 * G2), at = (c, r) => f[Math.min(G - 1, Math.max(0, r)) * G + Math.min(G - 1, Math.max(0, c))];
+  for (let r = 0; r < G2; r++) for (let c = 0; c < G2; c++) {
+    const x = c / 2 - 0.25, y = r / 2 - 0.25, x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0;
+    o[r * G2 + c] = (at(x0, y0) * (1 - fx) + at(x0 + 1, y0) * fx) * (1 - fy) + (at(x0, y0 + 1) * (1 - fx) + at(x0 + 1, y0 + 1) * fx) * fy;
+  }
+  const b = new Float64Array(G2 * G2);
+  for (let r = 0; r < G2; r++) for (let c = 0; c < G2; c++) {
+    let s = 0, n = 0;
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const rr = r + dr, cc = c + dc; if (rr >= 0 && cc >= 0 && rr < G2 && cc < G2) { s += o[rr * G2 + cc]; n++; } }
+    b[r * G2 + c] = s / n;
+  }
+  return b;
+}
 function riskShapes() {
-  const feats = [], toLL = ([c, r]) => [grid.west + c * grid.dx, grid.south + r * grid.dy];
-  for (const k of [2, 1, 3, 4, 5]) {
-    const v = new Float64Array(G * G);
-    let any = false;
-    for (let i = 0; i < G * G; i++) if (cl.f[i] === k || (k === 2 && cl.f[i] === 1)) { v[i] = 1; any = true; }
-    if (!any) continue;
-    const [mp] = contour(v);
-    const area = r => Math.abs(r.reduce((a, p, i) => { const q = r[(i + 1) % r.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
-    const polys = mp.coordinates.filter(poly => area(poly[0]) >= 3); // ponytail: manchas menores que 3 células viram ruído e custam um polígono cada
-    if (polys.length && !OFF.has("risk-" + M.KIND[k])) feats.push({ type: "Feature", properties: { k: M.KIND[k], d: S.mode === "chuva" ? F.sim.rise[S.t] : 0 },
-      geometry: { type: "MultiPolygon", coordinates: polys.map(poly => poly.map(ring => ring.map(toLL))) } });
+  const st = hourState(S.t), feats = [], NO = -9;
+  const toLL = ([c, r]) => [grid.west + (c / 2) * grid.dx, grid.south + (r / 2) * grid.dy];
+  const area = r => Math.abs(r.reduce((a, p, i) => { const q = r[(i + 1) % r.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
+  const add = (k, field, levels, minArea) => {
+    if (OFF.has("risk-" + k)) return;
+    contour2.thresholds(levels)(upsample(field)).forEach((mp, b) => {
+      const polys = mp.coordinates.filter(p => area(p[0]) >= minArea); // ponytail: manchas pequenas viram ruído e custam um polígono cada
+      if (polys.length) feats.push({ type: "Feature", properties: { k, b, lv: levels[b], d: st.rise || 0 },
+        geometry: { type: "MultiPolygon", coordinates: polys.map(p => p.map(ring => ring.map(toLL))) } });
+    });
+  };
+  const fl = new Float64Array(G * G).fill(NO), at = new Float64Array(G * G).fill(NO), sl = new Float64Array(G * G).fill(NO);
+  for (let i = 0; i < G * G; i++) {
+    const e = grid.el[i]; if (isNaN(e)) continue;
+    if (S.mode === "chuva") {
+      const w = grid.hand ? grid.hand.w[i] : 1, hv = grid.hand ? grid.hand.hand[i] : e - grid.base;
+      const depth = st.rise * w - (grid.hand ? M.bankfull(w) : 0);
+      if (!isNaN(hv)) {
+        if (depth > 0) fl[i] = depth - hv;
+        if (w >= 0.5 && st.rise * w > 1) at[i] = depth - hv + 1.5;
+      }
+      sl[i] = grid.slope[i] - st.slopeThr;
+    } else fl[i] = cl.f[i] === 4 ? 1 : cl.f[i] === 5 ? 2 : 0;
+  }
+  if (S.mode === "chuva") {
+    add("a", at, [0], 12); add("f", fl, [0, 1, 2.5], 8); add("s", sl, [0, 6], 10);
+  } else {
+    const x = fl.map(v => (v === 1 ? 1 : 0)), h = fl.map(v => (v === 2 ? 1 : 0));
+    add("x", x, [0.5], 10); add("h", h, [0.5], 10);
   }
   return { type: "FeatureCollection", features: feats };
 }
