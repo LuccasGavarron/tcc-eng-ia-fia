@@ -16,7 +16,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     navigationHelpButton: false, fullscreenButton: false, infoBox: false, selectionIndicator: false,
     baseLayer: token ? false : Cesium.ImageryLayer.fromProviderAsync(Cesium.ArcGisMapServerImageryProvider.fromUrl(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer")),
-    requestRenderMode: true, maximumRenderTimeChange: Infinity, msaaSamples: 2,
+    requestRenderMode: true, maximumRenderTimeChange: Infinity, msaaSamples: 1, // FXAA já suaviza; MSAA dobrava o custo por pixel
   });
   const sc = v.scene;
   // com requestRenderMode o canvas só acompanha o tamanho da janela se alguém pedir um quadro novo
@@ -51,7 +51,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   let tiles = null;
   if (token) {
     try {
-      tiles = await Cesium.createGooglePhotorealistic3DTileset({ maximumScreenSpaceError: 24, cacheBytes: 768 * 1024 * 1024 });
+      tiles = await Cesium.createGooglePhotorealistic3DTileset({ maximumScreenSpaceError: 32, cacheBytes: 768 * 1024 * 1024 });
       tiles.clippingPolygons = clip();
       sc.primitives.add(tiles);
       sc.globe.show = false;
@@ -63,11 +63,11 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   const CIEN = new Cesium.Cesium3DTileStyle({ color: { conditions: [
     ["${feature['cesium#estimatedHeight']} >= 40", "color('#F2D35B')"], ["${feature['cesium#estimatedHeight']} >= 20", "color('#7FC9B8')"],
     ["${feature['cesium#estimatedHeight']} >= 9", "color('#3E8FB0')"], ["true", "color('#2A5878')"]] } });
-  let osm = null, predOn = true;
+  let osm = null, predOn = false;
   const cam = v.camera;
   if (token) {
     try {
-      osm = await Cesium.createOsmBuildingsAsync({ style: FOTO, maximumScreenSpaceError: 28 }); osm.clippingPolygons = clip(); sc.primitives.add(osm);
+      osm = await Cesium.createOsmBuildingsAsync({ style: FOTO, maximumScreenSpaceError: 28 }); osm.clippingPolygons = clip(); osm.show = false; sc.primitives.add(osm);
       // ponytail: prédios só abaixo de 9 km de altura da câmera; na vista da cidade inteira eles somem e não pesam
       cam.changed.addEventListener(() => { osm.show = predOn && cam.positionCartographic.height < 9000; });
       cam.percentageChanged = 0.1;

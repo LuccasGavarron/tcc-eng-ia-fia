@@ -254,7 +254,7 @@ function areaFacts(st) {
 }
 
 // a legenda é o filtro: clicar num item liga ou desliga aquela camada do mapa
-const OFF = new Set();
+const OFF = new Set(["predios"]); // prédios 3D começam desligados: são a camada mais pesada
 const SENSOR_GROUP = { cemaden: "cemaden", lora: "lora", ana: "ana", inmet: "clima", radar: "clima", transito: "transito" };
 function drawLegend() {
   const sw = (c, line) => '<i class="sw' + (line ? " line" : "") + '" style="background:' + c + '"></i>';
