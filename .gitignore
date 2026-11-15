@@ -6,3 +6,4 @@ dist
 dados/osm_*.json
 public/cesium
 dados/campinas/
+dados/petropolis/

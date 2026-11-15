@@ -325,3 +325,11 @@ body.intro .rail,body.intro .panel,body.intro .timeline,body.intro .toolbar,body
 .sci-legend .ticks{display:flex;justify-content:space-between;margin-top:3px;font-variant-numeric:tabular-nums}
 .sci-legend p{margin:8px 0 0;display:flex;gap:7px;align-items:center}
 .sci-legend p i{width:18px;height:2px;background:#E6F7FF;flex:none}
+.citylist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.citylist a{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;padding:7px 8px;border-radius:8px;color:var(--tx);text-decoration:none;font-size:13.5px}
+.citylist a[aria-current]{background:var(--s3)}
+.citylist svg{width:34px;height:34px}
+.citylist path{fill:rgba(95,163,207,.1);stroke:#9FD6F7;stroke-width:3;stroke-linejoin:round}
+.citylist b{font-weight:600}
+.citylist span{color:var(--tx3);font-size:12px}
+.citymenu{width:240px}

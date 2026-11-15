@@ -36,13 +36,7 @@ const CITY = CITY_DATA[CITY_KEY];
 let LIMITE = LIMITE_SOROCABA;
 const getJSON = u => fetch(u).then(r => (r.ok ? r.json() : null)).catch(() => null);
 
-const CITIES = [
-  { n: CITY.n, c: CITY.c, r: CITY.r, ctx: CITY.ctx },
-  { n: "Petrópolis", c: [-43.178, -22.505], r: 5000, ctx: "Serra fluminense. Em 2022, chuvas extremas causaram deslizamentos com centenas de mortes." },
-  { n: "São Sebastião", c: [-45.68, -23.79], r: 6000, ctx: "Litoral norte de SP. Em 2023, deslizamentos atingiram a Vila Sahy após chuva recorde." },
-  { n: "Porto Alegre", c: [-51.215, -30.03], r: 8000, ctx: "Às margens do Guaíba. Em 2024, a cidade viveu a maior enchente de sua história." },
-  { n: "Blumenau", c: [-49.066, -26.919], r: 5000, ctx: "Vale do Itajaí, com histórico de cheias e a tragédia de 2008." },
-];
+const CITIES = [{ n: CITY.n, c: CITY.c, r: CITY.r, ctx: CITY.ctx }];
 const HAZ = [
   { k: "f", n: "Enchente", color: "#2C6CB0" },
   { k: "s", n: "Deslizamento", color: "#AE3A2C" },
@@ -582,26 +576,6 @@ function goTo(city, btn) {
   globe.focusCity(city.n === CITY.n);
   globe.flyTo(city.c[0], city.c[1], city.r || 5000);
 }
-CITIES.forEach((c, i) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c.n; b.setAttribute("aria-pressed", i === 0); b.onclick = () => goTo(c, b); $("cities").appendChild(b); });
-let tmr;
-$("q").addEventListener("input", e => {
-  clearTimeout(tmr); const q = e.target.value.trim(); if (q.length < 3) { $("sugg").hidden = true; return; }
-  tmr = setTimeout(() => {
-    fetch("https://photon.komoot.io/api/?limit=5&osm_tag=place:city&osm_tag=place:town&q=" + encodeURIComponent(q))
-      .then(r => r.json()).then(j => {
-        const ul = $("sugg"); ul.innerHTML = "";
-        (j.features || []).forEach(f => {
-          const li = document.createElement("li"), b = document.createElement("button");
-          const pr = f.properties, where = [pr.state, pr.country].filter(Boolean).join(", ");
-          b.innerHTML = esc(pr.name) + " <small>" + esc(where) + "</small>";
-          b.onclick = () => { ul.hidden = true; $("q").value = ""; goTo({ c: f.geometry.coordinates, r: 5000, ctx: pr.name + (where ? ", " + where : "") }, null); };
-          li.appendChild(b); ul.appendChild(li);
-        });
-        ul.hidden = !ul.children.length;
-      }).catch(() => {});
-  }, 400);
-});
-
 /* abas */
 const TABS = ["cen", "sen", "pla", "dad", "met"];
 function setOpen(open) {
@@ -684,8 +658,6 @@ $("tlTrack").addEventListener("pointerleave", () => ($("tlTip").hidden = true));
 let speed = 1;
 $("speed").onclick = () => { speed = speed === 4 ? 1 : speed * 2; $("speed").textContent = speed + "×"; if (timer) { stop(); $("play").click(); } };
 
-$("cityBtn").onclick = () => { const o = $("cityMenu").hidden; $("cityMenu").hidden = !o; $("cityBtn").setAttribute("aria-expanded", o); if (o) $("q").focus(); };
-document.addEventListener("click", e => { if (!e.target.closest(".citysel")) $("cityMenu").hidden = true; });
 
 /* tela de início: escolhe a cidade; depois a câmera percorre a cidade para encher o cache da malha 3D */
 // vista geral, 9 vistas médias em volta do centro e 5 vistas de perto nos pontos com mais registros
@@ -700,8 +672,11 @@ const globeOk = new Promise(r => (globeReady = r));
 // contorno do município em SVG para a tela de início
 const outline = ring => { const [w, s2, e, n] = bounds(ring), k = 100 / Math.max(e - w, (n - s2) * 1.08);
   return '<svg viewBox="-4 -4 108 108" aria-hidden="true"><path d="' + ring.map((p, i) => (i ? "L" : "M") + ((p[0] - w) * k).toFixed(1) + " " + ((n - p[1]) * k * 1.08).toFixed(1)).join("") + 'Z"/></svg>'; };
+let ringsP = null;
+const cityRings = () => ringsP || (ringsP = Promise.all(Object.keys(CITY_DATA).map(async k =>
+  [k, k === "sorocaba" ? LIMITE_SOROCABA.coordinates[0] : (await getJSON(CITY_DATA[k].file("limite")))?.coordinates[0]])).then(Object.fromEntries));
 async function drawSplash() {
-  const rings = { sorocaba: LIMITE_SOROCABA.coordinates[0], campinas: (await getJSON(CITY_DATA.campinas.file("limite")))?.coordinates[0] };
+  const rings = await cityRings();
   $("spCities").innerHTML = Object.entries(CITY_DATA).filter(([k]) => rings[k]).map(([k, c]) =>
     '<button type="button" data-k="' + k + '">' + outline(rings[k]) + "<b>" + c.n + "</b></button>").join("");
 }
@@ -721,10 +696,14 @@ $("spCities").onclick = e => {
 if (new URLSearchParams(location.search).get("go")) startCity(); else drawSplash();
 $("cityName").textContent = CITY.n + ", " + CITY.uf;
 ["sl0", "sl1", "sl2"].forEach((id, i) => ($(id).textContent = Math.round(CITY.alt[0] + (i * (CITY.alt[1] - CITY.alt[0])) / 2) + " m"));
-// troca de cidade com dados pelo menu do cabeçalho
-$("cities").insertAdjacentHTML("afterbegin", Object.entries(CITY_DATA).filter(([k]) => k !== CITY_KEY).map(([k, c]) => '<a class="chip-link" href="?c=' + k + '&go=1">' + c.n + "</a>").join(""));
+// troca de cidade pelo menu do cabeçalho: cada cidade com o contorno; a atual volta para a vista geral
+cityRings().then(rings => {
+  $("cities").innerHTML = Object.entries(CITY_DATA).filter(([k]) => rings[k]).map(([k, c]) =>
+    '<li><a href="?c=' + k + '&go=1"' + (k === CITY_KEY ? ' aria-current="true"' : "") + ">" + outline(rings[k]) + "<b>" + c.n + "</b><span>" + c.uf + "</span></a></li>").join("");
+});
+$("cities").onclick = e => { const a = e.target.closest('a[aria-current]'); if (!a) return; e.preventDefault(); goTo(CITIES[0], null); };
 
-$("cityBtn").onclick = () => { const o = $("cityMenu").hidden; $("cityMenu").hidden = !o; $("cityBtn").setAttribute("aria-expanded", o); if (o) $("q").focus(); };
+$("cityBtn").onclick = () => { const o = $("cityMenu").hidden; $("cityMenu").hidden = !o; $("cityBtn").setAttribute("aria-expanded", o); };
 document.addEventListener("click", e => { if (!e.target.closest(".citysel")) $("cityMenu").hidden = true; });
 
 /* busca no mapa: dados locais primeiro, depois ruas e lugares do Photon dentro da cidade */

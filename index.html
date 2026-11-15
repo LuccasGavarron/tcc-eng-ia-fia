@@ -91,11 +91,7 @@
     <div class="citysel">
       <button type="button" id="cityBtn" aria-expanded="false" aria-controls="cityMenu"><span id="cityName">Sorocaba, SP</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
       <div class="citymenu" id="cityMenu" hidden>
-        <div class="chips" id="cities"></div>
-        <div class="search">
-          <input id="q" type="search" placeholder="Buscar outra cidade" autocomplete="off" aria-label="Buscar cidade">
-          <ul id="sugg" hidden></ul>
-        </div>
+        <ul class="citylist" id="cities"></ul>
       </div>
     </div>
   </header>
@@ -245,7 +241,7 @@
 
     <div class="field">
       <h2 class="h">2. Solo e escoamento</h2>
-      <p>O escoamento usa o método Curve Number do NRCS (SCS-CN). O CN da malha urbana de Sorocaba é 82 e sobe ou desce conforme a umidade antecedente, de CN I (solo seco) a CN III (encharcado). Um balanço hídrico da camada de 0 a 30 cm acompanha a umidade do solo hora a hora.</p>
+      <p>O escoamento usa o método Curve Number do NRCS (SCS-CN). O CN da malha urbana é 82 e sobe ou desce conforme a umidade antecedente, de CN I (solo seco) a CN III (encharcado). Um balanço hídrico da camada de 0 a 30 cm acompanha a umidade do solo hora a hora.</p>
       <div class="formula">Q = (P − 0,2 S)² ÷ (P + 0,8 S), com S = 25 400 ÷ CN − 254</div>
     </div>
 
@@ -288,7 +284,7 @@
     </div>
 
     <div class="field" id="histField" hidden>
-      <h2 class="h">Histórico de Sorocaba</h2>
+      <h2 class="h">Histórico de ocorrências</h2>
       <ul class="hist" id="hist"></ul>
     </div>
 
