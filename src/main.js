@@ -553,8 +553,6 @@ const TABS = ["cen", "sen", "pla", "dad", "met"];
 function setOpen(open) {
   document.body.classList.toggle("closed", !open);
   $("collapse").setAttribute("aria-expanded", open); $("collapse").setAttribute("aria-label", open ? "Recolher painel" : "Abrir painel");
-  // o mapa muda de largura durante a transição: redesenha no fim
-  setTimeout(() => { if (globe) { globe.viewer.resize(); globe.viewer.scene.requestRender(); } }, 240);
 }
 TABS.forEach(k => ($("t-" + k).onclick = () => {
   const closed = document.body.classList.contains("closed");

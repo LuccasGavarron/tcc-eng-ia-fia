@@ -19,6 +19,8 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     requestRenderMode: true, maximumRenderTimeChange: Infinity, msaaSamples: 2,
   });
   const sc = v.scene;
+  // com requestRenderMode o canvas só acompanha o tamanho da janela se alguém pedir um quadro novo
+  new ResizeObserver(() => { v.resize(); sc.requestRender(); }).observe(container);
   // a cidade solta no espaço
   sc.backgroundColor = C("#05080C"); sc.skyBox.show = false; sc.sun.show = false; sc.moon.show = false;
   sc.skyAtmosphere.show = false; sc.fog.enabled = false; sc.globe.showGroundAtmosphere = false; sc.globe.baseColor = Cesium.Color.BLACK;
