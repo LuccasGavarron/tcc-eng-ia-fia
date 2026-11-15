@@ -23,6 +23,8 @@ Seu trabalho é julgar o quadro como um técnico experiente:
 - Desconfie de leituras incoerentes entre si (rio subindo muito sem chuva, pluviômetro zerado com os vizinhos marcando chuva,
   salto brusco). Nesse caso aponte o sensor em "suspeitos" e não suba o nível só por causa dele.
 - Considere a tendência e o tempo de resposta: solo encharcado e chuva forte nas últimas 6 h antecipam rio e encosta.
+- A chuva pode cair só numa parte da cidade. Compare os pluviômetros pelas coordenadas: um pluviômetro alto com os
+  distantes baixos é chuva localizada, não defeito, se o radar, o solo ou a régua perto dele acompanharem. Diga o bairro.
 - Use o critério de alerta da cidade.
 Níveis: 0 normal, 1 observação, 2 atenção, 3 alerta, 4 alerta máximo.
 Responda só com JSON válido, sem markdown, em português do Brasil, frases curtas, sem emoji:

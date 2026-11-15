@@ -53,23 +53,27 @@ function qc(st, v, t, out, neighborsRain) {
 }
 
 /* Gera as séries das 72 h a partir do estado do modelo.
-   p.mode, p.hours (mm/h), p.sim (theta, stage, pluvial), p.dry (T, RH). */
+   p.mode, p.hours (mm/h), p.sim (theta, stage, pluvial), p.dry (T, RH).
+   Opcionais da análise contínua: p.kAt(st, t) fator local da chuva; p.theta(st) umidade do solo da encosta;
+   p.clean sem os defeitos de fábrica (lá os defeitos vêm do usuário). */
 export function simulateSensors(p) {
   const r = rng(11), noise = s => (r() - 0.5) * 2 * s, res = {};
   const rainAt = t => (p.mode === "chuva" ? p.hours[t] : 0);
-  for (const st of STATIONS) {
+  for (const st0 of STATIONS) {
+    const st = p.clean ? { ...st0, fault: null } : st0;
+    const k = t => (p.kAt ? p.kAt(st, t) : st.rain);
     const out = { v: [], flag: [], battery: st.fault === "bateria" ? 18 : 70 + ((r() * 25) | 0), rssi: -70 - ((r() * 45) | 0) };
     for (let t = 0; t < H; t++) {
       let v;
-      if (st.c === "cemaden") v = st.fault === "entupido" && t >= 18 ? 0 : Math.max(0, rainAt(t) * st.rain * (1 + noise(0.15)));
-      else if (st.c === "radar") v = dbz(rainAt(t) * st.rain * (1 + noise(0.2)));
+      if (st.c === "cemaden") v = st.fault === "entupido" && t >= 18 ? 0 : Math.max(0, rainAt(t) * k(t) * (1 + noise(0.15)));
+      else if (st.c === "radar") v = dbz(rainAt(t) * k(t) * (1 + noise(0.2)));
       else if (st.c === "lora") {
-        const th = p.mode === "chuva" ? p.sim.theta[t] : SOIL.wp + 0.02 + 0.04 * Math.exp(-p.dryDays / 10);
+        const th = p.mode === "chuva" ? (p.theta ? p.theta(st) : p.sim.theta)[t] : SOIL.wp + 0.02 + 0.04 * Math.exp(-p.dryDays / 10);
         v = (st.fault === "sem sinal" && t >= 30 && t < 38) ? null : clamp(th * st.soil * 100 + noise(0.6), 0, 100);
       } else if (st.c === "ana") {
         const s = p.mode === "chuva" ? at(p.sim.stage, t + st.lag) : 0;
         v = Math.max(0, st.base + st.gain * s + noise(0.03));
-        if (st.id === "R1" && t === 47) v += 1.6; // pico espúrio de 1 leitura: interferência no sensor de radar
+        if (st.id === "R1" && t === 47 && !p.clean) v += 1.6; // pico espúrio de 1 leitura: interferência no sensor de radar
       } else if (st.c === "inmet") {
         v = p.mode === "chuva" ? 21 - Math.min(5, rainAt(t) * 0.2) + 3 * Math.sin(((t % 24) - 9) / 24 * 2 * Math.PI) + noise(0.3) : p.dry.T[t] + noise(0.3);
         out.rh = out.rh || []; out.rh.push(p.mode === "chuva" ? clamp(88 + rainAt(t), 0, 100) : p.dry.RH[t]);

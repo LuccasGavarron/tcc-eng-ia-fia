@@ -92,6 +92,7 @@ body.closed #map{left:var(--rail)}
 .unit{font:600 15px var(--display);margin-left:4px;color:var(--tx2)}
 .readout p{margin:6px 0 8px;font-size:12.5px;color:var(--tx2)}
 .presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.presets button[aria-pressed=true]{background:var(--tx);color:var(--s1);border-color:var(--tx)}
 .presets button{font:500 12.5px var(--body);background:var(--s2);border:1px solid var(--line);border-radius:4px;padding:5px 9px;cursor:pointer;color:var(--tx)}
 .range{gap:5px}
 .range .row{font-size:13.5px}

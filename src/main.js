@@ -55,7 +55,8 @@ let F = {};            // previsão derivada do cenário (recalculada quando o c
 let grid = null, cl = null, rivers = null, cover = null, schools = null, hist = null, shelters = [];
 const approved = new Set(), sentLog = [];
 // análise contínua: a chuva entra hora a hora pelo controle; ov = sensores mexidos à mão { id: { k: off|zero|fix, v, from } }
-const LIVE = { on: false, hours: [], rainNow: 0, ov: {}, feed: [], level: 0, aiAt: 0, aiBusy: false, saved: null };
+// hours = média da cidade; kk[t] = fator de cada sensor naquela hora (chuva só num bairro); where = pluviômetro no centro da chuva
+const LIVE = { on: false, hours: [], kk: [], where: "", rainNow: 0, ov: {}, feed: [], level: 0, aiAt: 0, aiBusy: false, saved: null };
 const models = M.trainModels();
 
 /* ---------- previsão ---------- */
@@ -65,8 +66,9 @@ function forecast() {
   if (LIVE.on) S.rain = Math.round(hours.reduce((a, b) => a + b, 0));
   const sim = M.simulate(hours, S.mode === "chuva" ? S.ante : 0);
   const dry = M.drySeries(S.mode === "seco" ? S.anom : 0, S.mode === "seco" ? S.rhMin : 70);
-  const sensors = simulateSensors({ mode: S.mode, hours, sim, dry, dryDays: S.dryDays });
-  if (LIVE.on) applyOverrides(sensors, hours);
+  const sensors = simulateSensors({ mode: S.mode, hours, sim, dry, dryDays: S.dryDays, ...(LIVE.on ? localRain(hours) : {}) });
+  let slideAt = t => M.slideIndex(hours, t, S.mode === "chuva" ? S.ante : 0);
+  if (LIVE.on) { applyOverrides(sensors, hours); slideAt = assimilate(sim, sensors, slideAt); }
   const wet = S.mode === "chuva" ? M.scenarioState({ mode: "chuva", sys: S.sys, rain: S.rain, ante: S.ante })
     : { rain: 0, peak: 0, sat: M.satOf(M.theta0(0)), rise: 0, slideIdx: 0 };
   const dryP = S.mode === "seco" ? { mode: "seco", dryDays: S.dryDays, rhMin: S.rhMin, wind: S.wind, anom: S.anom, heatDays: S.heatDays }
@@ -77,7 +79,6 @@ function forecast() {
     x: models.x.predict(M.features("x", drySt)), h: models.h.predict(M.features("h", drySt)),
   };
   const sat0 = M.satOf(sim.th0);
-  const slideAt = t => M.slideIndex(hours, t, S.mode === "chuva" ? S.ante : 0);
   const fmaAt = t => M.fmaPlus(dryP.dryDays + t / 24, dryP.rhMin, dryP.wind);
   const hiAt = t => M.heatIndex(dry.T[t], dry.RH[t]);
   const seq = f => Array.from({ length: H }, (_, t) => f(t));
@@ -624,6 +625,29 @@ function applyOverrides(sensors, hours) {
     }
   }
 }
+// chuva centrada num pluviômetro cai com a distância (3,5 km); fora dele sobra 5%. Normaliza pela média dos pluviômetros
+function rainShare() {
+  const c = STATIONS.find(st => st.id === LIVE.where), km = (a, b) => Math.hypot((a[0] - b[0]) * 111.3 * Math.cos(a[1] * Math.PI / 180), (a[1] - b[1]) * 110.5);
+  const k = Object.fromEntries(STATIONS.map(st => [st.id, c ? Math.max(0.05, Math.exp(-km(st.ll, c.ll) / 3.5)) : st.rain || 1]));
+  const ps = STATIONS.filter(st => st.c === "cemaden"), mean = ps.reduce((a, st) => a + k[st.id], 0) / ps.length;
+  for (const id in k) k[id] /= mean;
+  return { k, mean };
+}
+function localRain(hours) {
+  const f = (st, t) => (LIVE.kk[t] || {})[st.id] ?? 1, th = {};
+  return { clean: true, kAt: f, theta: st => th[st.id] || (th[st.id] = M.simulate(hours.map((h, t) => h * f(st, t)), S.ante).theta) };
+}
+// leitura forçada que passou no controle de qualidade vale mais que o modelo: mapa e linha do tempo seguem o sensor
+function assimilate(sim, sensors, slideAt) {
+  const pick = (c, t, f) => {
+    const v = Object.entries(LIVE.ov).map(([id, o]) => [STATIONS.find(st => st.id === id), o]).filter(([st, o]) => st && st.c === c && t >= o.from)
+      .map(([st]) => [st, sensors[st.id]]).filter(([, s]) => !s.flag[t] && s.v[t] != null).map(([st, s]) => f(st, s.v[t]));
+    return v.length ? Math.max(...v) : null;
+  };
+  sim.rise = sim.rise.map((r, t) => pick("ana", t, (st, v) => v / (st.gain || 1)) ?? r);
+  // umidade do solo em índice de deslizamento: 34% começa a pesar, 46% já derruba encosta de 18%
+  return t => { const u = pick("lora", t, (st, v) => v); return u == null ? slideAt(t) : u < 34 ? 0 : 0.7 + (u - 34) / 20; };
+}
 const UNIT = st => conOf(st.c).unit;
 function sensorCtl(st) {
   const o = LIVE.ov[st.id] || {}, k = o.k || "";
@@ -679,8 +703,9 @@ function changes(t) {
 const stamp = t => String(t % 24).padStart(2, "0") + "h";
 const feedAdd = e => LIVE.feed.unshift({ when: stamp(e.t), ...e });
 function liveTick() {
-  if (LIVE.hours.length >= H) { LIVE.hours.splice(0, 24); T0 = new Date(T0.getTime() + 864e5); for (const o of Object.values(LIVE.ov)) o.from = Math.max(0, o.from - 24); }
-  const r = LIVE.rainNow; LIVE.hours.push(r ? Math.max(0, r * (0.85 + Math.random() * 0.3)) : 0);
+  if (LIVE.hours.length >= H) { LIVE.hours.splice(0, 24); LIVE.kk.splice(0, 24); T0 = new Date(T0.getTime() + 864e5); for (const o of Object.values(LIVE.ov)) o.from = Math.max(0, o.from - 24); }
+  const r = LIVE.rainNow ? LIVE.rainNow * (0.85 + Math.random() * 0.3) : 0, { k, mean } = rainShare();
+  LIVE.hours.push(r * mean); LIVE.kk.push(k);
   S.t = LIVE.hours.length - 1;
   liveRefresh(true);
 }
@@ -722,10 +747,11 @@ async function askLive() {
   LIVE.aiBusy = true; LIVE.aiAt = Date.now();
   const t = S.t, body = {
     modo: "continua", cidade: CITY.n + ", " + CITY.uf, hora: hourLabel(t), criterio_alerta: CITY.alertTxt, nivel_regras: LEVELS[LIVE.level][0],
-    chuva_ultima_hora_mm: +(LIVE.hours[t] || 0).toFixed(1), chuva_24h_mm: Math.round(acc24(t)),
+    chuva_media_cidade_ultima_hora_mm: +(LIVE.hours[t] || 0).toFixed(1), chuva_24h_mediana_pluviometros_mm: Math.round(acc24(t)),
     chuva_6h_mm: Math.round(LIVE.hours.slice(Math.max(0, t - 5), t + 1).reduce((a, b) => a + b, 0)),
     leituras: readings(t).map(x => ({ id: x.id, tipo: conOf(x.c).n, nome: x.nome, valor: x.v, unidade: x.unid, reprovada: x.bad || undefined,
-      cota_atencao: x.st.alert, cota_transbordo: x.st.over })),
+      cota_atencao: x.st.alert, cota_transbordo: x.st.over, lon: x.st.ll[0], lat: x.st.ll[1],
+      chuva_24h_mm: x.c === "cemaden" ? Math.round(F.sensors[x.id].v.slice(Math.max(0, t - 23), t + 1).reduce((a, b) => a + (b || 0), 0)) : undefined })),
     eventos_recentes: LIVE.feed.filter(f => !f.ai).slice(0, 10).map(f => f.when + " " + f.txt),
   };
   try {
@@ -739,6 +765,11 @@ async function askLive() {
 }
 $("rainNow").oninput = e => { LIVE.rainNow = +e.target.value; drawLive(); };
 $("rainPre").onclick = e => { const b = e.target.closest("button[data-v]"); if (!b) return; LIVE.rainNow = +b.dataset.v; $("rainNow").value = LIVE.rainNow; drawLive(); };
+$("rainWhere").onclick = e => { const b = e.target.closest("button[data-w]"); if (!b) return; LIVE.where = b.dataset.w; drawWhere(); };
+function drawWhere() {
+  $("rainWhere").innerHTML = [["", "Cidade toda"], ...STATIONS.filter(st => st.c === "cemaden").map(st => [st.id, st.n.replace(/\s*\(.*\)/, "").split(",").pop().trim()])]
+    .map(([id, n]) => '<button type="button" data-w="' + id + '" aria-pressed="' + (id === LIVE.where) + '">' + esc(n) + "</button>").join("");
+}
 $("simPre").onclick = e => {
   const b = e.target.closest("button[data-s]"); if (!b) return;
   const g = STATIONS.find(st => st.c === "ana"), p = STATIONS.find(st => st.c === "cemaden");
@@ -760,7 +791,7 @@ function setLive(on) {
     LIVE.saved = { rain: S.rain, mode: S.mode, T0 };
     S.mode = "chuva"; T0 = new Date(); T0.setHours(0, 0, 0, 0);
     // começa com 6 h secas para o observador ter de onde comparar
-    LIVE.hours = Array(new Date().getHours() || 6).fill(0); LIVE.ov = {}; LIVE.feed = []; LIVE.level = 0;
+    LIVE.hours = Array(new Date().getHours() || 6).fill(0); LIVE.kk = LIVE.hours.map(() => ({})); LIVE.where = ""; drawWhere(); LIVE.ov = {}; LIVE.feed = []; LIVE.level = 0;
     S.t = LIVE.hours.length - 1; liveRefresh();
     feedAdd({ t: S.t, sev: 1, txt: "Observador ligado. Aperte o play para o relógio andar." }); drawLive();
   } else {
