@@ -27,6 +27,9 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   sc.globe.depthTestAgainstTerrain = true;
 
   const ring = limite.coordinates[0];
+  let clipOn = true;
+  const inside = (x, y) => { let c = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; };
   const clip = () => new Cesium.ClippingPolygonCollection({ inverse: true,
     polygons: [new Cesium.ClippingPolygon({ positions: Cesium.Cartesian3.fromDegreesArray(ring.flat()) })] });
   let tiles = null;
@@ -97,11 +100,14 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
         // ícone só nas 3 maiores manchas de cada tipo, para não poluir
         const big = new Set([...f.geometry.coordinates].sort((p, q) => q[0].length - p[0].length).slice(0, 3));
         f.geometry.coordinates.forEach(poly => {
+          // fora do município não há malha 3D: a mancha ficaria solta no preto
+          if (clipOn) { const n = poly[0].length, cx = poly[0].reduce((a, p) => a + p[0], 0) / n, cy = poly[0].reduce((a, p) => a + p[1], 0) / n; if (!inside(cx, cy)) return; }
           const outer = Cesium.Cartesian3.fromDegreesArray(poly[0].flat());
           const holes = poly.slice(1).map(h => new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(h.flat())));
           // pegada exata no chão
           ds.entities.add({ _pop: () => popup("risk", f.properties), _risk: true, polygon: { hierarchy: new Cesium.PolygonHierarchy(outer, holes), material: C(col).withAlpha(a * 0.8), classificationType: Cesium.ClassificationType.BOTH } });
           if (k !== "f" && k !== "s") return;
+          if (clipOn && poly[0].some(p => !inside(p[0], p[1]))) return; // volume só para mancha inteira dentro do município
           // volume 3D: enchente vira lâmina d'água até a cota prevista; encosta vira casca vermelha
           const es = poly[0].filter((_, i) => i % 3 === 0).map(p => elevAt(p[0], p[1])).filter(e => e != null);
           if (es.length < 3) return;
@@ -258,7 +264,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     }` });
   function setScience(on) { if (tiles) { tiles.customShader = on ? sci : undefined; sc.requestRender(); } }
   function focusCity(on) {
-    borda.show = on; plano.show = on;
+    borda.show = on; plano.show = on; clipOn = on;
     const c = on ? clip() : undefined;
     if (tiles) tiles.clippingPolygons = c; else sc.globe.clippingPolygons = c;
     if (layers.bairros) layers.bairros.show = on;

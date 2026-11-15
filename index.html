@@ -54,7 +54,7 @@
 
 <section class="panel" id="panel" aria-label="Painel do Véspera">
   <header class="head">
-    <div class="head-top"><h1 class="brand">Véspera</h1><span class="badge" id="level">Observação</span></div>
+    <h1 class="brand">Véspera</h1>
     <p class="city" id="cityName">Sorocaba, SP</p>
   </header>
 
@@ -72,7 +72,6 @@
         <input id="q" type="search" placeholder="Buscar outra cidade" autocomplete="off" aria-label="Buscar cidade">
         <ul id="sugg" hidden></ul>
       </div>
-      <p class="context" id="context"></p>
     </div>
 
     <div class="field">
@@ -99,7 +98,6 @@
           </div>
           <div class="readout">
             <div><span class="mm" id="mm">120</span><span class="unit">mm</span></div>
-            <p id="liters">120 litros por metro quadrado</p>
             <div class="presets">
               <button type="button" data-v="30">Chuva comum</button>
               <button type="button" data-v="120">Temporal</button>
@@ -112,7 +110,7 @@
       <div class="field range">
         <div class="row"><label class="h" for="ante">Chuva antecedente (5 dias)</label><output id="anteOut">80 mm</output></div>
         <input type="range" id="ante" min="0" max="250" step="10" value="80">
-        <p class="sub" id="soil"></p>
+        <div class="facts" id="soilFacts"></div>
       </div>
 
       <div class="field">
@@ -122,7 +120,7 @@
           <div><b id="fWhen"></b><span>Hora do pico</span></div>
           <div><b id="fDay"></b><span>Maior dia (mm)</span></div>
         </div>
-        <div class="warn" id="inmet"></div>
+        <div class="tagrow" id="inmet"></div>
       </div>
     </div>
 
@@ -153,16 +151,14 @@
         <div><b id="fHi"></b><span>Índice de calor (°C)</span></div>
         <div><b id="fTmax"></b><span>Máxima (°C)</span></div>
       </div>
-      <div class="warn" id="inmetHeat"></div>
+      <div class="tagrow" id="inmetHeat"></div>
     </div>
 
     <div class="field">
-      <h2 class="h">Área visível afetada</h2>
+      <h2 class="h">Área afetada</h2>
       <div class="facts" id="areaFacts"></div>
-      <p class="sub" id="riseTxt"></p>
     </div>
 
-    <p class="note">Protótipo acadêmico. Malha 3D, relevo, rios e cobertura do solo são dados reais (Google 3D Tiles, Terrarium e OpenStreetMap). O evento é um cenário que você define; sensores e histórico de treino são simulados.</p>
   </div>
 
   <!-- ===== SENSORES ===== -->
@@ -171,7 +167,6 @@
       <div class="facts" id="senFacts"></div>
     </div>
     <div id="connectors" class="connectors"></div>
-    <p class="note">Rede piloto simulada para Sorocaba. Cada conector imita o formato e a cadência da fonte real. As falhas são de propósito, para mostrar o controle de qualidade: leitura reprovada não entra no modelo.</p>
   </div>
 
   <!-- ===== PLANO ===== -->

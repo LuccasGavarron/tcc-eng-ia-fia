@@ -44,7 +44,7 @@ body.closed .panel{transform:translateX(calc(-100% - var(--rail)))}
 body.closed #map{left:var(--rail)}
 
 .field{display:flex;flex-direction:column;gap:9px}
-.h{font:700 11.5px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin:0}
+.h{font:600 13px var(--body);color:var(--tx2);margin:0}
 .sub{margin:-2px 0 0;font-size:12.5px;color:var(--tx2)}
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .context,.note{margin:0;font-size:12.5px;color:var(--tx2)}
@@ -220,3 +220,5 @@ body.closed .timeline{left:calc(var(--rail) + var(--gap))}
 .db th{position:sticky;top:0;background:var(--s3)}
 .db td{max-width:180px;overflow:hidden;text-overflow:ellipsis}
 .db .empty{padding:10px 12px;color:var(--tx3);font-size:12px;margin:0}
+.tagrow{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--tx2)}
+.tagrow b{font:600 12px var(--body);color:#fff;padding:3px 8px;border-radius:4px}

@@ -30,7 +30,6 @@ const HAZ = [
   { k: "x", n: "Incêndio em vegetação", color: "#E0612B" },
   { k: "h", n: "Onda de calor", color: "#B0368A" },
 ];
-const LEVELS = [["Observação", "var(--green)"], ["Atenção", "var(--ochre)"], ["Alerta", "var(--orange)"], ["Alerta máximo", "var(--brick)"]];
 
 /* ---------- estado ---------- */
 const S = { mode: "chuva", sys: M.SYSTEMS[0], rain: 120, ante: 80, anom: 6, heatDays: 4, rhMin: 22, dryDays: 18, wind: 18, t: 0, is3D: true };
@@ -202,20 +201,19 @@ function riskShapes() {
   return { type: "FeatureCollection", features: feats };
 }
 
+// quantos pontos com alagamento registrado caem dentro da mancha de agora
+function histHit() {
+  if (!grid || !hist) return "";
+  const pts = hist.pontos.map(p => cellOf([p.lon, p.lat])).filter(i => i >= 0);
+  return pts.length ? pts.filter(i => cl.f[i] === 1 || cl.f[i] === 2).length + "/" + pts.length : "";
+}
 function areaFacts(st) {
   const n = cl.n, t = n.t || 1, pc = v => (grid ? fmt((100 * v) / t, 1) + "%" : "");
   const sw = c => '<i class="sw" style="background:' + c + '"></i>';
   const cells = S.mode === "chuva"
-    ? [[pc(n.f), sw("var(--water)") + "Inundação"], [pc(n.a), sw("var(--ochre)") + "Atenção"], [pc(n.s), sw("var(--brick)") + "Encostas"]]
+    ? [[pc(n.f), sw("var(--water)") + "Inundação"], [pc(n.s), sw("var(--brick)") + "Encostas"], [histHit(), "Ocorrências na mancha"]]
     : [[pc(n.x), sw("#E0612B") + "Incêndio"], [pc(n.h), sw("#B0368A") + "Calor extremo"], [cover ? "" : "", "&nbsp;"]];
   $("areaFacts").innerHTML = cells.map(([v, l]) => "<div><b>" + v + "</b><span>" + l + "</span></div>").join("");
-  if (!grid) { $("riseTxt").textContent = "Aproxime o mapa de uma cidade para o Véspera ler o relevo."; return; }
-  const pts = (hist?.pontos || []).map(p => cellOf([p.lon, p.lat])).filter(i => i >= 0), hit = pts.filter(i => cl.f[i] === 1 || cl.f[i] === 2).length;
-  $("riseTxt").textContent = S.mode === "chuva"
-    ? "Em " + hourLabel(S.t) + ", rio " + fmt(st.rise, 1) + " m acima do normal" + (grid.hand ? "." : ". Sem rios mapeados aqui: comparado às cotas mais baixas da tela.") +
-      (pts.length ? " " + hit + " de " + pts.length + " pontos com alagamento registrado ficam dentro da mancha." : "")
-    : (!isNaN(coverAt(grid.cx, grid.cy, "veg")) ? "Em " + hourLabel(S.t) + ", perigo de incêndio " + M.FMA_CLASSES[st.fireClass].toLowerCase() + " e índice de calor " + fmt(F.hiAt(S.t), 0) + " °C."
-      : "Cobertura do solo disponível só para Sorocaba.");
 }
 
 // a legenda é o filtro: clicar num item liga ou desliga aquela camada do mapa
@@ -315,7 +313,7 @@ function drawSensorsTab() {
         spark(st) + (fl ? '<p class="bad">Reprovada: ' + esc(fl) + (lv ? ". Modelo usa a leitura de " + lv.age + " h atrás." : ".") + "</p>" : "") +
         (extra ? '<p class="s-meta">' + extra + "</p>" : "") + "</li>";
     }).join("");
-    return '<section class="connector"><header><h3>' + esc(c.n) + "</h3><p>" + esc(c.org + " · " + c.proto + " · a cada " + c.cad) + "</p></header><ul>" + rows + "</ul></section>";
+    return '<section class="connector"><header><h3>' + esc(c.n) + "</h3></header><ul>" + rows + "</ul></section>";
   }).join("");
 }
 
@@ -323,11 +321,10 @@ function drawSensorsTab() {
 function drawHazards() {
   $("hazards").innerHTML = HAZ.map(h => {
     const p = F.prob[h.k], e = F.eta[h.k];
-    const when = e == null ? (p >= 0.15 ? "limiar não cruzado em 72 h" : "") : e === 0 ? "limiar já ultrapassado" : "em " + e + " h, " + hourLabel(e);
+    const when = e == null ? "" : e === 0 ? "limiar já ultrapassado" : "em " + e + " h, " + hourLabel(e);
     return '<li><div class="hz-top"><b>' + h.n + "</b><span>" + pct(p) + '</span></div><div class="bar"><i style="width:' + Math.max(1, p * 100) + "%;background:" + h.color + '"></i></div>' +
       (when ? '<p class="hz-eta">' + when + "</p>" : "") + "</li>";
   }).join("");
-  const lv = LEVELS[F.level]; $("level").textContent = lv[0]; $("level").style.background = lv[1];
 }
 
 const histNames = tipo => (hist?.pontos || []).filter(p => !tipo || p.tipo.includes(tipo)).filter(p => {
@@ -397,7 +394,7 @@ function alertMessage() {
 function alertPreview() {
   const m = alertMessage();
   $("alertPreview").innerHTML = m ? "<p>" + esc(m) + '</p><small>' + m.length + " caracteres · Cell Broadcast (Defesa Civil Alerta) e SMS 40199</small>"
-    : "<p class=\"muted\">Aprove ações do plano para montar a mensagem.</p>";
+    : "<p class=\"muted\">Nenhuma ação aprovada.</p>";
   $("send").disabled = !m;
 }
 $("send").onclick = () => {
@@ -428,6 +425,7 @@ $("ask").onclick = async () => {
 };
 
 /* ---------- hietograma ---------- */
+const inmetTag = (label, lv) => "<span>" + label + '</span><b style="background:' + ["var(--s3)", "var(--ochre)", "var(--orange)", "var(--brick)"][lv] + '">' + ["Nenhum", "Amarelo", "Laranja", "Vermelho"][lv] + "</b>";
 function drawHyeto() {
   // linha do tempo: barras de chuva (mm/h) e curva do rio (m acima do normal) nas 72 h
   const W = 1000, Hh = 46, cw = W / H, maxV = Math.max(5, F.peak), y = v => Hh - 2 - (v / maxV) * (Hh - 6);
@@ -452,21 +450,15 @@ function drawHyeto() {
     ? "<span>Chuva <b>" + fmt(F.hours[S.t], 1) + "</b> mm/h</span><span>Rio <b>" + fmt(F.sim.rise[S.t], 1) + "</b> m</span>"
     : "<span>Calor <b>" + fmt(F.hiAt(S.t), 0) + "</b> °C</span>";
   $("fPeak").textContent = fmt(F.peak, F.peak < 10 ? 1 : 0);
-  $("fWhen").textContent = S.rain ? hourLabel(F.peakT) : "";
+  $("fWhen").textContent = S.rain ? dayName(F.peakT).split(" ")[0] + " " + String(F.peakT % 24).padStart(2, "0") + "h" : "";
   $("fDay").textContent = Math.round(F.dayMax);
-  const iv = [["Sem aviso do INMET pelos critérios de chuva", "var(--green)"], ["Equivale a aviso amarelo do INMET (perigo potencial)", "var(--ochre)"],
-    ["Equivale a aviso laranja do INMET (perigo)", "var(--orange)"], ["Equivale a aviso vermelho do INMET (grande perigo)", "var(--brick)"]][F.inmet.level];
-  $("inmet").style.borderLeftColor = iv[1];
-  $("inmet").textContent = iv[0] + (F.inmet.level ? ", pelo critério de " + (F.inmet.byI ? "intensidade horária." : "acumulado diário.") : ".");
+  $("inmet").innerHTML = inmetTag("Aviso INMET de chuva", F.inmet.level);
 }
 function drawDry() {
   $("anomOut").textContent = "+" + fmt(S.anom, 1) + " °C"; $("heatDaysOut").textContent = S.heatDays + (S.heatDays === 1 ? " dia" : " dias");
   $("rhMinOut").textContent = S.rhMin + "%"; $("dryDaysOut").textContent = S.dryDays + (S.dryDays === 1 ? " dia" : " dias"); $("windOut").textContent = S.wind + " km/h";
   $("fFma").textContent = fmt(F.fma, 1); $("fHi").textContent = fmt(F.hiMax, 0); $("fTmax").textContent = fmt(M.TMAX_CLIM + S.anom, 0);
-  const iv = [["Sem aviso de onda de calor do INMET", "var(--green)"], ["Equivale a aviso amarelo de onda de calor do INMET", "var(--ochre)"],
-    ["Equivale a aviso laranja de onda de calor do INMET", "var(--orange)"], ["Equivale a aviso vermelho de onda de calor do INMET", "var(--brick)"]][F.heatLevel];
-  $("inmetHeat").style.borderLeftColor = iv[1];
-  $("inmetHeat").textContent = iv[0] + ". Perigo de incêndio " + M.FMA_CLASSES[M.fmaClass(F.fma)].toLowerCase() + " pela FMA+; índice de calor máximo na faixa " + M.HI_CLASSES[M.hiClass(F.hiMax)].toLowerCase() + ".";
+  $("inmetHeat").innerHTML = inmetTag("Aviso INMET de onda de calor", F.heatLevel);
 }
 
 /* ---------- atualização ---------- */
@@ -474,9 +466,9 @@ function update(resetHour) {
   forecast();
   if (resetHour) setHour(S.mode === "chuva" ? (F.riseMax > 0.05 ? F.riseT : F.peakT) : F.hiT, true);
   $("fill").style.height = (S.rain / 250) * 100 + "%"; $("mm").textContent = S.rain; $("tube").setAttribute("aria-valuenow", S.rain);
-  $("liters").textContent = S.rain + " litros por metro quadrado";
   $("anteOut").textContent = S.ante + " mm";
-  $("soil").textContent = "Umidade do solo " + fmt(M.theta0(S.ante) * 100, 0) + "% (volume). CN ajustado " + fmt(F.sim.cn, 0) + ": " + Math.round(F.sim.C * 100) + "% da chuva vira escoamento.";
+  $("soilFacts").innerHTML = "<div><b>" + fmt(M.theta0(S.ante) * 100, 0) + "%</b><span>Umidade do solo</span></div><div><b>" + fmt(F.sim.cn, 0) +
+    "</b><span>Curve Number</span></div><div><b>" + Math.round(F.sim.C * 100) + "%</b><span>Vira escoamento</span></div>";
   $("g-chuva").hidden = S.mode !== "chuva"; $("g-seco").hidden = S.mode !== "seco";
   drawHazards(); drawHyeto(); drawDry(); drawHour();
 }
@@ -521,14 +513,12 @@ $("hour").oninput = e => { stop(); setHour(+e.target.value); };
 /* cidades e busca */
 function goTo(city, btn) {
   document.querySelectorAll("#cities button").forEach(x => x.setAttribute("aria-pressed", x === btn));
-  $("context").textContent = city.ctx || "";
   $("cityName").textContent = city.n ? city.n : (city.ctx || "").split(",")[0];
   if (!globe) return;
   globe.focusCity(city.n === "Sorocaba");
   globe.flyTo(city.c[0], city.c[1], city.r || 5000);
 }
 CITIES.forEach((c, i) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c.n; b.setAttribute("aria-pressed", i === 0); b.onclick = () => goTo(c, b); $("cities").appendChild(b); });
-$("context").textContent = CITIES[0].ctx;
 let tmr;
 $("q").addEventListener("input", e => {
   clearTimeout(tmr); const q = e.target.value.trim(); if (q.length < 3) { $("sugg").hidden = true; return; }
