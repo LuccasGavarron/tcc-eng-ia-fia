@@ -15,8 +15,12 @@
   <button type="button" id="v3" aria-pressed="true">3D</button>
   <button type="button" id="v2" aria-pressed="false">2D</button>
 </div>
+<div class="viewtoggle modo" role="group" aria-label="Estilo do mapa">
+  <button type="button" id="vFoto" aria-pressed="true">Foto</button>
+  <button type="button" id="vCien" aria-pressed="false">Científico</button>
+</div>
 <div class="spin" id="busy" role="status" aria-label="Lendo o relevo" hidden></div>
-<div class="legend" id="legend" aria-label="Legenda"></div>
+<details class="legend" id="legendBox"><summary>Camadas</summary><div id="legend" role="group" aria-label="Filtro do mapa"></div></details>
 
 <div class="timeline" aria-label="Linha do tempo da previsão">
   <button type="button" id="play" aria-label="Reproduzir as 72 horas">
@@ -151,12 +155,6 @@
       <h2 class="h">Área visível afetada</h2>
       <div class="facts" id="areaFacts"></div>
       <p class="sub" id="riseTxt"></p>
-      <div class="layers">
-        <label><input type="checkbox" id="lR" checked> Áreas de risco</label>
-        <label><input type="checkbox" id="lH" checked> Abrigos sugeridos</label>
-        <label><input type="checkbox" id="lS" checked> Sensores</label>
-        <label><input type="checkbox" id="lO" checked> Ocorrências registradas</label>
-      </div>
     </div>
 
     <p class="note">Protótipo acadêmico. Relevo, satélite, rios e cobertura do solo são dados reais (Sentinel-2, Terrarium e OpenStreetMap). O evento é um cenário que você define; sensores e histórico de treino são simulados.</p>

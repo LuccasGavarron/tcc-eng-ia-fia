@@ -98,14 +98,14 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
           const outer = Cesium.Cartesian3.fromDegreesArray(poly[0].flat());
           const holes = poly.slice(1).map(h => new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray(h.flat())));
           // pegada exata no chão
-          ds.entities.add({ polygon: { hierarchy: new Cesium.PolygonHierarchy(outer, holes), material: C(col).withAlpha(a * 0.8), classificationType: Cesium.ClassificationType.BOTH } });
+          ds.entities.add({ _pop: () => popup("risk", f.properties), _risk: true, polygon: { hierarchy: new Cesium.PolygonHierarchy(outer, holes), material: C(col).withAlpha(a * 0.8), classificationType: Cesium.ClassificationType.BOTH } });
           if (k !== "f" && k !== "s") return;
           // volume 3D: enchente vira lâmina d'água até a cota prevista; encosta vira casca vermelha
           const es = poly[0].filter((_, i) => i % 3 === 0).map(p => elevAt(p[0], p[1])).filter(e => e != null);
           if (es.length < 3) return;
           const lo = Math.min(...es), hi = Math.max(...es);
           const top = k === "f" ? lo + Math.max(1.5, f.properties.d || 0) * 2 : hi + 12; // ponytail: lâmina exagerada 2× para aparecer na vista da cidade
-          ds.entities.add({ _pop: () => popup("risk", f.properties), polygon: { hierarchy: new Cesium.PolygonHierarchy(outer, holes), height: lo - 3, extrudedHeight: top,
+          ds.entities.add({ _pop: () => popup("risk", f.properties), _risk: true, polygon: { hierarchy: new Cesium.PolygonHierarchy(outer, holes), height: lo - 3, extrudedHeight: top,
             material: C(col).withAlpha(k === "f" ? 0.38 : 0.22), outline: false } });
           if (big.has(poly)) {
             const n = poly[0].length, cx = poly[0].reduce((s, p) => s + p[0], 0) / n, cy = poly[0].reduce((s, p) => s + p[1], 0) / n;
@@ -161,8 +161,17 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     pop.firstChild.onclick = close;
     pop.style.left = e.position.x + "px"; pop.style.top = e.position.y + "px"; pop.hidden = false;
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-  h.setInputAction(e => { const p = sc.pick(e.endPosition); sc.canvas.style.cursor = p && p.id && p.id._pop ? "pointer" : ""; },
-    Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+  // passar o mouse sobre uma área de perigo mostra o que é e o dado da hora
+  const tip = document.createElement("div"); tip.className = "pop tip"; tip.hidden = true; container.appendChild(tip);
+  let lastPick = 0;
+  h.setInputAction(e => {
+    const now = performance.now(); if (now - lastPick < 60) return; lastPick = now; // ponytail: pick é caro, 16 por segundo basta
+    const p = sc.pick(e.endPosition), ent = p && p.id;
+    sc.canvas.style.cursor = ent && ent._pop ? "pointer" : "";
+    if (ent && ent._risk && pop.hidden) {
+      tip.innerHTML = ent._pop(); tip.style.left = e.endPosition.x + "px"; tip.style.top = e.endPosition.y + "px"; tip.hidden = false;
+    } else tip.hidden = true;
+  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
   v.camera.moveStart.addEventListener(close);
   v.camera.moveEnd.addEventListener(() => onMoveEnd && onMoveEnd());
 
@@ -201,8 +210,9 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     } else {
       const dx = e.endPosition.x - drag.x, dy = e.endPosition.y - drag.y, k = 0.0035;
       drag.x = e.endPosition.x; drag.y = e.endPosition.y;
-      cam.look(Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(cam.positionWC, new Cesium.Cartesian3()), dx * k); // gira em torno da vertical
-      if (is3D) cam.lookUp(-dy * k); // arrastar para cima olha para cima
+      // invertido: arrastar move a cena junto com o mouse
+      cam.look(Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(cam.positionWC, new Cesium.Cartesian3()), -dx * k); // gira em torno da vertical
+      if (is3D) cam.lookUp(dy * k);
     }
     sc.requestRender();
   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -226,6 +236,25 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     const g = Cesium.Cartographic.fromCartesian(p);
     return { lon: Cesium.Math.toDegrees(g.longitude), lat: Cesium.Math.toDegrees(g.latitude), dist: Cesium.Cartesian3.distance(cam.positionWC, p) };
   }
+  // modo científico: cidade em cinza com rampa hipsométrica e curvas de nível a cada 10 m (fortes a cada 50 m)
+  const P0 = Cesium.Cartesian3.fromDegrees(-47.437, -23.47, 0), up0 = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(P0, new Cesium.Cartesian3());
+  const RN = 6381000; // raio de curvatura local; o erro fica abaixo de 1 m em 20 km
+  const sci = new Cesium.CustomShader({ lightingModel: Cesium.LightingModel.UNLIT,
+    uniforms: { u_c: { type: Cesium.UniformType.VEC3, value: Cesium.Cartesian3.subtract(P0, Cesium.Cartesian3.multiplyByScalar(up0, RN, new Cesium.Cartesian3()), new Cesium.Cartesian3()) },
+      u_rn: { type: Cesium.UniformType.FLOAT, value: RN } },
+    fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+      float h = length(fsInput.attributes.positionWC - u_c) - u_rn;
+      float t = clamp((h - 530.0) / 200.0, 0.0, 1.0);
+      vec3 ramp = mix(mix(vec3(0.06, 0.16, 0.40), vec3(0.09, 0.58, 0.60), smoothstep(0.0, 0.5, t)), vec3(0.97, 0.84, 0.33), smoothstep(0.5, 1.0, t));
+      float g = dot(material.diffuse, vec3(0.299, 0.587, 0.114));
+      vec3 col = mix(vec3(g) * 0.55, ramp, 0.5);
+      float w = max(fwidth(h), 0.01);
+      float d5 = abs(fract(h / 10.0 + 0.5) - 0.5) * 10.0, d25 = abs(fract(h / 50.0 + 0.5) - 0.5) * 50.0;
+      float l5 = 1.0 - smoothstep(0.0, w, d5), l25 = 1.0 - smoothstep(0.0, w * 1.8, d25);
+      col = mix(col, vec3(0.90, 0.97, 1.0), max(l5 * 0.18, l25 * 0.75));
+      material.diffuse = col;
+    }` });
+  function setScience(on) { if (tiles) { tiles.customShader = on ? sci : undefined; sc.requestRender(); } }
   function focusCity(on) {
     borda.show = on; plano.show = on;
     const c = on ? clip() : undefined;
@@ -233,5 +262,5 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     if (layers.bairros) layers.bairros.show = on;
     sc.requestRender();
   }
-  return { setData, setElevation, show, flyTo, setView, center, focusCity, viewer: v, photoreal: !!tiles };
+  return { setData, setElevation, setScience, show, flyTo, setView, center, focusCity, viewer: v, photoreal: !!tiles };
 }

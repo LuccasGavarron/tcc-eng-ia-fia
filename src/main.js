@@ -91,8 +91,11 @@ const setData = (id, d) => { DATA[id] = d; if (globe) globe.setData(id, d); };
 const POPS = {
   shel: p => "<b>Abrigo sugerido</b><br>" + esc(p.name) + "<br><small>Escola fora das áreas de risco. Exemplo, não é abrigo oficial.</small>",
   sens: p => sensorPopup(p.id),
-  risk: p => "<b>" + { f: "Inundação prevista", s: "Encosta instável", x: "Perigo de incêndio", h: "Ilha de calor" }[p.k] + "</b><br>" + hourLabel(S.t) +
-    (p.k === "f" ? "<br>Rio " + fmt(p.d || 0, 1) + " m acima do normal" : ""),
+  risk: p => "<b>" + { f: "Inundação prevista", a: "Faixa de atenção", s: "Encosta instável", x: "Perigo de incêndio", h: "Ilha de calor" }[p.k] + "</b><br>" + hourLabel(S.t) +
+    (p.k === "f" || p.k === "a" ? "<br>Rio " + fmt(p.d || 0, 1) + " m acima do normal" : "") +
+    (p.k === "s" ? "<br>Declividade acima de " + fmt(M.slopeThreshold(F.slideAt(S.t)), 0) + "% com solo " + ["seco", "úmido", "muito úmido", "saturado"][Math.min(3, Math.floor(F.sat0 * 4))] : "") +
+    (p.k === "x" ? "<br>FMA+ " + M.FMA_CLASSES[M.fmaClass(F.fmaAt(S.t))].toLowerCase() : "") +
+    (p.k === "h" ? "<br>Índice de calor " + fmt(F.hiAt(S.t), 0) + " °C" : ""),
   hist: p => "<b>" + esc(p.nome) + "</b><br>" + esc(p.tipo) + (p.datas ? "<br><small>" + esc(p.datas) + "</small>" : "") +
     (p.fonte ? '<br><a href="' + esc(p.fonte) + '" target="_blank" rel="noopener">Fonte</a>' : ""),
 };
@@ -101,7 +104,7 @@ createGlobe($("map"), { token: import.meta.env.VITE_CESIUM_TOKEN, limite: LIMITE
   for (const id in DATA) g.setData(id, DATA[id]);
   // relevo de Sorocaba uma vez, para pousar pontos e rótulos sem prender ao 3D Tiles
   loadElevation(-47.58, -23.6, -47.29, -23.34, 300).then(fn => g.setElevation(fn));
-  if (!$("lO").checked) g.show("hist", false);
+  applyFilter();
   const c = CITIES[0]; g.flyTo(c.c[0], c.c[1], c.r, 0);
   if (import.meta.env.DEV) window.vespera = { globe, S, get grid() { return grid; } };
 });
@@ -112,6 +115,11 @@ function setView(three) {
   globe && globe.setView(three);
 }
 $("v3").onclick = () => setView(true); $("v2").onclick = () => setView(false);
+function setStyle(sci) {
+  $("vFoto").setAttribute("aria-pressed", !sci); $("vCien").setAttribute("aria-pressed", sci);
+  globe && globe.setScience(sci);
+}
+$("vFoto").onclick = () => setStyle(false); $("vCien").onclick = () => setStyle(true);
 
 /* ---------- dados locais ---------- */
 const getJSON = u => fetch(u).then(r => (r.ok ? r.json() : null)).catch(() => null);
@@ -168,7 +176,7 @@ async function sample() {
 function render() {
   const st = hourState(S.t);
   cl = M.classify(grid, st);
-  setData("risk", grid && $("lR").checked ? riskShapes() : null);
+  setData("risk", grid ? riskShapes() : null);
   drawSensorsOnMap(); drawShelters(); areaFacts(st); drawLegend();
 }
 
@@ -185,7 +193,7 @@ function riskShapes() {
     const [mp] = contour(v);
     const area = r => Math.abs(r.reduce((a, p, i) => { const q = r[(i + 1) % r.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
     const polys = mp.coordinates.filter(poly => area(poly[0]) >= 3); // ponytail: manchas menores que 3 células viram ruído e custam um polígono cada
-    if (polys.length) feats.push({ type: "Feature", properties: { k: M.KIND[k], d: S.mode === "chuva" ? F.sim.rise[S.t] : 0 },
+    if (polys.length && !OFF.has("risk-" + M.KIND[k])) feats.push({ type: "Feature", properties: { k: M.KIND[k], d: S.mode === "chuva" ? F.sim.rise[S.t] : 0 },
       geometry: { type: "MultiPolygon", coordinates: polys.map(poly => poly.map(ring => ring.map(toLL))) } });
   }
   return { type: "FeatureCollection", features: feats };
@@ -207,16 +215,27 @@ function areaFacts(st) {
       : "Cobertura do solo disponível só para Sorocaba.");
 }
 
+// a legenda é o filtro: clicar num item liga ou desliga aquela camada do mapa
+const OFF = new Set();
+const SENSOR_GROUP = { cemaden: "cemaden", lora: "lora", ana: "ana", inmet: "clima", radar: "clima", transito: "transito" };
 function drawLegend() {
-  const it = S.mode === "chuva"
-    ? [["var(--water)", "Inundação prevista"], ["var(--ochre)", "Faixa de atenção"], ["var(--brick)", "Encosta instável"]]
-    : [["#E0612B", "Vegetação com perigo de incêndio"], ["#B0368A", "Ilha de calor"]];
-  it.push(["#7FC4F0", "Rio ou córrego", true]);
-  $("legend").innerHTML = it.map(([c, l, line]) => '<span><i class="sw' + (line ? " line" : "") + '" style="background:' + c + '"></i>' + l + "</span>").join("") +
-    [["casa", "#3F7D55", "Abrigo sugerido"], ["chuva", "#2C6CB0", "Pluviômetro"], ["solo", "#5E8C3A", "Umidade do solo"], ["regua", "#1F7A8C", "Régua do rio"],
-      ["radar", "#6B4FA0", "Radar e estação"], ["carro", "#4E6068", "Trânsito"]].concat(hist ? [["alerta", "#C98A12", "Ocorrência registrada"]] : [])
-      .map(([g, c, l]) => '<span><img class="ico" src="' + icon(g, c) + '" alt="">' + l + "</span>").join("");
+  const sw = (c, line) => '<i class="sw' + (line ? " line" : "") + '" style="background:' + c + '"></i>';
+  const ico = (g, c) => '<img class="ico" src="' + icon(g, c) + '" alt="">';
+  const it = (S.mode === "chuva"
+    ? [["risk-f", sw("var(--water)"), "Inundação prevista"], ["risk-a", sw("var(--ochre)"), "Faixa de atenção"], ["risk-s", sw("var(--brick)"), "Encosta instável"]]
+    : [["risk-x", sw("#E0612B"), "Vegetação com perigo de incêndio"], ["risk-h", sw("#B0368A"), "Ilha de calor"]])
+    .concat([["rios", sw("#7FC4F0", true), "Rio ou córrego"], ["shel", ico("casa", "#3F7D55"), "Abrigo sugerido"],
+      ["cemaden", ico("chuva", "#2C6CB0"), "Pluviômetro"], ["lora", ico("solo", "#5E8C3A"), "Umidade do solo"], ["ana", ico("regua", "#1F7A8C"), "Régua do rio"],
+      ["clima", ico("radar", "#6B4FA0"), "Radar e estação"], ["transito", ico("carro", "#4E6068"), "Trânsito"]])
+    .concat(hist ? [["hist", ico("alerta", "#C98A12"), "Ocorrência registrada"]] : []).concat([["bairros", sw("#fff"), "Nome dos bairros"]]);
+  $("legend").innerHTML = it.map(([k, s, l]) => '<button type="button" data-k="' + k + '" aria-pressed="' + !OFF.has(k) + '">' + s + "<span>" + l + "</span></button>").join("");
 }
+$("legend").onclick = e => {
+  const b = e.target.closest("button[data-k]"); if (!b) return;
+  const k = b.dataset.k; OFF.has(k) ? OFF.delete(k) : OFF.add(k);
+  applyFilter(); render();
+};
+function applyFilter() { if (globe) for (const id of ["rios", "hist", "bairros"]) globe.show(id, !OFF.has(id)); }
 
 /* ---------- abrigos ---------- */
 let searchReq = 0;
@@ -245,7 +264,7 @@ function safeShelters() {
     .map(s => ({ ...s, d: Math.hypot((s.i % G) - cx, ((s.i / G) | 0) - cy) })).sort((a, b) => a.d - b.d).slice(0, 4);
 }
 function drawShelters() {
-  const list = $("lH").checked && F.level >= 2 && S.mode === "chuva" ? safeShelters() : [];
+  const list = !OFF.has("shel") && F.level >= 2 && S.mode === "chuva" ? safeShelters() : [];
   setData("shel", { type: "FeatureCollection", features: list.map(s => ({ type: "Feature", properties: { name: s.name }, geometry: { type: "Point", coordinates: s.c } })) });
 }
 
@@ -263,10 +282,9 @@ function sensorPopup(id) {
     (fl ? '<br><span class="bad">Reprovada: ' + esc(fl) + "</span>" : "") + "<br><small>" + esc(c.org + " · " + c.proto) + "</small>";
 }
 function drawSensorsOnMap() {
-  const on = $("lS").checked;
-  setData("sens", { type: "FeatureCollection", features: on ? STATIONS.map(st => ({ type: "Feature",
+  setData("sens", { type: "FeatureCollection", features: STATIONS.filter(st => !OFF.has(SENSOR_GROUP[st.c])).map(st => ({ type: "Feature",
     properties: { id: st.id, c: st.c, bad: !!F.sensors[st.id].flag[S.t], label: st.id + " " + sensorValue(st, S.t) },
-    geometry: { type: "Point", coordinates: st.ll } })) : [] });
+    geometry: { type: "Point", coordinates: st.ll } })) });
 }
 function spark(st) {
   const s = F.sensors[st.id], vals = s.v.filter(v => v != null);
@@ -465,8 +483,6 @@ tube.addEventListener("keydown", e => { const m = { ArrowUp: 5, ArrowRight: 5, A
 document.querySelectorAll(".presets button").forEach(b => (b.onclick = () => setRain(+b.dataset.v)));
 $("ante").oninput = e => { S.ante = +e.target.value; update(true); };
 for (const id of ["anom", "heatDays", "rhMin", "dryDays", "wind"]) { $(id).value = S[id]; $(id).oninput = e => { S[id] = +e.target.value; update(true); }; }
-["lR", "lS", "lH"].forEach(id => ($(id).onchange = render));
-$("lO").onchange = () => globe && globe.show("hist", $("lO").checked);
 
 M.SYSTEMS.forEach((s, i) => {
   const b = document.createElement("button"); b.type = "button"; b.innerHTML = "<b>" + s.n + "</b>" + s.d; b.setAttribute("aria-pressed", i === 0);
