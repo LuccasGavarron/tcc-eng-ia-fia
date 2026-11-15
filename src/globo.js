@@ -19,7 +19,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   });
   const sc = v.scene;
   // a cidade solta no espaço
-  sc.backgroundColor = Cesium.Color.BLACK; sc.skyBox.show = false; sc.sun.show = false; sc.moon.show = false;
+  sc.backgroundColor = C("#05080C"); sc.skyBox.show = false; sc.sun.show = false; sc.moon.show = false;
   sc.skyAtmosphere.show = false; sc.fog.enabled = false; sc.globe.showGroundAtmosphere = false; sc.globe.baseColor = Cesium.Color.BLACK;
   sc.globe.depthTestAgainstTerrain = true;
 
@@ -38,14 +38,38 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
   if (!tiles) sc.globe.clippingPolygons = clip();
 
   // borda da cidade com brilho
-  const borda = v.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArray(ring.flat()), width: 7, clampToGround: true,
-    material: new Cesium.PolylineGlowMaterialProperty({ color: C("#9FD6F7"), glowPower: 0.35 }) } });
+  const borda = v.entities.add({ polyline: { positions: Cesium.Cartesian3.fromDegreesArray(ring.flat()), width: 3, clampToGround: true,
+    material: C("#CFE9FA") } });
+
+  // plano cartesiano escuro sob a cidade: malha de 1 km, linhas fortes a cada 5 km, eixos x e y pelo centro
+  const plano = new Cesium.CustomDataSource("plano"); v.dataSources.add(plano);
+  {
+    const [lon0, lat0] = [-47.437, -23.47], H0 = 515, N = 35, km = 1000;
+    const kx = 1 / (111320 * Math.cos(rad(lat0))), ky = 1 / 110540;
+    const P = (x, y) => Cesium.Cartesian3.fromDegrees(lon0 + x * km * kx, lat0 + y * km * ky, H0);
+    const line = (a, b, width, color) => plano.entities.add({ polyline: { positions: [a, b], width, material: color, arcType: Cesium.ArcType.NONE } });
+    for (let i = -N; i <= N; i++) {
+      if (!i) continue;
+      const col = i % 5 ? C("#6FA8C8").withAlpha(0.14) : C("#6FA8C8").withAlpha(0.32), w = i % 5 ? 1 : 1.6;
+      line(P(i, -N), P(i, N), w, col); line(P(-N, i), P(N, i), w, col);
+    }
+    const axis = C("#9FD6F7");
+    line(P(-N - 3, 0), P(N + 3, 0), 2.4, axis); line(P(0, -N - 3), P(0, N + 3), 2.4, axis);
+    const arrow = (a, b) => plano.entities.add({ polyline: { positions: [a, b], width: 14, arcType: Cesium.ArcType.NONE,
+      material: new Cesium.PolylineArrowMaterialProperty(axis) } });
+    arrow(P(N + 1, 0), P(N + 4, 0)); arrow(P(0, N + 1), P(0, N + 4));
+    const txt = (x, y, t, size = 12) => plano.entities.add({ position: P(x, y), label: { text: t, font: "600 " + size + "px Archivo, sans-serif",
+      fillColor: C("#9FD6F7").withAlpha(0.85), pixelOffset: new Cesium.Cartesian2(6, 6), verticalOrigin: Cesium.VerticalOrigin.TOP } });
+    txt(N + 4.5, 0, "x", 18); txt(0, N + 4.5, "y", 18); txt(0, 0, "0");
+    for (let i = -30; i <= 30; i += 10) if (i) { txt(i, 0, i + " km", 11); txt(0, i, i + " km", 11); }
+  }
 
   // camadas dinâmicas
   const layers = {};
   const layer = id => { if (!layers[id]) { layers[id] = new Cesium.CustomDataSource(id); v.dataSources.add(layers[id]); } return layers[id]; };
   const pt = (ll, h = 0) => Cesium.Cartesian3.fromDegrees(ll[0], ll[1], h);
   const ground = { heightReference: Cesium.HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Number.POSITIVE_INFINITY };
+  const shrink = { scaleByDistance: new Cesium.NearFarScalar(3000, 1, 40000, 0.5) };
   const label = (text, size, offY) => ({ text, font: "600 " + size + "px Archivo, sans-serif", fillColor: Cesium.Color.WHITE,
     outlineColor: C("#1B2A31"), outlineWidth: 3, style: Cesium.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new Cesium.Cartesian2(0, offY),
     verticalOrigin: Cesium.VerticalOrigin.TOP, ...ground });
@@ -66,21 +90,24 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     },
     hist(ds, fc) {
       for (const f of fc.features) ds.entities.add({ position: pt(f.geometry.coordinates), _pop: () => popup("hist", f.properties),
-        point: { pixelSize: 9, color: C("#1B2A31"), outlineColor: C("#F2C14E"), outlineWidth: 2.5, ...ground } });
+        point: { pixelSize: 9, color: C("#1B2A31"), outlineColor: C("#F2C14E"), outlineWidth: 2.5, ...ground, ...shrink } });
     },
     sens(ds, fc) {
       for (const f of fc.features) ds.entities.add({ position: pt(f.geometry.coordinates), _pop: () => popup("sens", f.properties),
-        point: { pixelSize: 11, color: f.properties.bad ? C("#AE3A2C") : Cesium.Color.WHITE, outlineColor: C("#1B2A31"), outlineWidth: 3, ...ground },
+        point: { pixelSize: 11, color: f.properties.bad ? C("#AE3A2C") : Cesium.Color.WHITE, outlineColor: C("#1B2A31"), outlineWidth: 3, ...ground, ...shrink },
         label: { ...label(f.properties.label, 12, 10), distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 9000) } });
     },
     shel(ds, fc) {
       for (const f of fc.features) ds.entities.add({ position: pt(f.geometry.coordinates), _pop: () => popup("shel", f.properties),
         point: { pixelSize: 14, color: C("#E6ECE8"), outlineColor: C("#3F7D55"), outlineWidth: 3.5, ...ground }, label: label(f.properties.name, 13, 12) });
     },
+    // nível 0: um nome a cada 2,6 km; nível 1: a cada 900 m; nível 2: o resto, só bem de perto
     bairros(ds, list) {
-      for (const [n, lon, lat, k] of list) ds.entities.add({ position: pt([lon, lat]),
-        label: { ...label(n.toUpperCase(), k === "s" ? 13 : 11, 0), verticalOrigin: Cesium.VerticalOrigin.CENTER,
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, k === "s" ? 22000 : 7000) } });
+      const far = [26000, 7000, 2500], size = [14, 12, 11];
+      for (const [n, lon, lat, t] of list) ds.entities.add({ position: pt([lon, lat]),
+        label: { ...label(n.toUpperCase(), size[t], 0), verticalOrigin: Cesium.VerticalOrigin.CENTER,
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, far[t]),
+          translucencyByDistance: new Cesium.NearFarScalar(far[t] * 0.6, 1, far[t], 0) } });
     },
   };
   function setData(id, data) {
@@ -109,6 +136,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
 
   // câmera
   const cam = v.camera, ctrl = sc.screenSpaceCameraController;
+  ctrl.zoomFactor = 14; // padrão 5 é lento no trackpad
   let is3D = true;
   function flyTo(lon, lat, radius, duration = 2.6) {
     const sphere = new Cesium.BoundingSphere(Cesium.Cartesian3.fromDegrees(lon, lat, 600), radius);
@@ -129,7 +157,7 @@ export async function createGlobe(container, { token, limite, onMoveEnd, popup }
     return { lon: Cesium.Math.toDegrees(g.longitude), lat: Cesium.Math.toDegrees(g.latitude), dist: Cesium.Cartesian3.distance(cam.positionWC, p) };
   }
   function focusCity(on) {
-    borda.show = on;
+    borda.show = on; plano.show = on;
     const c = on ? clip() : undefined;
     if (tiles) tiles.clippingPolygons = c; else sc.globe.clippingPolygons = c;
     if (layers.bairros) layers.bairros.show = on;

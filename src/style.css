@@ -9,7 +9,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;margin:0}
-body{background:#000;color:var(--ink);font:15px/1.5 var(--body);overflow:hidden}
+body{background:#05080C;color:var(--ink);font:15px/1.5 var(--body);overflow:hidden}
 #map{position:absolute;inset:0}
 @media (min-width:761px){#map{left:420px}} /* painel fixo à esquerda: a cidade centraliza no espaço livre */
 
