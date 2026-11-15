@@ -112,7 +112,27 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
 
   // camadas dinâmicas
   const layers = {};
-  const layer = id => { if (!layers[id]) { layers[id] = new Cesium.CustomDataSource(id); v.dataSources.add(layers[id]); } return layers[id]; };
+  const layer = id => { if (!layers[id]) { layers[id] = new Cesium.CustomDataSource(id); v.dataSources.add(layers[id]); if (GROUP[id]) group(layers[id], GROUP[id]); } return layers[id]; };
+  // pontos muito juntos na tela viram um selo só com o número; clicar nele aproxima a câmera
+  const GROUP = { hist: "#C98A12", foco: "#C2473A", shel: "#3F7D55", sens: "#2C6CB0" };
+  const hidden = new Set();
+  function group(ds, color) {
+    const cl = ds.clustering; cl.enabled = true; cl.pixelRange = 34; cl.minimumClusterSize = 3; cl.clusterLabels = false; cl.clusterPoints = false;
+    cl.clusterEvent.addEventListener((list, c) => {
+      const col = ds._groupColor || color, n = list.filter(e => !e._wave).length;
+      for (const e of list) { if (e._stalkEnt) { e._stalkEnt.show = false; hidden.add(e._stalkEnt); } }
+      c.label.show = false; c.billboard.show = true; c.billboard.id = { _cluster: list };
+      c.billboard.image = count(n, col); c.billboard.width = c.billboard.height = n > 9 ? 50 : 44;
+      c.billboard.color = dimOn && ds !== layers.foco ? DIM : Cesium.Color.WHITE;
+      c.billboard.verticalOrigin = Cesium.VerticalOrigin.CENTER; c.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+    });
+  }
+  // a cada novo agrupamento as hastes voltam e só as dos pontos agrupados somem de novo
+  cam.changed.addEventListener(() => { for (const e of hidden) e.show = true; hidden.clear(); });
+  const countCache = {};
+  const count = (n, col) => countCache[n + col] || (countCache[n + col] = "data:image/svg+xml;utf8," + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="${col}" fill-opacity=".35"/>
+    <circle cx="32" cy="32" r="23" fill="${col}" stroke="#fff" stroke-width="3"/><text x="32" y="39.5" text-anchor="middle" font-family="Archivo, sans-serif" font-weight="700" font-size="21" fill="#fff">${n}</text></svg>`));
   // ponytail: altura vem do relevo (Terrarium) + folga; prender ao 3D Tiles (CLAMP_TO_GROUND) refaz consulta a cada quadro e derrubava o FPS
   let elevAt = () => null;
   const pt = (ll, up = 25) => { const e = elevAt(ll[0], ll[1]); return Cesium.Cartesian3.fromDegrees(ll[0], ll[1], (e ?? 0) + up); };
@@ -127,8 +147,8 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   function marker(ds, ll, img, pop, text, size, floor) {
     const e = floor ?? elevAt(ll[0], ll[1]) ?? 0;
     const base = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e), top = Cesium.Cartesian3.fromDegrees(ll[0], ll[1], e + STALK);
-    ds.entities.add({ _pop: pop, _stalk: true, polyline: { positions: [base, top], width: 2, arcType: Cesium.ArcType.NONE, material: Cesium.Color.WHITE.withAlpha(0.8) } });
-    return ds.entities.add({ position: top, _pop: pop, _at: { ll, r: 260, top },
+    const stalk = ds.entities.add({ _pop: pop, _stalk: true, polyline: { positions: [base, top], width: 2, arcType: Cesium.ArcType.NONE, material: Cesium.Color.WHITE.withAlpha(0.8) } });
+    return ds.entities.add({ _stalkEnt: stalk, position: top, _pop: pop, _at: { ll, r: 260, top },
       billboard: { image: img, width: size, height: size, verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY,
         scaleByDistance: new Cesium.NearFarScalar(1500, 1.1, 40000, 0.4) },
       label: text ? { ...label(text, 12, 4), distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500) } : undefined });
@@ -227,6 +247,9 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   const h = new Cesium.ScreenSpaceEventHandler(sc.canvas);
   h.setInputAction(e => {
     const p = sc.pick(e.position), ent = p && p.id;
+    if (ent && ent._cluster) { stopOrbit(); const ps = ent._cluster.map(e => e.position.getValue(Cesium.JulianDate.now())).filter(Boolean);
+      const sph = Cesium.BoundingSphere.fromPoints(ps);
+      return cam.flyToBoundingSphere(sph, { duration: 2.4, easingFunction: EASE, offset: new Cesium.HeadingPitchRange(cam.heading, rad(-45), Math.max(900, sph.radius * 2.8)) }); }
     if (!ent || !ent._pop) return close();
     if (ent._at) return goTo(ent);
     pop.innerHTML = '<button type="button" aria-label="Fechar">×</button>' + ent._pop();
@@ -257,19 +280,19 @@ export async function createGlobe(container, { token, limite, origin = [-47.437,
   function spotlight(items, glyph, color, fly = true) {
     foco.entities.removeAll();
     if (!items || !items.length) { stopOrbit(); pulse = false; dim(false); sc.requestRenderMode = true; sc.requestRender(); return; }
-    const t0 = performance.now(), pts = [];
+    const t0 = performance.now(), pts = []; foco._groupColor = color;
     items.forEach((it, i) => {
       // o ponto sobe do chão até bem acima dos outros, saindo rápido e parando devagar
       const g = elevAt(it.ll[0], it.ll[1]) ?? 0, ph = i * 0.7, s = () => ((performance.now() - t0) / 1600 + ph) % 1;
       const h = () => { const k = Math.min(1, (performance.now() - t0 - i * 40) / 900); return g + 60 + 240 * (k <= 0 ? 0 : 1 - Math.pow(2, -10 * k)); };
       const base = Cesium.Cartesian3.fromDegrees(it.ll[0], it.ll[1], g), top = new Cesium.CallbackPositionProperty(() => Cesium.Cartesian3.fromDegrees(it.ll[0], it.ll[1], h()), false);
       const at = { ll: it.ll, r: it.r || 260, get top() { return top.getValue(); } };
-      foco.entities.add({ _pop: it.pop, _at: at, polyline: { positions: new Cesium.CallbackProperty(() => [base, top.getValue()], false), width: 2.5, arcType: Cesium.ArcType.NONE, material: C(color) } });
+      const stalk = foco.entities.add({ _pop: it.pop, _at: at, polyline: { positions: new Cesium.CallbackProperty(() => [base, top.getValue()], false), width: 2.5, arcType: Cesium.ArcType.NONE, material: C(color) } });
       const bb = { verticalOrigin: Cesium.VerticalOrigin.BOTTOM, disableDepthTestDistance: Number.POSITIVE_INFINITY, scaleByDistance: new Cesium.NearFarScalar(1500, 1.1, 40000, 0.45) };
-      foco.entities.add({ position: top, _pop: it.pop, _at: at, billboard: { ...bb, image: icon(glyph, color, true), width: 56, height: 56,
+      foco.entities.add({ position: top, _pop: it.pop, _at: at, _stalkEnt: stalk, billboard: { ...bb, image: icon(glyph, color, true), width: 56, height: 56,
         scale: new Cesium.CallbackProperty(() => 1 + 0.06 * Math.sin(s() * 6.283), false) } });
       // onda de radar saindo do ponto
-      foco.entities.add({ position: top, billboard: { ...bb, image: wave, width: 56, height: 56,
+      foco.entities.add({ position: top, _wave: true, billboard: { ...bb, image: wave, width: 56, height: 56,
         scale: new Cesium.CallbackProperty(() => 1 + s() * 1.4, false), color: new Cesium.CallbackProperty(() => C(color).withAlpha(1 - s()), false) } });
       pts.push(base);
     });
